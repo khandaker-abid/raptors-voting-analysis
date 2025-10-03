@@ -23,6 +23,10 @@ import ProvisionalBallotBarChart from "../components/ProvisionalBallotBarChart";
 import ProvisionalBallotTable from "../components/ProvisionalBallotTable";
 import ProvisionalBallotChoroplethMap from "../components/ProvisionalBallotChoroplethMap";
 
+// New imports for GUI-25 to GUI-27
+import EquipmentRejectedBubbleChart from "../components/EquipmentRejectedBubbleChart";
+import ResetButton from "../components/ResetButton";
+
 interface TabPanelProps {
 	children?: React.ReactNode;
 	index: number;
@@ -162,6 +166,7 @@ const StateDetailPage: React.FC = () => {
 						{isDetail && <Tab label="Provisional Ballot Chart" />}
 						{isDetail && <Tab label="Provisional Ballot Table" />}
 						{isDetail && <Tab label="Choropleth Map" />}
+						{isDetail && <Tab label="Equipment vs Rejected Ballots" />}
 					</Tabs>
 				</Box>
 
@@ -192,9 +197,25 @@ const StateDetailPage: React.FC = () => {
 								data={choroplethData || []}
 							/>
 						</TabPanel>
+
+						<TabPanel value={tabValue} index={4}>
+							<EquipmentRejectedBubbleChart
+								data={[
+									{ county: "Travis", equipmentQuality: 85, rejectedPct: 2, party: "D" },
+									{ county: "Orange", equipmentQuality: 70, rejectedPct: 5, party: "R" },
+								]}
+								regressionLines={[
+									{ party: "D", coefficients: { a: 0.5, b: 1.2 } },
+									{ party: "R", coefficients: { a: 0.7, b: 1.0 } },
+								]}
+							/>
+						</TabPanel>
 					</>
 				)}
 			</Paper>
+
+			{/* GUI-27: Reset Button */}
+			<ResetButton />
 		</Container>
 	);
 };

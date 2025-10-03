@@ -57,6 +57,7 @@ const Navigation: React.FC = () => {
 							}}>
 							Home
 						</Button>
+
 						<Button
 							color="inherit"
 							component={Link}
@@ -82,6 +83,36 @@ const Navigation: React.FC = () => {
 										: "1px solid transparent",
 							}}>
 							Party Comparison
+						</Button>
+
+						{/* ✅ New Navigation Link for GUI-21 to GUI-23 */}
+						<Button
+							color="inherit"
+							component={Link}
+							to="/registration-comparison"
+							variant={
+								location.pathname === "/registration-comparison"
+									? "outlined"
+									: "text"
+							}
+							sx={{
+								"textDecoration": "none",
+								"borderRadius": 2,
+								"px": 3,
+								"fontWeight": 600,
+								"backgroundColor":
+									location.pathname === "/registration-comparison"
+										? "rgba(255,255,255,0.15)"
+										: "transparent",
+								"&:hover": {
+									backgroundColor: "rgba(255,255,255,0.1)",
+								},
+								"border":
+									location.pathname === "/registration-comparison"
+										? "1px solid rgba(255,255,255,0.3)"
+										: "1px solid transparent",
+							}}>
+							Registration Comparison
 						</Button>
 					</Box>
 				</Toolbar>
