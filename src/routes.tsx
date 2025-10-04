@@ -9,7 +9,6 @@ import SameDayRegistrationComparison from "./components/SameDayRegistrationCompa
 import EarlyVotingPartyComparison from "./components/EarlyVotingPartyComparison";
 import DropBoxVotingBubbleChart from "./components/DropBoxVotingBubbleChart";
 import BubbleChartWithRegression from "./components/BubbleChartWithRegression";
-import ResetPage from "./components/ResetPage";
 
 const AppRoutes: React.FC = () => {
 	return (
@@ -41,7 +40,6 @@ const AppRoutes: React.FC = () => {
 				path="/bubble-chart-with-regression"
 				element={<BubbleChartWithRegression />}
 			/>
-			<Route path="/reset-page" element={<ResetPage />} />
 		</Routes>
 	);
 };

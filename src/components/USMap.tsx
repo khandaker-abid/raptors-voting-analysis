@@ -54,8 +54,10 @@ const USMap: React.FC = () => {
 
 		layer.bindTooltip(tooltipContent, {
 			permanent: false,
-			direction: "center",
+			direction: "auto",
 			className: "custom-tooltip",
+			offset: [0, 0],
+			sticky: true,
 		});
 
 		layer.on({
@@ -98,21 +100,25 @@ const USMap: React.FC = () => {
 		<Box
 			sx={{
 				textAlign: "center",
-				width: "100vw",
-				height: "calc(100vh - 65px)", // Subtract navigation bar height
+				width: "100%",
+				height: "100%",
 				margin: "0",
 				padding: "0",
+				minHeight: "500px", // Ensure minimum height for map rendering
 			}}>
 			<Box
+				className="us-map-container"
 				sx={{
 					display: "flex",
 					justifyContent: "center",
 					border: "1px solid #e0e0e0",
 					borderRadius: 2,
-					padding: 1,
+					padding: 0,
 					backgroundColor: "#fafafa",
 					height: "100%",
 					width: "100%",
+					overflow: "visible",
+					minHeight: "500px", // Ensure minimum height for map rendering
 				}}>
 				<MapContainer
 					center={[39.5, -96.0]} // Adjusted center to better show Florida and Maine

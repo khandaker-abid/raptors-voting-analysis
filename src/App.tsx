@@ -13,9 +13,10 @@ const App: React.FC = () => {
 					flexDirection: "column",
 					minHeight: "100vh",
 					backgroundColor: "background.default",
+					width: "100%",
 				}}>
 				<Navigation />
-				<Box component="main" sx={{ flexGrow: 1 }}>
+				<Box component="main" sx={{ flexGrow: 1, width: "100%" }}>
 					<AppRoutes />
 				</Box>
 			</Box>

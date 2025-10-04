@@ -273,18 +273,13 @@ const StateMap: React.FC<StateMapProps> = ({
 			<Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
 				{stateName} Geographic View
 			</Typography>
-			{isDetailState && detailStates.includes(stateName) && (
-				<Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
-					County boundaries with detailed data
-				</Typography>
-			)}
 			<Box
 				sx={{
 					display: "flex",
 					justifyContent: "center",
 					border: "1px solid #e0e0e0",
 					borderRadius: 2,
-					padding: 1,
+					padding: 0,
 					backgroundColor: "#fafafa",
 					height: 500,
 					width: "100%",

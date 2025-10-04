@@ -49,7 +49,6 @@ const Navigation: React.FC = () => {
 	const isComparisonPage = location.pathname.includes("comparison");
 	const isChartPage =
 		location.pathname.includes("chart") || location.pathname.includes("bubble");
-	const isResetPage = location.pathname.includes("reset");
 
 	return (
 		<AppBar
@@ -69,7 +68,7 @@ const Navigation: React.FC = () => {
 							fontWeight: 700,
 							letterSpacing: "-0.02em",
 						}}>
-						🗳️ Voting Data Explorer
+						🗳️ Raptors Voter's Compass
 					</Typography>
 					<Box sx={{ display: "flex", gap: 1 }}>
 						<Button
@@ -143,30 +142,6 @@ const Navigation: React.FC = () => {
 									: "1px solid transparent",
 							}}>
 							Charts
-						</Button>
-
-						{/* Reset Page Button */}
-						<Button
-							color="inherit"
-							component={Link}
-							to="/reset-page"
-							variant={isResetPage ? "outlined" : "text"}
-							sx={{
-								"textDecoration": "none",
-								"borderRadius": 2,
-								"px": 3,
-								"fontWeight": 600,
-								"backgroundColor": isResetPage
-									? "rgba(255,255,255,0.15)"
-									: "transparent",
-								"&:hover": {
-									backgroundColor: "rgba(255,255,255,0.1)",
-								},
-								"border": isResetPage
-									? "1px solid rgba(255,255,255,0.3)"
-									: "1px solid transparent",
-							}}>
-							Reset
 						</Button>
 
 						{/* Comparisons Menu */}

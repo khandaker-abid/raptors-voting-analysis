@@ -15,6 +15,7 @@ import {
 	InputAdornment,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import { getProvisionalBallotCategories } from "../data/provisionalBallotData";
 
 interface ProvisionalBallotTableProps {
 	data: Array<{
@@ -38,6 +39,16 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [searchTerm, setSearchTerm] = useState("");
+
+	// Get category mappings
+	const categories = useMemo(() => getProvisionalBallotCategories(), []);
+	const categoryMap = useMemo(() => {
+		const map: Record<string, string> = {};
+		categories.forEach((cat) => {
+			map[cat.key] = cat.label;
+		});
+		return map;
+	}, [categories]);
 
 	const filteredData = useMemo(() => {
 		if (!data) return [];
@@ -169,7 +180,7 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 									backgroundColor: "primary.main",
 									color: "white",
 								}}>
-								E1a (Total)
+								Total
 							</TableCell>
 							{[
 								"E2a",
@@ -190,7 +201,7 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 										backgroundColor: "primary.main",
 										color: "white",
 									}}>
-									{cat}
+									{categoryMap[cat] || cat}
 								</TableCell>
 							))}
 						</TableRow>

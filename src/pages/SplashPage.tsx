@@ -1,16 +1,22 @@
 ﻿import React from "react";
 import USMap from "../components/USMap";
-import { Container, Box } from "@mui/material";
+import { Box } from "@mui/material";
 
 const SplashPage: React.FC = () => {
 	return (
-		<Container
-			maxWidth="lg"
-			sx={{ height: "100%", display: "flex", alignItems: "center" }}>
-			<Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
-				<USMap />
-			</Box>
-		</Container>
+		<Box
+			sx={{
+				height: "calc(100vh - 65px)", // Full viewport height minus nav bar
+				width: "100%",
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "center",
+				padding: 0,
+				margin: 0,
+				overflow: "hidden",
+			}}>
+			<USMap />
+		</Box>
 	);
 };
 

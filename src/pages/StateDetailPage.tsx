@@ -1,10 +1,8 @@
 import React, { useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
-	Container,
 	Typography,
 	Box,
-	Button,
 	Paper,
 	Tabs,
 	Tab,
@@ -13,7 +11,6 @@ import {
 	AccordionSummary,
 	AccordionDetails,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
 	stateData,
@@ -68,20 +65,20 @@ function TabPanel(props: TabPanelProps) {
 	const { children, value, index, ...other } = props;
 
 	return (
-		<div
+		<Box
+			component="div"
 			role="tabpanel"
 			hidden={value !== index}
 			id={`simple-tabpanel-${index}`}
 			aria-labelledby={`simple-tab-${index}`}
 			{...other}>
-			{value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-		</div>
+			{value === index && <Box sx={{ p: 0 }}>{children}</Box>}
+		</Box>
 	);
 }
 
 const StateDetailPage: React.FC = () => {
 	const { stateName } = useParams<{ stateName: string }>();
-	const navigate = useNavigate();
 	const [tabValue, setTabValue] = React.useState(0);
 
 	// Decode the state name from URL
@@ -138,81 +135,18 @@ const StateDetailPage: React.FC = () => {
 
 	if (!stateInfo) {
 		return (
-			<Container sx={{ py: 4 }}>
+			<Box sx={{ py: 0, px: 0 }}>
 				<Alert severity="error" sx={{ mb: 2 }}>
 					State "{decodedStateName}" not found. Please select a valid state.
 				</Alert>
-				<Button
-					startIcon={<ArrowBackIcon />}
-					onClick={() => navigate("/")}
-					variant="contained">
-					Back to Map
-				</Button>
-			</Container>
+			</Box>
 		);
 	}
 
 	return (
-		<Container maxWidth="xl" sx={{ py: 4 }}>
-			<Box display="flex" alignItems="center" gap={2} mb={4}>
-				<Button
-					startIcon={<ArrowBackIcon />}
-					onClick={() => navigate("/")}
-					variant="outlined">
-					Back to Map
-				</Button>
-				<Typography
-					variant="h4"
-					component="h1"
-					sx={{
-						background: isDetail
-							? "linear-gradient(90deg, #2196F3 0%, #1976D2 100%)"
-							: "inherit",
-						WebkitBackgroundClip: isDetail ? "text" : "unset",
-						WebkitTextFillColor: isDetail ? "transparent" : "inherit",
-						fontWeight: "bold",
-					}}>
-					{stateInfo.name} Voting Analysis
-				</Typography>
-			</Box>
-
-			{/* State Overview Cards */}
-			<Box display="flex" gap={2} mb={4} flexWrap="wrap">
-				<Paper sx={{ p: 2, flex: 1, minWidth: 200 }}>
-					<Typography variant="subtitle2" color="text.secondary">
-						State Type
-					</Typography>
-					<Typography variant="h6">
-						{isDetail ? "Detailed Analysis Available" : "Basic View"}
-					</Typography>
-					{isDetail && (
-						<Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-							{getDetailStateDescription(decodedStateName)}
-						</Typography>
-					)}
-				</Paper>
-				{stateInfo.cvapPercentage && (
-					<Paper sx={{ p: 2, flex: 1, minWidth: 200 }}>
-						<Typography variant="subtitle2" color="text.secondary">
-							CVAP %
-						</Typography>
-						<Typography variant="h6">{stateInfo.cvapPercentage}%</Typography>
-					</Paper>
-				)}
-				{isDetail && (
-					<Paper sx={{ p: 2, flex: 1, minWidth: 200 }}>
-						<Typography variant="subtitle2" color="text.secondary">
-							Counties/Towns
-						</Typography>
-						<Typography variant="h6">
-							{getCountyCount(decodedStateName)}
-						</Typography>
-					</Paper>
-				)}
-			</Box>
-
+		<Box sx={{ py: 0, px: 0, width: "100%", margin: 0 }}>
 			{/* Organized Content with Category Groups */}
-			<Paper sx={{ width: "100%", mb: 2 }}>
+			<Paper sx={{ width: "100%", mb: 0 }}>
 				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
 					<Tabs
 						value={tabValue}
@@ -303,20 +237,59 @@ const StateDetailPage: React.FC = () => {
 
 				{/* Overview Tab */}
 				<TabPanel value={tabValue} index={0}>
-					<Box sx={{ p: 2 }}>
-						<Typography variant="h5" gutterBottom sx={{ mb: 1 }}>
-							📍 {decodedStateName} Overview
-						</Typography>
-						<Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-							Geographic view and general information about {decodedStateName}'s
-							voting infrastructure and administrative boundaries.
-						</Typography>
-						<Box sx={{ width: "60%", maxWidth: 600, mx: "auto" }}>
-							<StateMap
-								stateName={decodedStateName}
-								center={stateCenter}
-								isDetailState={isDetail}
-							/>
+					<Box sx={{ p: 0 }}>
+						{/* Map and State Info Side by Side */}
+						<Box display="flex" gap={3} alignItems="flex-start" flexWrap="wrap">
+							{/* Map Section */}
+							<Box sx={{ flex: 1, minWidth: 400 }}>
+								<StateMap
+									stateName={decodedStateName}
+									center={stateCenter}
+									isDetailState={isDetail}
+								/>
+							</Box>
+
+							{/* State Overview Cards */}
+							<Box sx={{ flex: 0, minWidth: 300, maxWidth: 400 }}>
+								<Box display="flex" flexDirection="column" gap={2}>
+									<Paper sx={{ p: 2 }}>
+										<Typography variant="subtitle2" color="text.secondary">
+											State Type
+										</Typography>
+										<Typography variant="h6">
+											{isDetail ? "Detailed Analysis Available" : "Basic View"}
+										</Typography>
+										{isDetail && (
+											<Typography
+												variant="body2"
+												color="text.secondary"
+												sx={{ mt: 1 }}>
+												{getDetailStateDescription(decodedStateName)}
+											</Typography>
+										)}
+									</Paper>
+									{stateInfo.cvapPercentage && (
+										<Paper sx={{ p: 2 }}>
+											<Typography variant="subtitle2" color="text.secondary">
+												CVAP %
+											</Typography>
+											<Typography variant="h6">
+												{stateInfo.cvapPercentage}%
+											</Typography>
+										</Paper>
+									)}
+									{isDetail && (
+										<Paper sx={{ p: 2 }}>
+											<Typography variant="subtitle2" color="text.secondary">
+												Counties/Towns
+											</Typography>
+											<Typography variant="h6">
+												{getCountyCount(decodedStateName)}
+											</Typography>
+										</Paper>
+									)}
+								</Box>
+							</Box>
 						</Box>
 					</Box>
 				</TabPanel>
@@ -324,82 +297,41 @@ const StateDetailPage: React.FC = () => {
 				{/* Provisional Ballots Tab */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={1}>
-						<Box sx={{ p: 2 }}>
-							<Typography variant="h5" gutterBottom sx={{ mb: 1 }}>
-								🗳️ Provisional Ballot Analysis
-							</Typography>
-							<Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-								Comprehensive analysis of provisional ballots including
-								acceptance rates, rejection reasons, and county-level
-								variations.
-							</Typography>
-
-							<Accordion
-								defaultExpanded
+						<Box sx={{ p: 0 }}>
+							<Box
 								sx={{
-									"& .MuiAccordionSummary-root": {
-										"backgroundColor": "rgba(33, 150, 243, 0.05)",
-										"&:hover": { backgroundColor: "rgba(33, 150, 243, 0.1)" },
-									},
+									display: "flex",
+									gap: 2,
+									flexDirection: { xs: "column", md: "row" },
+									alignItems: "stretch",
+									justifyContent: "space-between",
+									mb: 4,
 								}}>
-								<AccordionSummary
-									expandIcon={<ExpandMoreIcon />}
-									sx={{ "& .MuiTypography-root": { fontWeight: 600 } }}>
-									<Typography variant="h6">
-										📊 Charts & Visualizations
-									</Typography>
-								</AccordionSummary>
-								<AccordionDetails>
-									<Box
-										sx={{
-											display: "flex",
-											gap: 2,
-											flexDirection: { xs: "column", md: "row" },
-											alignItems: "stretch",
-											justifyContent: "space-between",
-										}}>
-										<Box
-											sx={{
-												flex: 1,
-												minWidth: { xs: "100%", md: "calc(50% - 8px)" },
-												maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
-											}}>
-											<ProvisionalBallotBarChart
-												data={provisionalData || []}
-												categories={getProvisionalBallotCategories()}
-											/>
-										</Box>
-										<Box
-											sx={{
-												flex: 1,
-												minWidth: { xs: "100%", md: "calc(50% - 8px)" },
-												maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
-											}}>
-											<ProvisionalBallotChoroplethMap
-												stateName={decodedStateName}
-												data={choroplethData || []}
-											/>
-										</Box>
-									</Box>
-								</AccordionDetails>
-							</Accordion>
+								<Box
+									sx={{
+										flex: 1,
+										minWidth: { xs: "100%", md: "calc(50% - 8px)" },
+										maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
+									}}>
+									<ProvisionalBallotBarChart
+										data={provisionalData || []}
+										categories={getProvisionalBallotCategories()}
+									/>
+								</Box>
+								<Box
+									sx={{
+										flex: 1,
+										minWidth: { xs: "100%", md: "calc(50% - 8px)" },
+										maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
+									}}>
+									<ProvisionalBallotChoroplethMap
+										stateName={decodedStateName}
+										data={choroplethData || []}
+									/>
+								</Box>
+							</Box>
 
-							<Accordion
-								sx={{
-									"& .MuiAccordionSummary-root": {
-										"backgroundColor": "rgba(76, 175, 80, 0.05)",
-										"&:hover": { backgroundColor: "rgba(76, 175, 80, 0.1)" },
-									},
-								}}>
-								<AccordionSummary
-									expandIcon={<ExpandMoreIcon />}
-									sx={{ "& .MuiTypography-root": { fontWeight: 600 } }}>
-									<Typography variant="h6">📋 Data Tables</Typography>
-								</AccordionSummary>
-								<AccordionDetails>
-									<ProvisionalBallotTable data={provisionalData || []} />
-								</AccordionDetails>
-							</Accordion>
+							<ProvisionalBallotTable data={provisionalData || []} />
 						</Box>
 					</TabPanel>
 				)}
@@ -407,7 +339,7 @@ const StateDetailPage: React.FC = () => {
 				{/* Active Voters Tab */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={2}>
-						<Box sx={{ p: 2 }}>
+						<Box sx={{ p: 0 }}>
 							<Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
 								👥 Active Voters Analysis
 							</Typography>
@@ -469,7 +401,7 @@ const StateDetailPage: React.FC = () => {
 				{/* Voter Registration Tab */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={3}>
-						<Box sx={{ p: 2 }}>
+						<Box sx={{ p: 0 }}>
 							<Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
 								📊 Voter Registration Analysis
 							</Typography>
@@ -480,7 +412,12 @@ const StateDetailPage: React.FC = () => {
 								</AccordionSummary>
 								<AccordionDetails>
 									<Box
-										sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+										sx={{
+											display: "flex",
+											flexDirection: "column",
+											gap: 3,
+											mb: 4,
+										}}>
 										<VoterRegistrationLineChart
 											selectedStates={[decodedStateName]}
 										/>
@@ -499,6 +436,7 @@ const StateDetailPage: React.FC = () => {
 											display: "flex",
 											flexDirection: "column",
 											gap: 3,
+											mb: 4,
 										}}>
 										<Box sx={{ width: "100%" }}>
 											<VoterRegistrationChoroplethMap
@@ -522,11 +460,7 @@ const StateDetailPage: React.FC = () => {
 								</AccordionSummary>
 								<AccordionDetails>
 									<Box
-										sx={{
-											display: "flex",
-											flexDirection: "column",
-											gap: 3,
-										}}>
+										sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
 										<Box sx={{ width: "100%" }}>
 											<VoterRegistrationTable stateName={decodedStateName} />
 										</Box>
@@ -543,7 +477,7 @@ const StateDetailPage: React.FC = () => {
 				{/* Equipment Analysis Tab */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={4}>
-						<Box sx={{ p: 2 }}>
+						<Box sx={{ p: 0 }}>
 							<Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
 								🖥️ Equipment Analysis
 							</Typography>
@@ -574,11 +508,7 @@ const StateDetailPage: React.FC = () => {
 								</AccordionSummary>
 								<AccordionDetails>
 									<Box
-										sx={{
-											display: "flex",
-											flexDirection: "column",
-											gap: 3,
-										}}>
+										sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
 										<Box sx={{ width: "100%" }}>
 											<VotingEquipmentChoroplethMap
 												stateName={decodedStateName}
@@ -611,7 +541,7 @@ const StateDetailPage: React.FC = () => {
 				{/* Data Issues Tab */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={5}>
-						<Box sx={{ p: 2 }}>
+						<Box sx={{ p: 0 }}>
 							<Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
 								⚠️ Data Quality & Issues
 							</Typography>
@@ -673,7 +603,7 @@ const StateDetailPage: React.FC = () => {
 
 				{/* Comparisons Tab */}
 				<TabPanel value={tabValue} index={isDetail ? 6 : 1}>
-					<Box sx={{ p: 2 }}>
+					<Box sx={{ p: 0 }}>
 						<Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
 							📈 National Comparisons
 						</Typography>
@@ -698,7 +628,7 @@ const StateDetailPage: React.FC = () => {
 					</Box>
 				</TabPanel>
 			</Paper>
-		</Container>
+		</Box>
 	);
 };
 

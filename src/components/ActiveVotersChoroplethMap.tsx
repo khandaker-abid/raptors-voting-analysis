@@ -3,15 +3,12 @@ import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { Paper, Typography, Box, Chip, Alert } from "@mui/material";
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
+import { getCountyCount } from "../data/stateShapes";
+import type { ActiveVotersData } from "../data/activeVotersData";
 
-interface ProvisionalBallotChoroplethMapProps {
+interface ActiveVotersChoroplethMapProps {
 	stateName: string;
-	data: Array<{
-		county: string;
-		E1a: number;
-		lat?: number;
-		lng?: number;
-	}>;
+	data: ActiveVotersData[];
 }
 
 type CountyFeature = Feature<
@@ -32,36 +29,38 @@ type CountyGeoJSONData = FeatureCollection<
 	}
 >;
 
-const ProvisionalBallotChoroplethMap: React.FC<
-	ProvisionalBallotChoroplethMapProps
-> = ({ stateName, data }) => {
+const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
+	stateName,
+	data,
+}) => {
 	const [geoData, setGeoData] = useState<FeatureCollection | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
 
-	// Calculate color scale for provisional ballots
+	// Calculate color scale for active voter percentage
 	const colorScale = useMemo(() => {
 		if (!data || data.length === 0) return null;
 
-		const values = data.map((d) => d.E1a);
-		const maxValue = Math.max(...values);
-		const minValue = Math.min(...values);
+		const percentages = data.map((d) => d.activePercentage);
+		const maxPercentage = Math.max(...percentages);
+		const minPercentage = Math.min(...percentages);
 
-		// Create a quantile scale for better distribution
+		// Create 8 color bins for active voter percentage (green scale)
 		const range = [
-			"#e3f2fd", // Very low
-			"#bbdefb", // Low
-			"#90caf9", // Below average
-			"#64b5f6", // Average
-			"#42a5f5", // Above average
-			"#2196f3", // High
-			"#1976d2", // Very high
+			"#ffebee", // Very low active %
+			"#fff3e0", // Low active %
+			"#f3e5f5", // Below average active %
+			"#e8f5e8", // Average active %
+			"#c8e6c9", // Good active %
+			"#a5d6a7", // High active %
+			"#81c784", // Very high active %
+			"#4caf50", // Excellent active %
 		];
 
 		return (value: number) => {
 			if (value === 0) return "#f5f5f5"; // Special color for no data
-			const ratio = (value - minValue) / (maxValue - minValue);
+			const ratio = (value - minPercentage) / (maxPercentage - minPercentage);
 			const index = Math.floor(ratio * (range.length - 1));
 			return range[Math.min(index, range.length - 1)];
 		};
@@ -69,19 +68,19 @@ const ProvisionalBallotChoroplethMap: React.FC<
 
 	// Create a data lookup map for efficient county data retrieval
 	const dataLookup = useMemo(() => {
-		const lookup = new Map<string, number>();
+		const lookup = new Map<string, ActiveVotersData>();
 		data.forEach((item) => {
 			// Normalize county names for better matching
 			const normalizedCounty = item.county
 				.toLowerCase()
 				.replace(/\s+/g, " ")
 				.trim();
-			lookup.set(normalizedCounty, item.E1a);
+			lookup.set(normalizedCounty, item);
 
 			// Also add without "county" suffix for broader matching
 			const withoutCounty = normalizedCounty.replace(/\s+county$/, "");
 			if (withoutCounty !== normalizedCounty) {
-				lookup.set(withoutCounty, item.E1a);
+				lookup.set(withoutCounty, item);
 			}
 		});
 		return lookup;
@@ -95,7 +94,9 @@ const ProvisionalBallotChoroplethMap: React.FC<
 			setError(null);
 
 			try {
-				console.log(`Loading county data for choropleth: ${stateName}`);
+				console.log(
+					`Loading county data for active voters choropleth: ${stateName}`,
+				);
 				const response = await fetch(
 					"/georef-united-states-of-america-county.geojson",
 				);
@@ -154,10 +155,8 @@ const ProvisionalBallotChoroplethMap: React.FC<
 				setGeoData(featureCollection);
 				setLoading(false);
 			} catch (err) {
-				console.error("Error loading choropleth map data:", err);
-				setError(
-					err instanceof Error ? err.message : "Failed to load map data",
-				);
+				console.error("Error loading county data:", err);
+				setError(err instanceof Error ? err.message : "Unknown error");
 				setLoading(false);
 			}
 		};
@@ -165,7 +164,7 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		loadMapData();
 	}, [stateName]);
 
-	// Style function for counties based on provisional ballot data
+	// Style function for counties based on active voters data
 	const getFeatureStyle = (feature?: Feature) => {
 		if (!feature || !colorScale) {
 			return {
@@ -189,55 +188,69 @@ const ProvisionalBallotChoroplethMap: React.FC<
 			.trim();
 
 		// Try multiple variations of the county name
-		let ballotCount = dataLookup.get(countyName);
-		if (ballotCount === undefined) {
+		let countyData = dataLookup.get(countyName);
+		if (!countyData) {
 			// Try without "county" suffix
 			const withoutCounty = countyName.replace(/\s+county$/, "");
-			ballotCount = dataLookup.get(withoutCounty);
+			countyData = dataLookup.get(withoutCounty);
 		}
-		if (ballotCount === undefined) {
+		if (!countyData) {
 			// Try adding "county" suffix
 			const withCounty = countyName.includes("county")
 				? countyName
 				: `${countyName} county`;
-			ballotCount = dataLookup.get(withCounty);
+			countyData = dataLookup.get(withCounty);
 		}
-		ballotCount = ballotCount || 0;
 
-		const fillColor = colorScale(ballotCount);
+		const activePercentage = countyData?.activePercentage || 0;
+		const fillColor = colorScale(activePercentage);
 
 		return {
 			fillColor,
 			weight: 1,
 			opacity: 1,
-			color: "#ffffff",
+			color: "#fff",
 			dashArray: "",
-			fillOpacity: 0.8,
+			fillOpacity: 0.7,
 		};
 	};
 
-	// Event handlers for county features
+	// Event handlers for GeoJSON features
 	const onEachFeature = (feature: Feature, layer: L.Layer) => {
 		const countyFeature = feature as CountyFeature;
-		const displayCountyName =
+		const countyName =
 			countyFeature.properties.coty_name_long?.[0] ||
 			countyFeature.properties.coty_name?.[0] ||
 			"Unknown County";
 
-		const normalizedCountyName = displayCountyName
-			.toLowerCase()
-			.replace(/\s+/g, " ")
-			.trim();
+		// Get normalized name for data lookup
+		const normalizedName = countyName.toLowerCase().replace(/\s+/g, " ").trim();
+		let countyData = dataLookup.get(normalizedName);
+		if (!countyData) {
+			const withoutCounty = normalizedName.replace(/\s+county$/, "");
+			countyData = dataLookup.get(withoutCounty);
+		}
+		if (!countyData) {
+			const withCounty = normalizedName.includes("county")
+				? normalizedName
+				: `${normalizedName} county`;
+			countyData = dataLookup.get(withCounty);
+		}
 
-		const ballotCount = dataLookup.get(normalizedCountyName) || 0;
+		const activeVoters = countyData?.activeVoters || 0;
+		const totalVoters = countyData?.totalVoters || 0;
+		const activePercentage = countyData?.activePercentage || 0;
 
-		// Create tooltip content
 		const tooltipContent = `
-			<div style="font-weight: bold; margin-bottom: 4px;">${displayCountyName}</div>
-			<div>Provisional Ballots: <span style="color: #2196f3; font-weight: bold;">${ballotCount.toLocaleString()}</span></div>
+			<div style="font-weight: bold; margin-bottom: 4px;">${countyName}</div>
+			<div>Active Voters: <span style="color: #81c784;">${activeVoters.toLocaleString()}</span></div>
+			<div>Total Voters: <span style="color: #e3f2fd;">${totalVoters.toLocaleString()}</span></div>
+			<div>Active Percentage: <span style="color: #4caf50; font-weight: bold;">${activePercentage.toFixed(
+				1,
+			)}%</span></div>
 			${
-				ballotCount === 0
-					? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">No data available</div>'
+				activePercentage === 0
+					? '<div style="color: #ffab91; font-size: 11px; margin-top: 2px;">No data available</div>'
 					: ""
 			}
 		`;
@@ -253,9 +266,9 @@ const ProvisionalBallotChoroplethMap: React.FC<
 				const targetLayer = e.target;
 				targetLayer.setStyle({
 					weight: 3,
-					color: "#333333",
+					color: "#333",
 					dashArray: "",
-					fillOpacity: 1.0,
+					fillOpacity: 0.8,
 				});
 				targetLayer.bringToFront();
 			},
@@ -266,20 +279,10 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		});
 	};
 
-	if (!data || data.length === 0) {
-		return (
-			<Paper sx={{ p: 3, textAlign: "center" }}>
-				<Typography variant="body1" color="text.secondary">
-					No provisional ballot choropleth data available for this state.
-				</Typography>
-			</Paper>
-		);
-	}
-
 	if (loading) {
 		return (
 			<Paper sx={{ p: 3, textAlign: "center" }}>
-				<Typography>Loading choropleth map data...</Typography>
+				<Typography variant="body1">Loading map data...</Typography>
 			</Paper>
 		);
 	}
@@ -287,57 +290,67 @@ const ProvisionalBallotChoroplethMap: React.FC<
 	if (error) {
 		return (
 			<Paper sx={{ p: 3 }}>
-				<Alert severity="error">{error}</Alert>
+				<Alert severity="error">
+					<Typography variant="body2">
+						Failed to load county boundaries: {error}
+					</Typography>
+				</Alert>
+			</Paper>
+		);
+	}
+
+	if (!data || data.length === 0) {
+		return (
+			<Paper sx={{ p: 3, textAlign: "center" }}>
+				<Typography variant="body1" color="text.secondary">
+					No active voters choropleth data available for this state.
+				</Typography>
 			</Paper>
 		);
 	}
 
 	if (!geoData) {
 		return (
-			<Paper sx={{ p: 3 }}>
-				<Alert severity="info">No map data available</Alert>
+			<Paper sx={{ p: 3, textAlign: "center" }}>
+				<Typography variant="body1">No geographic data available...</Typography>
 			</Paper>
 		);
 	}
 
-	const maxValue = Math.max(...data.map((d) => d.E1a));
-	const minValue = Math.min(...data.map((d) => d.E1a));
-	const totalBallots = data.reduce((sum, d) => sum + d.E1a, 0);
+	const maxPercentage = Math.max(...data.map((d) => d.activePercentage));
+	const minPercentage = Math.min(...data.map((d) => d.activePercentage));
+	const avgPercentage =
+		data.reduce((sum, d) => sum + d.activePercentage, 0) / data.length;
 
 	return (
 		<Paper sx={{ p: 3 }}>
 			<Box mb={3}>
 				<Typography variant="h6" gutterBottom fontWeight={600}>
-					Provisional Ballots Distribution - {stateName}
+					Active Voter Percentage Distribution - {stateName}
 				</Typography>
 				<Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
 					<Chip
-						label={`${data.length} Counties/Towns`}
+						label={`${getCountyCount(stateName)} Counties/Towns`}
 						size="small"
 						color="primary"
 					/>
 					<Chip
-						label={`Total: ${totalBallots.toLocaleString()} ballots`}
+						label={`Range: ${minPercentage.toFixed(
+							1,
+						)}% - ${maxPercentage.toFixed(1)}%`}
 						size="small"
 					/>
-					<Chip
-						label={`Range: ${minValue.toLocaleString()} - ${maxValue.toLocaleString()}`}
-						size="small"
-					/>
+					<Chip label={`Average: ${avgPercentage.toFixed(1)}%`} size="small" />
 				</Box>
 			</Box>
 
+			{/* Map Container */}
 			<Box
 				sx={{
-					display: "flex",
-					justifyContent: "center",
+					height: 500,
 					border: "1px solid #e0e0e0",
 					borderRadius: 2,
-					padding: 0,
-					backgroundColor: "#fafafa",
-					height: 600,
-					width: "100%",
-					margin: "0 auto",
+					overflow: "hidden",
 					mb: 3,
 				}}>
 				<MapContainer
@@ -365,11 +378,11 @@ const ProvisionalBallotChoroplethMap: React.FC<
 			{/* Color Legend */}
 			<Box>
 				<Typography variant="subtitle2" gutterBottom fontWeight={600}>
-					Color Scale (E1a - Total Provisional Ballots Cast)
+					Color Scale (Active Voter Percentage)
 				</Typography>
 				<Box display="flex" alignItems="center" gap={0.5}>
 					<Typography variant="caption" sx={{ minWidth: 50 }}>
-						{minValue}
+						{minPercentage.toFixed(1)}%
 					</Typography>
 					<Box
 						display="flex"
@@ -380,13 +393,14 @@ const ProvisionalBallotChoroplethMap: React.FC<
 						overflow="hidden">
 						{colorScale &&
 							[
-								"#e3f2fd",
-								"#bbdefb",
-								"#90caf9",
-								"#64b5f6",
-								"#42a5f5",
-								"#2196f3",
-								"#1976d2",
+								"#ffebee",
+								"#fff3e0",
+								"#f3e5f5",
+								"#e8f5e8",
+								"#c8e6c9",
+								"#a5d6a7",
+								"#81c784",
+								"#4caf50",
 							].map((color, index) => (
 								<Box
 									key={index}
@@ -401,7 +415,7 @@ const ProvisionalBallotChoroplethMap: React.FC<
 					<Typography
 						variant="caption"
 						sx={{ minWidth: 50, textAlign: "right" }}>
-						{maxValue}
+						{maxPercentage.toFixed(1)}%
 					</Typography>
 				</Box>
 				<Typography
@@ -409,12 +423,12 @@ const ProvisionalBallotChoroplethMap: React.FC<
 					color="text.secondary"
 					display="block"
 					mt={1}>
-					Interactive choropleth map showing provisional ballot distribution
-					across counties. Hover over counties for detailed information.
+					8-color scale showing percentage of active voters across
+					counties/towns
 				</Typography>
 			</Box>
 		</Paper>
 	);
 };
 
-export default ProvisionalBallotChoroplethMap;
+export default ActiveVotersChoroplethMap;
