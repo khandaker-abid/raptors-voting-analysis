@@ -11,6 +11,13 @@ import {
 	Cell,
 } from "recharts";
 
+interface TooltipData {
+	label: string;
+	description: string;
+	color: string;
+	value: number;
+}
+
 interface ProvisionalBallotBarChartProps {
 	data: Array<{
 		county: string;
@@ -63,7 +70,13 @@ const ProvisionalBallotBarChart: React.FC<ProvisionalBallotBarChartProps> = ({
 		}));
 	}, [data, categories]);
 
-	const CustomTooltip = ({ active, payload }: any) => {
+	const CustomTooltip = ({
+		active,
+		payload,
+	}: {
+		active?: boolean;
+		payload?: { payload: TooltipData }[];
+	}) => {
 		if (active && payload && payload[0]) {
 			const data = payload[0].payload;
 			return (

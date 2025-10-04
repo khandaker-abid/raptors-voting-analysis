@@ -4,6 +4,11 @@ export interface StateInfo {
 	abbreviation: string;
 	cvapPercentage?: number;
 	party?: "Republican" | "Democratic";
+	detailStateType?: {
+		registrationType: "opt-in" | "opt-out";
+		electionDayRegistration: boolean;
+		specialAnalysisType?: string;
+	};
 }
 
 export const stateData: StateInfo[] = [
@@ -13,18 +18,31 @@ export const stateData: StateInfo[] = [
 		abbreviation: "RI",
 		cvapPercentage: 78.2,
 		party: "Democratic",
+		detailStateType: {
+			registrationType: "opt-out",
+			electionDayRegistration: false,
+		},
 	},
 	{
-		name: "West Virginia",
-		abbreviation: "WV",
-		cvapPercentage: 82.5,
-		party: "Republican",
+		name: "Maryland",
+		abbreviation: "MD",
+		cvapPercentage: 81.3,
+		party: "Democratic",
+		detailStateType: {
+			registrationType: "opt-out",
+			electionDayRegistration: true,
+		},
 	},
 	{
 		name: "Arkansas",
 		abbreviation: "AR",
 		cvapPercentage: 76.8,
 		party: "Republican",
+		detailStateType: {
+			registrationType: "opt-in",
+			electionDayRegistration: false,
+			specialAnalysisType: "detailed voter registration",
+		},
 	},
 
 	// Other states
@@ -44,7 +62,6 @@ export const stateData: StateInfo[] = [
 	{ name: "Kentucky", abbreviation: "KY", party: "Republican" },
 	{ name: "Louisiana", abbreviation: "LA", party: "Republican" },
 	{ name: "Maine", abbreviation: "ME", party: "Democratic" },
-	{ name: "Maryland", abbreviation: "MD", party: "Democratic" },
 	{ name: "Massachusetts", abbreviation: "MA", party: "Democratic" },
 	{ name: "Michigan", abbreviation: "MI" },
 	{ name: "Minnesota", abbreviation: "MN", party: "Democratic" },
@@ -71,6 +88,7 @@ export const stateData: StateInfo[] = [
 	{ name: "Vermont", abbreviation: "VT", party: "Democratic" },
 	{ name: "Virginia", abbreviation: "VA", party: "Democratic" },
 	{ name: "Washington", abbreviation: "WA", party: "Democratic" },
+	{ name: "West Virginia", abbreviation: "WV", party: "Republican" },
 	{ name: "Wisconsin", abbreviation: "WI" },
 	{ name: "Wyoming", abbreviation: "WY", party: "Republican" },
 ];
@@ -128,7 +146,7 @@ export const stateCenters: Record<string, [number, number]> = {
 };
 
 // Detail states (with comprehensive data)
-export const detailStates = ["Rhode Island", "West Virginia", "Arkansas"];
+export const detailStates = ["Rhode Island", "Maryland", "Arkansas"];
 
 export const getStateCenter = (stateName: string): [number, number] => {
 	return stateCenters[stateName] || [-98.5795, 39.8283]; // Default to US center
@@ -136,4 +154,30 @@ export const getStateCenter = (stateName: string): [number, number] => {
 
 export const isDetailState = (stateName: string): boolean => {
 	return detailStates.includes(stateName);
+};
+
+export const getDetailStateDescription = (stateName: string): string => {
+	const state = stateData.find(s => s.name === stateName);
+	if (!state?.detailStateType) return "";
+
+	const { registrationType, electionDayRegistration, specialAnalysisType } = state.detailStateType;
+	const partyDominated = state.party ? `${state.party.toLowerCase()}-dominated` : "";
+
+	let description = `Voter registration ${registrationType} state`;
+
+	if (electionDayRegistration) {
+		description += " with election day registration";
+	} else {
+		description += " without election day registration";
+	}
+
+	if (partyDominated) {
+		description += `, ${partyDominated}`;
+	}
+
+	if (specialAnalysisType) {
+		description += `, ${specialAnalysisType} state`;
+	}
+
+	return description;
 };
