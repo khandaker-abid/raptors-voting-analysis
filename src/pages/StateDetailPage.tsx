@@ -24,36 +24,14 @@ import {
 	getProvisionalBallotCategories,
 	getChoroplethData,
 } from "../data/provisionalBallotData";
-import { getEquipmentData } from "../data/equipmentData";
 import { getActiveVotersData } from "../data/activeVotersData";
-import { getPollbookDeletionData } from "../data/pollbookDeletionData";
-import { generateMailBallotRejectionData } from "../data/mailBallotRejectionData";
 import StateMap from "../components/StateMap";
 import ProvisionalBallotBarChart from "../components/ProvisionalBallotBarChart";
 import ProvisionalBallotTable from "../components/ProvisionalBallotTable";
 import ProvisionalBallotChoroplethMap from "../components/ProvisionalBallotChoroplethMap";
-import EquipmentSummary from "../components/EquipmentSummary";
 import ActiveVotersBarChart from "../components/ActiveVotersBarChart";
 import ActiveVotersTable from "../components/ActiveVotersTable";
 import ActiveVotersChoroplethMap from "../components/ActiveVotersChoroplethMap";
-import PollbookDeletionBarChart from "../components/PollbookDeletionBarChart";
-import PollbookDeletionTable from "../components/PollbookDeletionTable";
-import PollbookDeletionChoroplethMap from "../components/PollbookDeletionChoroplethMap";
-import MailBallotRejectionBarChart from "../components/MailBallotRejectionBarChart";
-import MailBallotRejectionTable from "../components/MailBallotRejectionTable";
-import MailBallotRejectionChoroplethMap from "../components/MailBallotRejectionChoroplethMap";
-import VotingEquipmentChoroplethMap from "../components/VotingEquipmentChoroplethMap";
-import VotingEquipmentAgeChoroplethMap from "../components/VotingEquipmentAgeChoroplethMap";
-import VotingEquipmentRegionalTable from "../components/VotingEquipmentRegionalTable";
-import USVotingEquipmentSummary from "../components/USVotingEquipmentSummary";
-import StateEquipmentHistoryBarChart from "../components/StateEquipmentHistoryBarChart";
-import PartyComparisonTable from "../components/PartyComparisonTable";
-import VoterRegistrationLineChart from "../components/VoterRegistrationLineChart";
-import VoterRegistrationChoroplethMap from "../components/VoterRegistrationChoroplethMap";
-import VoterRegistrationTable from "../components/VoterRegistrationTable";
-import VoterRegistrationBubbleChart from "../components/VoterRegistrationBubbleChart";
-import RegisteredVotersDisplay from "../components/RegisteredVotersDisplay";
-import EAVSVotingRegionsMap from "../components/EAVSVotingRegionsMap";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -109,24 +87,9 @@ const StateDetailPage: React.FC = () => {
 		return getChoroplethData(decodedStateName);
 	}, [decodedStateName]);
 
-	// Get equipment data for detail states
-	const equipmentData = useMemo(() => {
-		return isDetail ? getEquipmentData(decodedStateName) : null;
-	}, [decodedStateName, isDetail]);
-
 	// Get active voters data for detail states
 	const activeVotersData = useMemo(() => {
 		return isDetail ? getActiveVotersData(decodedStateName) : null;
-	}, [decodedStateName, isDetail]);
-
-	// Get pollbook deletion data for detail states
-	const pollbookDeletionData = useMemo(() => {
-		return isDetail ? getPollbookDeletionData(decodedStateName) : null;
-	}, [decodedStateName, isDetail]);
-
-	// Get mail ballot rejection data for detail states
-	const mailBallotRejectionData = useMemo(() => {
-		return isDetail ? generateMailBallotRejectionData(decodedStateName) : null;
 	}, [decodedStateName, isDetail]);
 
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -194,44 +157,6 @@ const StateDetailPage: React.FC = () => {
 								}
 							/>
 						)}
-						{isDetail && (
-							<Tab
-								label={
-									<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-										<span>📊</span>
-										<span>Voter Registration</span>
-									</Box>
-								}
-							/>
-						)}
-						{isDetail && (
-							<Tab
-								label={
-									<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-										<span>🖥️</span>
-										<span>Equipment Analysis</span>
-									</Box>
-								}
-							/>
-						)}
-						{isDetail && (
-							<Tab
-								label={
-									<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-										<span>⚠️</span>
-										<span>Data Issues</span>
-									</Box>
-								}
-							/>
-						)}
-						<Tab
-							label={
-								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-									<span>📈</span>
-									<span>Comparisons</span>
-								</Box>
-							}
-						/>
 					</Tabs>
 				</Box>
 
@@ -397,236 +322,6 @@ const StateDetailPage: React.FC = () => {
 						</Box>
 					</TabPanel>
 				)}
-
-				{/* Voter Registration Tab */}
-				{isDetail && (
-					<TabPanel value={tabValue} index={3}>
-						<Box sx={{ p: 0 }}>
-							<Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-								📊 Voter Registration Analysis
-							</Typography>
-
-							<Accordion defaultExpanded>
-								<AccordionSummary expandIcon={<ExpandMoreIcon />}>
-									<Typography variant="h6">📈 Trends & Overview</Typography>
-								</AccordionSummary>
-								<AccordionDetails>
-									<Box
-										sx={{
-											display: "flex",
-											flexDirection: "column",
-											gap: 3,
-											mb: 4,
-										}}>
-										<VoterRegistrationLineChart
-											selectedStates={[decodedStateName]}
-										/>
-										<RegisteredVotersDisplay stateName={decodedStateName} />
-									</Box>
-								</AccordionDetails>
-							</Accordion>
-
-							<Accordion>
-								<AccordionSummary expandIcon={<ExpandMoreIcon />}>
-									<Typography variant="h6">🗺️ Geographic Analysis</Typography>
-								</AccordionSummary>
-								<AccordionDetails>
-									<Box
-										sx={{
-											display: "flex",
-											flexDirection: "column",
-											gap: 3,
-											mb: 4,
-										}}>
-										<Box sx={{ width: "100%" }}>
-											<VoterRegistrationChoroplethMap
-												stateName={decodedStateName}
-											/>
-										</Box>
-										<Box sx={{ width: "100%" }}>
-											<VoterRegistrationBubbleChart
-												stateName={decodedStateName}
-											/>
-										</Box>
-									</Box>
-								</AccordionDetails>
-							</Accordion>
-
-							<Accordion>
-								<AccordionSummary expandIcon={<ExpandMoreIcon />}>
-									<Typography variant="h6">
-										📋 Detailed Data & EAVS Regions
-									</Typography>
-								</AccordionSummary>
-								<AccordionDetails>
-									<Box
-										sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-										<Box sx={{ width: "100%" }}>
-											<VoterRegistrationTable stateName={decodedStateName} />
-										</Box>
-										<Box sx={{ width: "100%" }}>
-											<EAVSVotingRegionsMap stateName={decodedStateName} />
-										</Box>
-									</Box>
-								</AccordionDetails>
-							</Accordion>
-						</Box>
-					</TabPanel>
-				)}
-
-				{/* Equipment Analysis Tab */}
-				{isDetail && (
-					<TabPanel value={tabValue} index={4}>
-						<Box sx={{ p: 0 }}>
-							<Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-								🖥️ Equipment Analysis
-							</Typography>
-
-							<Accordion defaultExpanded>
-								<AccordionSummary expandIcon={<ExpandMoreIcon />}>
-									<Typography variant="h6">📊 Equipment Overview</Typography>
-								</AccordionSummary>
-								<AccordionDetails>
-									<Box
-										sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-										<EquipmentSummary
-											data={equipmentData || []}
-											stateName={decodedStateName}
-										/>
-										<StateEquipmentHistoryBarChart
-											stateName={decodedStateName}
-										/>
-									</Box>
-								</AccordionDetails>
-							</Accordion>
-
-							<Accordion>
-								<AccordionSummary expandIcon={<ExpandMoreIcon />}>
-									<Typography variant="h6">
-										🗺️ Equipment Distribution & Age
-									</Typography>
-								</AccordionSummary>
-								<AccordionDetails>
-									<Box
-										sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-										<Box sx={{ width: "100%" }}>
-											<VotingEquipmentChoroplethMap
-												stateName={decodedStateName}
-												data={equipmentData || []}
-											/>
-										</Box>
-										<Box sx={{ width: "100%" }}>
-											<VotingEquipmentAgeChoroplethMap
-												stateName={decodedStateName}
-											/>
-										</Box>
-									</Box>
-								</AccordionDetails>
-							</Accordion>
-
-							<Accordion>
-								<AccordionSummary expandIcon={<ExpandMoreIcon />}>
-									<Typography variant="h6">
-										📋 Regional Equipment Data
-									</Typography>
-								</AccordionSummary>
-								<AccordionDetails>
-									<VotingEquipmentRegionalTable stateName={decodedStateName} />
-								</AccordionDetails>
-							</Accordion>
-						</Box>
-					</TabPanel>
-				)}
-
-				{/* Data Issues Tab */}
-				{isDetail && (
-					<TabPanel value={tabValue} index={5}>
-						<Box sx={{ p: 0 }}>
-							<Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-								⚠️ Data Quality & Issues
-							</Typography>
-
-							<Accordion defaultExpanded>
-								<AccordionSummary expandIcon={<ExpandMoreIcon />}>
-									<Typography variant="h6">📚 Pollbook Deletions</Typography>
-								</AccordionSummary>
-								<AccordionDetails>
-									<Box
-										sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-										<Box sx={{ width: "100%" }}>
-											<PollbookDeletionBarChart
-												data={pollbookDeletionData || []}
-												stateName={decodedStateName}
-											/>
-										</Box>
-										<Box sx={{ width: "100%" }}>
-											<PollbookDeletionChoroplethMap
-												stateName={decodedStateName}
-												data={pollbookDeletionData || []}
-											/>
-										</Box>
-										<PollbookDeletionTable data={pollbookDeletionData || []} />
-									</Box>
-								</AccordionDetails>
-							</Accordion>
-
-							<Accordion>
-								<AccordionSummary expandIcon={<ExpandMoreIcon />}>
-									<Typography variant="h6">
-										✉️ Mail Ballot Rejections
-									</Typography>
-								</AccordionSummary>
-								<AccordionDetails>
-									<Box
-										sx={{ display: "flex", flexDirection: "column", gap: 5 }}>
-										<Box sx={{ width: "100%", mb: 2 }}>
-											<MailBallotRejectionBarChart
-												data={mailBallotRejectionData || []}
-											/>
-										</Box>
-										<Box sx={{ width: "100%", mt: 3 }}>
-											<MailBallotRejectionChoroplethMap
-												stateName={decodedStateName}
-												data={mailBallotRejectionData || []}
-											/>
-										</Box>
-										<MailBallotRejectionTable
-											data={mailBallotRejectionData || []}
-											stateName={decodedStateName}
-										/>
-									</Box>
-								</AccordionDetails>
-							</Accordion>
-						</Box>
-					</TabPanel>
-				)}
-
-				{/* Comparisons Tab */}
-				<TabPanel value={tabValue} index={isDetail ? 6 : 1}>
-					<Box sx={{ p: 0 }}>
-						<Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-							📈 National Comparisons
-						</Typography>
-
-						<Accordion defaultExpanded>
-							<AccordionSummary expandIcon={<ExpandMoreIcon />}>
-								<Typography variant="h6">🇺🇸 US Equipment Summary</Typography>
-							</AccordionSummary>
-							<AccordionDetails>
-								<USVotingEquipmentSummary />
-							</AccordionDetails>
-						</Accordion>
-
-						<Accordion>
-							<AccordionSummary expandIcon={<ExpandMoreIcon />}>
-								<Typography variant="h6">🏛️ Party Comparison</Typography>
-							</AccordionSummary>
-							<AccordionDetails>
-								<PartyComparisonTable />
-							</AccordionDetails>
-						</Accordion>
-					</Box>
-				</TabPanel>
 			</Paper>
 		</Box>
 	);
