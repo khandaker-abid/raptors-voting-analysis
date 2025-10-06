@@ -1,4 +1,5 @@
-// 2024 EAVS Active Voters data structure
+// 2024 EAVS Active Voters mock generator + helpers used by charts/maps/tables.
+
 export interface ActiveVotersData {
 	county: string;
 	totalVoters: number;
@@ -8,15 +9,14 @@ export interface ActiveVotersData {
 	inactivePercentage: number;
 }
 
-// Mock data generation based on realistic voter registration patterns
 const generateActiveVotersData = (
 	counties: string[],
-	stateName: string,
+	stateName: string
 ): ActiveVotersData[] => {
 	const stateMultipliers: Record<string, number> = {
-		"Rhode Island": 1.2, // Higher registration rate
-		"Maryland": 1.1, // High registration rate
-		"Arkansas": 0.9, // Average registration rate
+		"Rhode Island": 1.2, // higher registration density
+		"Maryland": 1.1,
+		"Arkansas": 0.9,
 	};
 
 	const baseMultiplier = stateMultipliers[stateName] || 1.0;
@@ -24,27 +24,29 @@ const generateActiveVotersData = (
 	return counties.map((county) => {
 		// Base voter population varies by county
 		const baseVoters = Math.floor(
-			(1000 + Math.random() * 15000) * baseMultiplier,
+			(1000 + Math.random() * 15000) * baseMultiplier
 		);
 
-		// Active voter percentage typically ranges from 75-95%
-		const activePercentage = 75 + Math.random() * 20;
-		const activeVoters = Math.floor(baseVoters * (activePercentage / 100));
+		// Active voter percentage typically ranges from 75–95%
+		const activePct = 75 + Math.random() * 20;
+		const activeVoters = Math.floor(baseVoters * (activePct / 100));
 		const inactiveVoters = baseVoters - activeVoters;
-		const inactivePercentage = 100 - activePercentage;
+		const inactivePct = 100 - activePct;
 
 		return {
 			county,
 			totalVoters: baseVoters,
 			activeVoters,
 			inactiveVoters,
-			activePercentage: Math.round(activePercentage * 10) / 10,
-			inactivePercentage: Math.round(inactivePercentage * 10) / 10,
+			activePercentage: Math.round(activePct * 10) / 10,
+			inactivePercentage: Math.round(inactivePct * 10) / 10,
 		};
 	});
 };
 
-// County lists for each state
+// -----------------------------
+// County lists
+// -----------------------------
 const rhodeIslandCounties = [
 	"Bristol County",
 	"Kent County",
@@ -158,14 +160,14 @@ const arkansasCounties = [
 	"Yell County",
 ];
 
+// -----------------------------
+// Public API
+// -----------------------------
 export const getActiveVotersData = (
-	stateName: string,
+	stateName: string
 ): ActiveVotersData[] | null => {
 	const detailStates = ["Rhode Island", "Maryland", "Arkansas"];
-
-	if (!detailStates.includes(stateName)) {
-		return null;
-	}
+	if (!detailStates.includes(stateName)) return null;
 
 	let counties: string[];
 	switch (stateName) {
@@ -185,43 +187,51 @@ export const getActiveVotersData = (
 	return generateActiveVotersData(counties, stateName);
 };
 
-// Helper functions
-export const getTotalActiveVoters = (data: ActiveVotersData[]): number => {
-	return data.reduce((total, county) => total + county.activeVoters, 0);
-};
+export const getTotalActiveVoters = (data: ActiveVotersData[]): number =>
+	data.reduce((total, c) => total + (c.activeVoters || 0), 0);
 
-export const getTotalInactiveVoters = (data: ActiveVotersData[]): number => {
-	return data.reduce((total, county) => total + county.inactiveVoters, 0);
-};
+export const getTotalInactiveVoters = (data: ActiveVotersData[]): number =>
+	data.reduce((total, c) => total + (c.inactiveVoters || 0), 0);
 
-export const getTotalVoters = (data: ActiveVotersData[]): number => {
-	return data.reduce((total, county) => total + county.totalVoters, 0);
-};
+export const getTotalVoters = (data: ActiveVotersData[]): number =>
+	data.reduce((total, c) => total + (c.totalVoters || 0), 0);
 
 export const getStateActivePercentage = (data: ActiveVotersData[]): number => {
 	const totalActive = getTotalActiveVoters(data);
-	const totalVoters = getTotalVoters(data);
-	return Math.round((totalActive / totalVoters) * 1000) / 10;
+	const total = getTotalVoters(data);
+	return total ? Math.round((totalActive / total) * 1000) / 10 : 0;
 };
 
+// -----------------------------
+// Chart adapter used by <ActiveVotersBarChart />
+// NOTE: We return three categories — "Active", "Inactive", and "Total" —
+// so the component can extract the chip value from the "Total" bar.
+// -----------------------------
 export const getActiveVotersChartData = (data: ActiveVotersData[]) => {
 	const totalActive = getTotalActiveVoters(data);
 	const totalInactive = getTotalInactiveVoters(data);
+	const total = totalActive + totalInactive || getTotalVoters(data);
+
+	const pct = (n: number, d: number) => (d ? Math.round((n / d) * 1000) / 10 : 0);
 
 	return [
 		{
-			category: "Active Voters",
+			category: "Active",
 			count: totalActive,
-			percentage:
-				Math.round((totalActive / (totalActive + totalInactive)) * 1000) / 10,
-			color: "#4caf50",
+			percentage: pct(totalActive, total),
+			color: "#42a5f5",
 		},
 		{
-			category: "Inactive Voters",
+			category: "Inactive",
 			count: totalInactive,
-			percentage:
-				Math.round((totalInactive / (totalActive + totalInactive)) * 1000) / 10,
-			color: "#ff9800",
+			percentage: pct(totalInactive, total),
+			color: "#ef5350",
+		},
+		{
+			category: "Total",
+			count: total,
+			percentage: 100,
+			color: "#455a64",
 		},
 	];
 };

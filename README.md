@@ -1,17 +1,29 @@
-# raptors-voting-analysis
+# Raptors Voting Analysis
 
-cse 416 project
+Interactive web app for analyzing and visualizing election administration and voter
+registration data (EAVS, voting equipment, registration trends). Built for **CSE 416**.
 
+### Languages — what we use them for
+- **Java** — Backend REST API serving EAVS/registration/equipment data
+- **Python** — ETL/preprocessing: clean EAVS CSVs, compute percentages, sort orders,
+  combine year series, block centroids & dominant party
+- **TypeScript** — Frontend logic, types, API client, React components
+- **HTML** — SPA shell (Vite)
+- **CSS** — Styling via MUI + small utilities
 
-Languages:
-Java - Server Side / Backend
-Python -
-css
-html
-Typescript
+### Libraries — how we use them
+- **React** — UI components, routing, state
+- **Recharts / Chart.js** — Bar & line charts (voters, deletions, rejections, equipment history, trends)
+- **Leaflet (+ React-Leaflet)** — Maps: state/ county choropleths, bubble overlays
+- **MUI** — Layout, tables, accordions, tabs, theming
 
-Libraries in use:
-React, d3 (chartJS if d3 doesn't work out), leaflet
+### 1) Install
+```bash
+# Node 18+ (or 20+) recommended
+npm install
+# Dev server
+npm run dev
+```
 
 # GUI
 

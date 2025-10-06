@@ -22,7 +22,27 @@ const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 	data,
 	stateName,
 }) => {
+	// Base chart data from your helper
 	const chartData = useMemo(() => getActiveVotersChartData(data), [data]);
+
+	// [PATCH]: Enforce bar order + human-readable Y ticks ----
+	const ORDER = ["Active", "Inactive", "Total"] as const;
+
+	const orderedChartData = useMemo(() => {
+		const byCat = new Map(chartData.map((d) => [d.category.toLowerCase(), d]));
+		const fallbackColors = ["#42a5f5", "#ef5350", "#455a64"]; // Active, Inactive, Total
+		return ORDER.map((label, i) => {
+			const found = byCat.get(label.toLowerCase());
+			return (
+				found ?? {
+					category: label,
+					count: 0,
+					percentage: 0,
+					color: fallbackColors[i],
+				}
+			);
+		});
+	}, [chartData]);
 
 	const CustomTooltip = ({
 		active,
@@ -67,7 +87,10 @@ const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 		);
 	}
 
-	const totalVoters = chartData.reduce((sum, item) => sum + item.count, 0);
+	// [PATCH]: read the chip from the “Total” bar
+	const totalVoters =
+		orderedChartData.find((d) => d.category.toLowerCase() === "total")
+			?.count ?? 0;
 
 	return (
 		<Paper sx={{ p: 3 }}>
@@ -89,17 +112,14 @@ const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 
 			<ResponsiveContainer width="100%" height={400}>
 				<BarChart
-					data={chartData}
-					margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+					data={orderedChartData}
+					margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+				>
 					<CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-					<XAxis
-						dataKey="category"
-						tick={{ fontSize: 12 }}
-						angle={0}
-						textAnchor="middle"
-					/>
+					<XAxis dataKey="category" tick={{ fontSize: 12 }} />
 					<YAxis
 						tick={{ fontSize: 12 }}
+						tickFormatter={(v: number) => v.toLocaleString()}
 						label={{
 							value: "Number of Voters",
 							angle: -90,
@@ -109,7 +129,7 @@ const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 					/>
 					<RechartsTooltip content={<CustomTooltip />} />
 					<Bar dataKey="count" radius={[8, 8, 0, 0]} barSize={120}>
-						{chartData.map((entry, index) => (
+						{orderedChartData.map((entry, index) => (
 							<Cell key={`cell-${index}`} fill={entry.color} />
 						))}
 					</Bar>
@@ -117,23 +137,16 @@ const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 			</ResponsiveContainer>
 
 			{/* Summary Statistics */}
-			<Box
-				mt={3}
-				display="flex"
-				gap={2}
-				flexWrap="wrap"
-				justifyContent="center">
-				{chartData.map((item) => (
+			<Box mt={3} display="flex" gap={2} flexWrap="wrap" justifyContent="center">
+				{orderedChartData.map((item) => (
 					<Chip
 						key={item.category}
-						label={`${item.category}: ${item.count.toLocaleString()} (${
-							item.percentage
-						}%)`}
+						label={`${item.category}: ${item.count.toLocaleString()} (${item.percentage}%)`}
 						size="medium"
 						sx={{
-							"backgroundColor": item.color,
-							"color": "#fff",
-							"fontWeight": 500,
+							backgroundColor: item.color,
+							color: "#fff",
+							fontWeight: 500,
 							"& .MuiChip-label": {
 								fontSize: "0.875rem",
 							},
