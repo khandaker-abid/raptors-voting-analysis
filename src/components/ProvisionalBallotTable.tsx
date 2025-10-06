@@ -70,30 +70,7 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 		setPage(0);
 	};
 
-	const getColorForValue = (value: number, max: number) => {
-		const intensity = Math.min((value / max) * 100, 100);
-		if (intensity > 75) return "#ffebee";
-		if (intensity > 50) return "#fff3e0";
-		if (intensity > 25) return "#f3e5f5";
-		return "transparent";
-	};
 
-	const maxValue = useMemo(() => {
-		if (!data || data.length === 0) return 100;
-		return Math.max(
-			...data.flatMap((row) => [
-				row.E2a,
-				row.E2b,
-				row.E2c,
-				row.E2d,
-				row.E2e,
-				row.E2f,
-				row.E2g,
-				row.E2h,
-				row.E2i,
-			]),
-		);
-	}, [data]);
 
 	const totalsByCategory = useMemo(() => {
 		if (!data || data.length === 0) return {};
@@ -209,58 +186,56 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 					<TableBody>
 						{filteredData
 							.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-							.map((row, index) => (
-								<TableRow
-									key={row.county}
-									hover
-									sx={{ "&:nth-of-type(odd)": { backgroundColor: "#fafafa" } }}>
-									<TableCell
-										component="th"
-										scope="row"
-										sx={{
-											fontWeight: 500,
-											position: "sticky",
-											left: 0,
-											backgroundColor: index % 2 === 0 ? "white" : "#fafafa",
-											zIndex: 1,
-										}}>
-										{row.county}
-									</TableCell>
-									<TableCell
-										align="right"
-										sx={{
-											fontWeight: "bold",
-											backgroundColor: "#e3f2fd",
-										}}>
-										{row.E1a.toLocaleString()}
-									</TableCell>
-									{[
-										"E2a",
-										"E2b",
-										"E2c",
-										"E2d",
-										"E2e",
-										"E2f",
-										"E2g",
-										"E2h",
-										"E2i",
-									].map((cat) => (
+							.map((row, index) => {
+								const globalIndex = page * rowsPerPage + index;
+								const rowBg = globalIndex % 2 === 0 ? "white" : "#fafafa";
+								return (
+									<TableRow key={row.county} hover>
 										<TableCell
-											key={cat}
+											component="th"
+											scope="row"
+											sx={{
+												fontWeight: 500,
+												position: "sticky",
+												left: 0,
+												backgroundColor: rowBg,
+												zIndex: 1,
+											}}>
+											{row.county}
+										</TableCell>
+										<TableCell
 											align="right"
 											sx={{
-												backgroundColor: getColorForValue(
-													row[cat as keyof typeof row] as number,
-													maxValue,
-												),
+												fontWeight: "bold",
+												backgroundColor: "#e3f2fd",
 											}}>
-											{(
-												row[cat as keyof typeof row] as number
-											).toLocaleString()}
+											{row.E1a.toLocaleString()}
 										</TableCell>
-									))}
-								</TableRow>
-							))}
+										{[
+											"E2a",
+											"E2b",
+											"E2c",
+											"E2d",
+											"E2e",
+											"E2f",
+											"E2g",
+											"E2h",
+											"E2i",
+										].map((cat) => (
+											<TableCell
+												key={cat}
+												align="right"
+												sx={{
+													backgroundColor: rowBg,
+												}}>
+												{(
+													row[cat as keyof typeof row] as number
+												).toLocaleString()}
+											</TableCell>
+											))}
+									</TableRow>
+								);
+							})}
 						{/* Totals Row */}
 						<TableRow sx={{ backgroundColor: "#f5f5f5", fontWeight: "bold" }}>
 							<TableCell

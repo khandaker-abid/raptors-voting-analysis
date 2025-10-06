@@ -6,6 +6,7 @@ import {
 	Box,
 	Container,
 } from "@mui/material";
+import logo from "../assets/raptors+compass.png";
 import { Link, useLocation } from "react-router-dom";
 
 const Navigation: React.FC = () => {
@@ -29,7 +30,13 @@ const Navigation: React.FC = () => {
 							fontWeight: 700,
 							letterSpacing: "-0.02em",
 						}}>
-						🗳️ Raptors Voter's Compass
+						<Box
+							component="img"
+							src={logo}
+							alt="Raptors Compass"
+							sx={{ height: 70, width: 70, mr: 1.5, display: "inline-block", verticalAlign: "middle", borderRadius: 1, objectFit: 'cover' }}
+						/>
+						Raptors Voter's Compass
 					</Typography>
 					<Box sx={{ display: "flex", gap: 1 }}>
 						<Button

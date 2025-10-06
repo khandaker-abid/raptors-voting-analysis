@@ -46,16 +46,15 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 		const maxPercentage = Math.max(...percentages);
 		const minPercentage = Math.min(...percentages);
 
-		// Create 8 color bins for active voter percentage (green scale)
+		// Use the same blue color bins as the provisional ballot choropleth
 		const range = [
-			"#ffebee", // Very low active %
-			"#fff3e0", // Low active %
-			"#f3e5f5", // Below average active %
-			"#e8f5e8", // Average active %
-			"#c8e6c9", // Good active %
-			"#a5d6a7", // High active %
-			"#81c784", // Very high active %
-			"#4caf50", // Excellent active %
+			"#e3f2fd", // Very low
+			"#bbdefb", // Low
+			"#90caf9", // Below average
+			"#64b5f6", // Average
+			"#42a5f5", // Above average
+			"#2196f3", // High
+			"#1976d2", // Very high
 		];
 
 		return (value: number) => {
@@ -243,14 +242,14 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 
 		const tooltipContent = `
 			<div style="font-weight: bold; margin-bottom: 4px;">${countyName}</div>
-			<div>Active Voters: <span style="color: #81c784;">${activeVoters.toLocaleString()}</span></div>
-			<div>Total Voters: <span style="color: #e3f2fd;">${totalVoters.toLocaleString()}</span></div>
-			<div>Active Percentage: <span style="color: #4caf50; font-weight: bold;">${activePercentage.toFixed(
+			<div>Active Voters: <span style="color: #2196f3;">${activeVoters.toLocaleString()}</span></div>
+			<div>Total Voters: <span style="color: #90caf9;">${totalVoters.toLocaleString()}</span></div>
+			<div>Active Percentage: <span style="color: #1976d2; font-weight: bold;">${activePercentage.toFixed(
 				1,
 			)}%</span></div>
 			${
 				activePercentage === 0
-					? '<div style="color: #ffab91; font-size: 11px; margin-top: 2px;">No data available</div>'
+					? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">No data available</div>'
 					: ""
 			}
 		`;
@@ -393,14 +392,13 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 						overflow="hidden">
 						{colorScale &&
 							[
-								"#ffebee",
-								"#fff3e0",
-								"#f3e5f5",
-								"#e8f5e8",
-								"#c8e6c9",
-								"#a5d6a7",
-								"#81c784",
-								"#4caf50",
+								"#e3f2fd",
+								"#bbdefb",
+								"#90caf9",
+								"#64b5f6",
+								"#42a5f5",
+								"#2196f3",
+								"#1976d2",
 							].map((color, index) => (
 								<Box
 									key={index}
