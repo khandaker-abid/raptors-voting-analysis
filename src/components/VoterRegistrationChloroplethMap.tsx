@@ -3,8 +3,10 @@ import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { Paper, Typography, Box, Chip, Alert } from "@mui/material";
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
+import type { StateVoterRegistrationData } from "../data/stateVoterRegistrationData";
+import { getStateVoterRegistrationData } from "../data/stateVoterRegistrationData";
 
-interface ProvisionalBallotChoroplethMapProps {
+interface VoterRegistrationChloroplethMapProps {
 	stateName: string;
 	data: Array<{
 		county: string;
@@ -32,19 +34,33 @@ type CountyGeoJSONData = FeatureCollection<
 	}
 >;
 
-const ProvisionalBallotChoroplethMap: React.FC<
-	ProvisionalBallotChoroplethMapProps
-> = ({ stateName, data }) => {
+const VoterRegistrationChloroplethMap: React.FC<
+	VoterRegistrationChloroplethMapProps
+> = ({ stateName }) => {
+
+	const [data, setData] = useState<StateVoterRegistrationData[]>([]);
 	const [geoData, setGeoData] = useState<FeatureCollection | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
 
-	// Calculate color scale for provisional ballots
+	useEffect(() => {
+		const fetchData = async () => {
+		try {
+			const result = await getStateVoterRegistrationData(stateName);
+			setData(Array.isArray(result) ? result : []);
+		} catch (error) {
+			console.error('Error fetching voting equipment data:', error);
+		}
+		};
+		fetchData();
+	}, []);
+
+	// Calculate color scale for registered voters
 	const colorScale = useMemo(() => {
 		if (!data || data.length === 0) return null;
 
-		const values = data.map((d) => d.E1a);
+		const values = data.map((d) => d.registeredVoterCount);
 		const maxValue = Math.max(...values);
 		const minValue = Math.min(...values);
 
@@ -72,16 +88,16 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		const lookup = new Map<string, number>();
 		data.forEach((item) => {
 			// Normalize county names for better matching
-			const normalizedCounty = item.county
+			const normalizedCounty = item.regionName
 				.toLowerCase()
 				.replace(/\s+/g, " ")
 				.trim();
-			lookup.set(normalizedCounty, item.E1a);
+			lookup.set(normalizedCounty, item.registeredVoterCount);
 
 			// Also add without "county" suffix for broader matching
 			const withoutCounty = normalizedCounty.replace(/\s+county$/, "");
 			if (withoutCounty !== normalizedCounty) {
-				lookup.set(withoutCounty, item.E1a);
+				lookup.set(withoutCounty, item.registeredVoterCount);
 			}
 		});
 		return lookup;
@@ -165,7 +181,7 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		loadMapData();
 	}, [stateName]);
 
-	// Style function for counties based on provisional ballot data
+	// Style function for counties based on registered voter data
 	const getFeatureStyle = (feature?: Feature) => {
 		if (!feature || !colorScale) {
 			return {
@@ -189,22 +205,22 @@ const ProvisionalBallotChoroplethMap: React.FC<
 			.trim();
 
 		// Try multiple variations of the county name
-		let ballotCount = dataLookup.get(countyName);
-		if (ballotCount === undefined) {
+		let voterCount = dataLookup.get(countyName);
+		if (voterCount === undefined) {
 			// Try without "county" suffix
 			const withoutCounty = countyName.replace(/\s+county$/, "");
-			ballotCount = dataLookup.get(withoutCounty);
+			voterCount = dataLookup.get(withoutCounty);
 		}
-		if (ballotCount === undefined) {
+		if (voterCount === undefined) {
 			// Try adding "county" suffix
 			const withCounty = countyName.includes("county")
 				? countyName
 				: `${countyName} county`;
-			ballotCount = dataLookup.get(withCounty);
+			voterCount = dataLookup.get(withCounty);
 		}
-		ballotCount = ballotCount || 0;
+		voterCount = voterCount || 0;
 
-		const fillColor = colorScale(ballotCount);
+		const fillColor = colorScale(voterCount);
 
 		return {
 			fillColor,
@@ -227,16 +243,20 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		const normalizedCountyName = displayCountyName
 			.toLowerCase()
 			.replace(/\s+/g, " ")
-			.trim();
+			.trim()
+			.split(" ")
+			.slice(0,-1).join(" ");
 
-		const ballotCount = dataLookup.get(normalizedCountyName) || 0;
+		console.log(dataLookup)
+		console.log(normalizedCountyName)
+		const voterCount = dataLookup.get(normalizedCountyName) || 0;
 
 		// Create tooltip content
 		const tooltipContent = `
 			<div style="font-weight: bold; margin-bottom: 4px;">${displayCountyName}</div>
-			<div>Provisional Ballots: <span style="color: #2196f3; font-weight: bold;">${ballotCount.toLocaleString()}</span></div>
+			<div>Registered Voters: <span style="color: #2196f3; font-weight: bold;">${voterCount.toLocaleString()}</span></div>
 			${
-				ballotCount === 0
+				voterCount === 0
 					? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">No data available</div>'
 					: ""
 			}
@@ -300,15 +320,15 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		);
 	}
 
-	const maxValue = Math.max(...data.map((d) => d.E1a));
-	const minValue = Math.min(...data.map((d) => d.E1a));
-	const totalBallots = data.reduce((sum, d) => sum + d.E1a, 0);
+	const maxValue = Math.max(...data.map((d) => d.registeredVoterCount));
+	const minValue = Math.min(...data.map((d) => d.registeredVoterCount));
+	const totalVotes = data.reduce((sum, d) => sum + d.registeredVoterCount, 0);
 
 	return (
 		<Paper sx={{ p: 3 }}>
 			<Box mb={3}>
 				<Typography variant="h6" gutterBottom fontWeight={600}>
-					Provisional Ballots Distribution - {stateName}
+					Registered Voters Distribution - {stateName}
 				</Typography>
 				<Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
 					<Chip
@@ -317,7 +337,7 @@ const ProvisionalBallotChoroplethMap: React.FC<
 						color="primary"
 					/>
 					<Chip
-						label={`Total: ${totalBallots.toLocaleString()} ballots`}
+						label={`Total: ${totalVotes.toLocaleString()} voters`}
 						size="small"
 					/>
 					<Chip
@@ -365,7 +385,7 @@ const ProvisionalBallotChoroplethMap: React.FC<
 			{/* Color Legend */}
 			<Box>
 				<Typography variant="subtitle2" gutterBottom fontWeight={600}>
-					Color Scale (E1a - Total Provisional Ballots Cast)
+					Color Scale (Total Registered Voters)
 				</Typography>
 				<Box display="flex" alignItems="center" gap={0.5}>
 					<Typography variant="caption" sx={{ minWidth: 50 }}>
@@ -417,4 +437,4 @@ const ProvisionalBallotChoroplethMap: React.FC<
 	);
 };
 
-export default ProvisionalBallotChoroplethMap;
+export default VoterRegistrationChloroplethMap;

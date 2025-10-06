@@ -347,7 +347,7 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 			{/* Map Container */}
 			<Box
 				sx={{
-					height: 500,
+					height: 400,
 					border: "1px solid #e0e0e0",
 					borderRadius: 2,
 					overflow: "hidden",

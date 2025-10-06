@@ -32,6 +32,9 @@ import ProvisionalBallotChoroplethMap from "../components/ProvisionalBallotChoro
 import ActiveVotersBarChart from "../components/ActiveVotersBarChart";
 import ActiveVotersTable from "../components/ActiveVotersTable";
 import ActiveVotersChoroplethMap from "../components/ActiveVotersChoroplethMap";
+import StateVotingEquipmentTable from "../components/StateVotingEquipmentTable";
+import StateVoterRegistrationTable from "../components/StateVoterRegistrationTable";
+import VoterRegistrationChloroplethMap from "../components/VoterRegistrationChloroplethMap";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -153,6 +156,24 @@ const StateDetailPage: React.FC = () => {
 									<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 										<span>👥</span>
 										<span>Active Voters</span>
+									</Box>
+								}
+							/>
+						)}
+						<Tab
+							label={
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									<span>📟</span>
+									<span>Voting Equipment</span>
+								</Box>
+							}
+						/>
+						{isDetail && (
+							<Tab
+								label={
+									<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+										<span>📥</span>
+										<span>Voter Registration Data</span>
 									</Box>
 								}
 							/>
@@ -322,9 +343,60 @@ const StateDetailPage: React.FC = () => {
 						</Box>
 					</TabPanel>
 				)}
+
+				{/* Voting Equipment Tab */}
+				<TabPanel value={tabValue} index={isDetail ? 3 : 1}>
+					<Box sx={{ p: 0}}>
+						<StateVotingEquipmentTable stateName={stateName ? stateName : ""} />
+					</Box>
+				</TabPanel>
+
+				{/* Voter Registration Data Tab */}
+				{isDetail && (
+					<TabPanel value={tabValue} index={4}>
+						<Box sx={{ p: 0 }}>
+							<Box
+								sx={{
+									display: "flex",
+									gap: 2,
+									flexDirection: { xs: "column", md: "row" },
+									alignItems: "stretch",
+									justifyContent: "space-between",
+									mb: 4,
+								}}>
+								<Box
+									sx={{
+										flex: 1,
+										minWidth: { xs: "100%", md: "calc(50% - 8px)" },
+										maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
+									}}>
+									<StateVoterRegistrationTable stateName={stateName ? stateName : ""}/>
+								</Box>
+								<Box
+									sx={{
+										flex: 1,
+										minWidth: { xs: "100%", md: "calc(50% - 8px)" },
+										maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
+									}}>
+									<VoterRegistrationChloroplethMap
+										stateName={decodedStateName}
+										data={choroplethData || []}
+									/>
+								</Box>
+							</Box>
+						</Box>
+					</TabPanel>
+				)}
 			</Paper>
 		</Box>
 	);
 };
 
 export default StateDetailPage;
+
+									// <Paper sx={{ p: 2 }}>
+									// 	<Typography variant="subtitle2" color="text.secondary">
+									// 		Counties/Towns
+									// 	</Typography>
+									// 	<StateVotingEquipmentTable stateName={stateName ? stateName : ""} />
+									// </Paper>

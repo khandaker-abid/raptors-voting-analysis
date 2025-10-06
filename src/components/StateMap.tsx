@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
-import { Box, Typography, Paper, Alert } from "@mui/material";
+import { MapContainer, TileLayer, GeoJSON} from "react-leaflet";
+import { Box, Typography, Paper, Alert, Dialog, DialogContent, DialogTitle, IconButton  } from "@mui/material";
+import CloseIcon from '@mui/icons-material/Close';
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
+import RegionRegisteredVotersTable from "./RegionRegisteredVotersTable";
 
 type CountyFeature = Feature<
 	Geometry,
@@ -41,6 +43,7 @@ const StateMap: React.FC<StateMapProps> = ({
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
+	const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
 	useEffect(() => {
 		const loadMapData = async () => {
@@ -210,6 +213,11 @@ const StateMap: React.FC<StateMapProps> = ({
 					const targetLayer = e.target;
 					targetLayer.setStyle(getFeatureStyle(feature));
 				},
+				click: (e) => {
+					const targetLayer = e.target;
+					// Set popup info with county name and click coordinates
+					setSelectedRegion(countyName);
+				}
 			});
 		} else {
 			// State feature handling
@@ -268,6 +276,10 @@ const StateMap: React.FC<StateMapProps> = ({
 		);
 	}
 
+	const handleClose = () => {
+		setSelectedRegion(null);
+  	};
+
 	return (
 		<Paper elevation={2} sx={{ p: 3, textAlign: "center" }}>
 			<Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
@@ -305,6 +317,30 @@ const StateMap: React.FC<StateMapProps> = ({
 					/>
 				</MapContainer>
 			</Box>
+			<Dialog
+				open={!!selectedRegion}
+				onClose={handleClose}
+				maxWidth="lg" 
+				fullWidth={false}
+				
+				PaperProps={{
+				sx: {
+					width: '900px', 
+					maxHeight: '900px', 
+					m: 'auto',
+				},
+				}}
+			>
+				<DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+					All Registered Voters in {selectedRegion || 'All Counties'} 
+					<IconButton onClick={handleClose}>
+						<CloseIcon />
+					</IconButton>
+				</DialogTitle>
+				<DialogContent sx={{ p: 0, overflowY: 'auto' }}>
+				{selectedRegion && <RegionRegisteredVotersTable geographicUnitName={selectedRegion.split(" ").slice(0,-1).join(" ")} />}
+				</DialogContent>
+			</Dialog>
 		</Paper>
 	);
 };

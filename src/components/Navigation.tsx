@@ -56,6 +56,78 @@ const Navigation: React.FC = () => {
 							}}>
 							Home
 						</Button>
+						<Button
+							color="inherit"
+							component={Link}
+							to="/per-state-voting-equipment"
+							variant={location.pathname === "/per-state-voting-equipment" ? "outlined" : "text"}
+							sx={{
+								"textDecoration": "none",
+								"borderRadius": 2,
+								"px": 3,
+								"fontWeight": 600,
+								"backgroundColor":
+									location.pathname === "/per-state-voting-equipment"
+										? "rgba(255,255,255,0.15)"
+										: "transparent",
+								"&:hover": {
+									backgroundColor: "rgba(255,255,255,0.1)",
+								},
+								"border":
+									location.pathname === "/per-state-voting-equipment"
+										? "1px solid rgba(255,255,255,0.3)"
+										: "1px solid transparent",
+							}}>
+							State Voting Equipment
+						</Button>
+						<Button
+							color="inherit"
+							component={Link}
+							to="/voting-equipment-summary"
+							variant={location.pathname === "/voting-equipment-summary" ? "outlined" : "text"}
+							sx={{
+								"textDecoration": "none",
+								"borderRadius": 2,
+								"px": 3,
+								"fontWeight": 600,
+								"backgroundColor":
+									location.pathname === "/voting-equipment-summary"
+										? "rgba(255,255,255,0.15)"
+										: "transparent",
+								"&:hover": {
+									backgroundColor: "rgba(255,255,255,0.1)",
+								},
+								"border":
+									location.pathname === "/voting-equipment-summary"
+										? "1px solid rgba(255,255,255,0.3)"
+										: "1px solid transparent",
+							}}>
+							Voting Equipment Summary
+						</Button>
+						<Button
+							color="inherit"
+							component={Link}
+							to="/party-comparison"
+							variant={location.pathname === "/party-comparison" ? "outlined" : "text"}
+							sx={{
+								"textDecoration": "none",
+								"borderRadius": 2,
+								"px": 3,
+								"fontWeight": 600,
+								"backgroundColor":
+									location.pathname === "/party-comparison"
+										? "rgba(255,255,255,0.15)"
+										: "transparent",
+								"&:hover": {
+									backgroundColor: "rgba(255,255,255,0.1)",
+								},
+								"border":
+									location.pathname === "/party-comparison"
+										? "1px solid rgba(255,255,255,0.3)"
+										: "1px solid transparent",
+							}}>
+							Compare Parties
+						</Button>
 					</Box>
 				</Toolbar>
 			</Container>
