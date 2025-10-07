@@ -3,6 +3,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 import { Box } from "@mui/material";
 import Navigation from "./components/Navigation";
 import AppRoutes from "./routes";
+import Footer from "./components/Footer";
 
 const App: React.FC = () => {
 	return (
@@ -13,12 +14,12 @@ const App: React.FC = () => {
 					flexDirection: "column",
 					minHeight: "100vh",
 					backgroundColor: "background.default",
-					width: "100%",
 				}}>
 				<Navigation />
-				<Box component="main" sx={{ flexGrow: 1, width: "100%" }}>
+				<Box component="main" sx={{ flexGrow: 1 }}>
 					<AppRoutes />
 				</Box>
+				<Footer />
 			</Box>
 		</Router>
 	);
