@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useMemo } from "react";
-import * as d3 from "d3";
-import { Paper, Typography, Box, Chip } from "@mui/material";
-import { getCountyCount, getStateShape } from "../data/stateShapes";
+import React, { useEffect, useState, useMemo } from "react";
+import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
+import { Paper, Typography, Box, Chip, Alert } from "@mui/material";
+import L from "leaflet";
+import type { Feature, FeatureCollection, Geometry } from "geojson";
 
 interface ProvisionalBallotChoroplethMapProps {
 	stateName: string;
@@ -13,12 +14,33 @@ interface ProvisionalBallotChoroplethMapProps {
 	}>;
 }
 
+type CountyFeature = Feature<
+	Geometry,
+	{
+		ste_name: string[];
+		coty_name: string[];
+		coty_name_long: string[];
+	}
+>;
+
+type CountyGeoJSONData = FeatureCollection<
+	Geometry,
+	{
+		ste_name: string[];
+		coty_name: string[];
+		coty_name_long: string[];
+	}
+>;
+
 const ProvisionalBallotChoroplethMap: React.FC<
 	ProvisionalBallotChoroplethMapProps
 > = ({ stateName, data }) => {
-	const svgRef = useRef<SVGSVGElement>(null);
+	const [geoData, setGeoData] = useState<FeatureCollection | null>(null);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
 
-	// Calculate color scale
+	// Calculate color scale for provisional ballots
 	const colorScale = useMemo(() => {
 		if (!data || data.length === 0) return null;
 
@@ -26,220 +48,254 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		const maxValue = Math.max(...values);
 		const minValue = Math.min(...values);
 
-		// Create 7 color bins for monochromatic scale
-		return d3
-			.scaleQuantize<string>()
-			.domain([minValue, maxValue])
-			.range([
-				"#e3f2fd",
-				"#bbdefb",
-				"#90caf9",
-				"#64b5f6",
-				"#42a5f5",
-				"#2196f3",
-				"#1976d2",
-			]);
+		// Create a quantile scale for better distribution
+		const range = [
+			"#e3f2fd", // Very low
+			"#bbdefb", // Low
+			"#90caf9", // Below average
+			"#64b5f6", // Average
+			"#42a5f5", // Above average
+			"#2196f3", // High
+			"#1976d2", // Very high
+		];
+
+		return (value: number) => {
+			if (value === 0) return "#f5f5f5"; // Special color for no data
+			const ratio = (value - minValue) / (maxValue - minValue);
+			const index = Math.floor(ratio * (range.length - 1));
+			return range[Math.min(index, range.length - 1)];
+		};
+	}, [data]);
+
+	// Create a data lookup map for efficient county data retrieval
+	const dataLookup = useMemo(() => {
+		const lookup = new Map<string, number>();
+		data.forEach((item) => {
+			// Normalize county names for better matching
+			const normalizedCounty = item.county
+				.toLowerCase()
+				.replace(/\s+/g, " ")
+				.trim();
+			lookup.set(normalizedCounty, item.E1a);
+
+			// Also add without "county" suffix for broader matching
+			const withoutCounty = normalizedCounty.replace(/\s+county$/, "");
+			if (withoutCounty !== normalizedCounty) {
+				lookup.set(withoutCounty, item.E1a);
+			}
+		});
+		return lookup;
 	}, [data]);
 
 	useEffect(() => {
-		if (!svgRef.current || !data || data.length === 0 || !colorScale) return;
+		const loadMapData = async () => {
+			if (!stateName) return;
 
-		const width = 800;
-		const height = 600;
+			setLoading(true);
+			setError(null);
 
-		// Clear previous content
-		d3.select(svgRef.current).selectAll("*").remove();
-
-		// Create SVG
-		const svg = d3
-			.select(svgRef.current)
-			.attr("width", width)
-			.attr("height", height)
-			.attr("viewBox", `0 0 ${width} ${height}`)
-			.attr("preserveAspectRatio", "xMidYMid meet")
-			.style("background", "#f9f9f9");
-
-		// Get state shape data with county boundaries
-		const stateShape = getStateShape(stateName);
-		const hasCountyBoundaries =
-			stateShape.counties && stateShape.counties.length > 0;
-
-		const g = svg.append("g");
-
-		// Create tooltip
-		const tooltip = d3
-			.select("body")
-			.append("div")
-			.attr("class", "choropleth-tooltip")
-			.style("position", "absolute")
-			.style("padding", "12px")
-			.style("background", "rgba(0, 0, 0, 0.9)")
-			.style("color", "white")
-			.style("border-radius", "8px")
-			.style("pointer-events", "none")
-			.style("opacity", 0)
-			.style("font-size", "13px")
-			.style("box-shadow", "0 4px 12px rgba(0,0,0,0.3)")
-			.style("z-index", "9999");
-
-		if (hasCountyBoundaries) {
-			// Use actual county boundaries
-			const [vx, vy, vw, vh] = stateShape.viewBox.split(" ").map(Number);
-
-			// Calculate scale and translation to fit in the container
-			const padding = 50;
-			const scaleX = (width - padding * 2) / vw;
-			const scaleY = (height - padding * 2) / vh;
-			const scale = Math.min(scaleX, scaleY);
-
-			const translateX = (width - vw * scale) / 2;
-			const translateY = (height - vh * scale) / 2;
-
-			g.attr(
-				"transform",
-				`translate(${translateX - vx * scale}, ${
-					translateY - vy * scale
-				}) scale(${scale})`,
-			);
-
-			// Draw state outline first
-			g.append("path")
-				.attr("d", stateShape.path)
-				.attr("fill", "none")
-				.attr("stroke", "#666")
-				.attr("stroke-width", 2)
-				.attr("opacity", 0.3);
-
-			// Draw counties with choropleth coloring
-			if (stateShape.counties) {
-				stateShape.counties.forEach((county) => {
-					const countyData = data.find((d) => d.county === county.name);
-					const fillColor = countyData ? colorScale(countyData.E1a) : "#f0f0f0";
-					const ballotCount = countyData?.E1a || 0;
-
-					g.append("path")
-						.attr("d", county.path)
-						.attr("fill", fillColor)
-						.attr("stroke", "#fff")
-						.attr("stroke-width", 1.5)
-						.style("cursor", "pointer")
-						.style("transition", "all 0.2s ease")
-						.on("mouseover", function (event) {
-							d3.select(this)
-								.attr("stroke", "#333")
-								.attr("stroke-width", 3)
-								.attr("filter", "drop-shadow(2px 2px 4px rgba(0,0,0,0.3))");
-
-							tooltip
-								.style("opacity", 1)
-								.html(
-									`
-									<div style="font-weight: bold; margin-bottom: 4px;">${county.name} County</div>
-									<div>Provisional Ballots: <span style="color: #81c784;">${ballotCount.toLocaleString()}</span></div>
-									${
-										ballotCount === 0
-											? '<div style="color: #ffab91; font-size: 11px; margin-top: 2px;">No data available</div>'
-											: ""
-									}
-								`,
-								)
-								.style("left", event.pageX + 10 + "px")
-								.style("top", event.pageY - 10 + "px");
-						})
-						.on("mouseout", function () {
-							d3.select(this)
-								.attr("stroke", "#fff")
-								.attr("stroke-width", 1.5)
-								.attr("filter", "none");
-
-							tooltip.style("opacity", 0);
-						});
-				});
-			}
-		} else {
-			// Fallback to grid layout for states without county boundary data
-			const gridSize = Math.ceil(Math.sqrt(data.length));
-			const cellWidth = width / gridSize;
-			const cellHeight = height / gridSize;
-
-			g.selectAll("rect")
-				.data(data)
-				.enter()
-				.append("rect")
-				.attr("x", (_d, i) => (i % gridSize) * cellWidth + 10)
-				.attr("y", (_d, i) => Math.floor(i / gridSize) * cellHeight + 10)
-				.attr("width", cellWidth - 20)
-				.attr("height", cellHeight - 20)
-				.attr("fill", (d) => colorScale(d.E1a))
-				.attr("stroke", "#fff")
-				.attr("stroke-width", 2)
-				.attr("rx", 8)
-				.style("cursor", "pointer")
-				.style("transition", "all 0.2s ease")
-				.on("mouseover", function (event, d) {
-					d3.select(this)
-						.attr("stroke", "#333")
-						.attr("stroke-width", 3)
-						.attr("filter", "drop-shadow(2px 2px 4px rgba(0,0,0,0.3))");
-
-					tooltip
-						.style("opacity", 1)
-						.html(
-							`
-							<div style="font-weight: bold; margin-bottom: 4px;">${d.county}</div>
-							<div>Provisional Ballots: <span style="color: #81c784;">${d.E1a.toLocaleString()}</span></div>
-						`,
-						)
-						.style("left", event.pageX + 10 + "px")
-						.style("top", event.pageY - 10 + "px");
-				})
-				.on("mouseout", function () {
-					d3.select(this)
-						.attr("stroke", "#fff")
-						.attr("stroke-width", 2)
-						.attr("filter", "none");
-
-					tooltip.style("opacity", 0);
-				});
-
-			// Add county labels for grid layout
-			g.selectAll("text")
-				.data(data)
-				.enter()
-				.append("text")
-				.attr("x", (_d, i) => (i % gridSize) * cellWidth + cellWidth / 2)
-				.attr(
-					"y",
-					(_d, i) => Math.floor(i / gridSize) * cellHeight + cellHeight / 2,
-				)
-				.attr("text-anchor", "middle")
-				.attr("dominant-baseline", "middle")
-				.attr("font-size", "10px")
-				.attr("font-weight", "600")
-				.attr("fill", (d) => {
-					const color = colorScale(d.E1a);
-					const rgb = d3.rgb(color);
-					const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
-					return brightness > 128 ? "#333" : "#fff";
-				})
-				.attr("pointer-events", "none")
-				.text((d) =>
-					d.county.length > 8 ? d.county.substring(0, 6) + "..." : d.county,
+			try {
+				console.log(`Loading county data for choropleth: ${stateName}`);
+				const response = await fetch(
+					"/georef-united-states-of-america-county.geojson",
 				);
+
+				if (!response.ok) {
+					throw new Error(
+						`Failed to fetch county data: ${response.statusText}`,
+					);
+				}
+
+				const countyData = (await response.json()) as CountyGeoJSONData;
+
+				if (!countyData || !countyData.features) {
+					throw new Error("County GeoJSON data is invalid or empty");
+				}
+
+				// Filter counties by state name
+				const features = countyData.features.filter(
+					(feature: CountyFeature) =>
+						feature.properties.ste_name &&
+						feature.properties.ste_name.includes(stateName),
+				);
+
+				console.log(`Found ${features.length} counties for ${stateName}`);
+
+				if (features.length === 0) {
+					throw new Error(`No county data found for ${stateName}`);
+				}
+
+				// Create FeatureCollection for the map
+				const featureCollection: FeatureCollection = {
+					type: "FeatureCollection",
+					features: features,
+				};
+
+				// Calculate bounds for the map
+				const bounds = new L.LatLngBounds([]);
+				features.forEach((feature) => {
+					if (feature.geometry.type === "Polygon") {
+						feature.geometry.coordinates[0].forEach((coord) => {
+							bounds.extend([coord[1], coord[0]]); // [lat, lng]
+						});
+					} else if (feature.geometry.type === "MultiPolygon") {
+						feature.geometry.coordinates.forEach((polygon) => {
+							polygon[0].forEach((coord) => {
+								bounds.extend([coord[1], coord[0]]); // [lat, lng]
+							});
+						});
+					}
+				});
+
+				// Add padding to the bounds
+				const paddedBounds = bounds.pad(0.1);
+				setMapBounds(paddedBounds);
+
+				setGeoData(featureCollection);
+				setLoading(false);
+			} catch (err) {
+				console.error("Error loading choropleth map data:", err);
+				setError(
+					err instanceof Error ? err.message : "Failed to load map data",
+				);
+				setLoading(false);
+			}
+		};
+
+		loadMapData();
+	}, [stateName]);
+
+	// Style function for counties based on provisional ballot data
+	const getFeatureStyle = (feature?: Feature) => {
+		if (!feature || !colorScale) {
+			return {
+				fillColor: "#f5f5f5",
+				weight: 1,
+				opacity: 1,
+				color: "#bdbdbd",
+				dashArray: "",
+				fillOpacity: 0.7,
+			};
 		}
 
-		// Cleanup function
-		return () => {
-			d3.select("body").selectAll(".choropleth-tooltip").remove();
+		const countyFeature = feature as CountyFeature;
+		const countyName = (
+			countyFeature.properties.coty_name_long?.[0] ||
+			countyFeature.properties.coty_name?.[0] ||
+			"Unknown County"
+		)
+			.toLowerCase()
+			.replace(/\s+/g, " ")
+			.trim();
+
+		// Try multiple variations of the county name
+		let ballotCount = dataLookup.get(countyName);
+		if (ballotCount === undefined) {
+			// Try without "county" suffix
+			const withoutCounty = countyName.replace(/\s+county$/, "");
+			ballotCount = dataLookup.get(withoutCounty);
+		}
+		if (ballotCount === undefined) {
+			// Try adding "county" suffix
+			const withCounty = countyName.includes("county")
+				? countyName
+				: `${countyName} county`;
+			ballotCount = dataLookup.get(withCounty);
+		}
+		ballotCount = ballotCount || 0;
+
+		const fillColor = colorScale(ballotCount);
+
+		return {
+			fillColor,
+			weight: 1,
+			opacity: 1,
+			color: "#ffffff",
+			dashArray: "",
+			fillOpacity: 0.8,
 		};
-	}, [stateName, data, colorScale]);
+	};
+
+	// Event handlers for county features
+	const onEachFeature = (feature: Feature, layer: L.Layer) => {
+		const countyFeature = feature as CountyFeature;
+		const displayCountyName =
+			countyFeature.properties.coty_name_long?.[0] ||
+			countyFeature.properties.coty_name?.[0] ||
+			"Unknown County";
+
+		const normalizedCountyName = displayCountyName
+			.toLowerCase()
+			.replace(/\s+/g, " ")
+			.trim();
+
+		const ballotCount = dataLookup.get(normalizedCountyName) || 0;
+
+		// Create tooltip content
+		const tooltipContent = `
+			<div style="font-weight: bold; margin-bottom: 4px;">${displayCountyName}</div>
+			<div>Provisional Ballots: <span style="color: #2196f3; font-weight: bold;">${ballotCount.toLocaleString()}</span></div>
+			${
+				ballotCount === 0
+					? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">No data available</div>'
+					: ""
+			}
+		`;
+
+		layer.bindTooltip(tooltipContent, {
+			permanent: false,
+			direction: "center",
+			className: "custom-tooltip",
+		});
+
+		layer.on({
+			mouseover: (e) => {
+				const targetLayer = e.target;
+				targetLayer.setStyle({
+					weight: 3,
+					color: "#333333",
+					dashArray: "",
+					fillOpacity: 1.0,
+				});
+				targetLayer.bringToFront();
+			},
+			mouseout: (e) => {
+				const targetLayer = e.target;
+				targetLayer.setStyle(getFeatureStyle(feature));
+			},
+		});
+	};
 
 	if (!data || data.length === 0) {
 		return (
 			<Paper sx={{ p: 3, textAlign: "center" }}>
 				<Typography variant="body1" color="text.secondary">
-					No choropleth data available for this state.
+					No provisional ballot choropleth data available for this state.
 				</Typography>
+			</Paper>
+		);
+	}
+
+	if (loading) {
+		return (
+			<Paper sx={{ p: 3, textAlign: "center" }}>
+				<Typography>Loading choropleth map data...</Typography>
+			</Paper>
+		);
+	}
+
+	if (error) {
+		return (
+			<Paper sx={{ p: 3 }}>
+				<Alert severity="error">{error}</Alert>
+			</Paper>
+		);
+	}
+
+	if (!geoData) {
+		return (
+			<Paper sx={{ p: 3 }}>
+				<Alert severity="info">No map data available</Alert>
 			</Paper>
 		);
 	}
@@ -256,7 +312,7 @@ const ProvisionalBallotChoroplethMap: React.FC<
 				</Typography>
 				<Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
 					<Chip
-						label={`${getCountyCount(stateName)} Counties/Towns`}
+						label={`${data.length} Counties/Towns`}
 						size="small"
 						color="primary"
 					/>
@@ -271,8 +327,39 @@ const ProvisionalBallotChoroplethMap: React.FC<
 				</Box>
 			</Box>
 
-			<Box display="flex" justifyContent="center" mb={3}>
-				<svg ref={svgRef} className="responsive-svg"></svg>
+			<Box
+				sx={{
+					display: "flex",
+					justifyContent: "center",
+					border: "1px solid #e0e0e0",
+					borderRadius: 2,
+					padding: 0,
+					backgroundColor: "#fafafa",
+					height: 400,
+					width: "100%",
+					margin: "0 auto",
+					mb: 3,
+				}}>
+				<MapContainer
+					bounds={mapBounds || undefined}
+					zoom={8}
+					zoomSnap={0.1}
+					minZoom={6}
+					maxZoom={12}
+					maxBounds={mapBounds || undefined}
+					maxBoundsViscosity={1.0}
+					style={{ height: "100%", width: "100%", borderRadius: "8px" }}
+					scrollWheelZoom={true}>
+					<TileLayer
+						attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+						url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
+					/>
+					<GeoJSON
+						data={geoData}
+						style={getFeatureStyle}
+						onEachFeature={onEachFeature}
+					/>
+				</MapContainer>
 			</Box>
 
 			{/* Color Legend */}
@@ -292,7 +379,15 @@ const ProvisionalBallotChoroplethMap: React.FC<
 						borderRadius={1}
 						overflow="hidden">
 						{colorScale &&
-							colorScale.range().map((color, index) => (
+							[
+								"#e3f2fd",
+								"#bbdefb",
+								"#90caf9",
+								"#64b5f6",
+								"#42a5f5",
+								"#2196f3",
+								"#1976d2",
+							].map((color, index) => (
 								<Box
 									key={index}
 									sx={{
@@ -314,8 +409,8 @@ const ProvisionalBallotChoroplethMap: React.FC<
 					color="text.secondary"
 					display="block"
 					mt={1}>
-					Monochromatic scale with 7 color bins showing provisional ballot
-					distribution across counties
+					Interactive choropleth map showing provisional ballot distribution
+					across counties. Hover over counties for detailed information.
 				</Typography>
 			</Box>
 		</Paper>
