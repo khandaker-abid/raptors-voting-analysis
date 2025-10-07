@@ -302,7 +302,18 @@ const StateDetailPage: React.FC = () => {
 						</Box>
 					</Box>
 				</TabPanel>
-
+				<TabPanel value={tabValue} index={4}>
+							<EquipmentRejectedBubbleChart
+								data={[
+									{ county: "Travis", equipmentQuality: 85, rejectedPct: 2, party: "D" },
+									{ county: "Orange", equipmentQuality: 70, rejectedPct: 5, party: "R" },
+								]}
+								regressionLines={[
+									{ party: "D", coefficients: { a: 0.5, b: 1.2 } },
+									{ party: "R", coefficients: { a: 0.7, b: 1.0 } },
+								]}
+							/>
+				</TabPanel>
 				{/* Provisional Ballots Tab */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_PROVISIONAL}>
@@ -557,6 +568,7 @@ const StateDetailPage: React.FC = () => {
 					</TabPanel>
 				)}
 			</Paper>
+			<ResetButton />
 		</Box>
 	);
 };
