@@ -1,4 +1,3 @@
-import React from "react";
 import {
 	AppBar,
 	Toolbar,
@@ -7,6 +6,7 @@ import {
 	Box,
 	Container,
 } from "@mui/material";
+import logo from "../assets/raptors+compass.png";
 import { Link, useLocation } from "react-router-dom";
 
 const Navigation: React.FC = () => {
@@ -30,7 +30,13 @@ const Navigation: React.FC = () => {
 							fontWeight: 700,
 							letterSpacing: "-0.02em",
 						}}>
-						🗳️ Voting Data Explorer
+						<Box
+							component="img"
+							src={logo}
+							alt="Raptors Compass"
+							sx={{ height: 70, width: 70, mr: 1.5, display: "inline-block", verticalAlign: "middle", borderRadius: 1, objectFit: 'cover' }}
+						/>
+						Raptors Voter's Compass
 					</Typography>
 					<Box sx={{ display: "flex", gap: 1 }}>
 						<Button
@@ -61,10 +67,56 @@ const Navigation: React.FC = () => {
 						<Button
 							color="inherit"
 							component={Link}
+							to="/per-state-voting-equipment"
+							variant={location.pathname === "/per-state-voting-equipment" ? "outlined" : "text"}
+							sx={{
+								"textDecoration": "none",
+								"borderRadius": 2,
+								"px": 3,
+								"fontWeight": 600,
+								"backgroundColor":
+									location.pathname === "/per-state-voting-equipment"
+										? "rgba(255,255,255,0.15)"
+										: "transparent",
+								"&:hover": {
+									backgroundColor: "rgba(255,255,255,0.1)",
+								},
+								"border":
+									location.pathname === "/per-state-voting-equipment"
+										? "1px solid rgba(255,255,255,0.3)"
+										: "1px solid transparent",
+							}}>
+							State Voting Equipment
+						</Button>
+						<Button
+							color="inherit"
+							component={Link}
+							to="/voting-equipment-summary"
+							variant={location.pathname === "/voting-equipment-summary" ? "outlined" : "text"}
+							sx={{
+								"textDecoration": "none",
+								"borderRadius": 2,
+								"px": 3,
+								"fontWeight": 600,
+								"backgroundColor":
+									location.pathname === "/voting-equipment-summary"
+										? "rgba(255,255,255,0.15)"
+										: "transparent",
+								"&:hover": {
+									backgroundColor: "rgba(255,255,255,0.1)",
+								},
+								"border":
+									location.pathname === "/voting-equipment-summary"
+										? "1px solid rgba(255,255,255,0.3)"
+										: "1px solid transparent",
+							}}>
+							Voting Equipment Summary
+						</Button>
+						<Button
+							color="inherit"
+							component={Link}
 							to="/party-comparison"
-							variant={
-								location.pathname === "/party-comparison" ? "outlined" : "text"
-							}
+							variant={location.pathname === "/party-comparison" ? "outlined" : "text"}
 							sx={{
 								"textDecoration": "none",
 								"borderRadius": 2,
@@ -82,7 +134,7 @@ const Navigation: React.FC = () => {
 										? "1px solid rgba(255,255,255,0.3)"
 										: "1px solid transparent",
 							}}>
-							Party Comparison
+							Compare Parties
 						</Button>
 
 						{/* ✅ New Navigation Link for GUI-21 to GUI-23 */}

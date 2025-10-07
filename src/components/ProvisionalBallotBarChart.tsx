@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Paper, Typography, Box, Tooltip, Chip } from "@mui/material";
+import { Paper, Typography, Box, Chip } from "@mui/material";
 import {
 	BarChart,
 	Bar,
@@ -10,6 +10,13 @@ import {
 	ResponsiveContainer,
 	Cell,
 } from "recharts";
+
+interface TooltipData {
+	label: string;
+	description: string;
+	color: string;
+	value: number;
+}
 
 interface ProvisionalBallotBarChartProps {
 	data: Array<{
@@ -63,7 +70,13 @@ const ProvisionalBallotBarChart: React.FC<ProvisionalBallotBarChartProps> = ({
 		}));
 	}, [data, categories]);
 
-	const CustomTooltip = ({ active, payload }: any) => {
+	const CustomTooltip = ({
+		active,
+		payload,
+	}: {
+		active?: boolean;
+		payload?: { payload: TooltipData }[];
+	}) => {
 		if (active && payload && payload[0]) {
 			const data = payload[0].payload;
 			return (
@@ -121,7 +134,7 @@ const ProvisionalBallotBarChart: React.FC<ProvisionalBallotBarChartProps> = ({
 					margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
 					<CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
 					<XAxis
-						dataKey="category"
+						dataKey="label"
 						angle={-45}
 						textAnchor="end"
 						height={100}
@@ -144,27 +157,6 @@ const ProvisionalBallotBarChart: React.FC<ProvisionalBallotBarChartProps> = ({
 					</Bar>
 				</BarChart>
 			</ResponsiveContainer>
-
-			<Box mt={3}>
-				<Typography variant="subtitle2" gutterBottom fontWeight={600}>
-					Category Legend
-				</Typography>
-				<Box display="flex" flexWrap="wrap" gap={1}>
-					{aggregatedData.map((item) => (
-						<Tooltip key={item.category} title={item.description} arrow>
-							<Chip
-								label={`${item.category}: ${item.value.toLocaleString()}`}
-								size="small"
-								sx={{
-									backgroundColor: item.color,
-									color: "#fff",
-									fontWeight: 500,
-								}}
-							/>
-						</Tooltip>
-					))}
-				</Box>
-			</Box>
 		</Paper>
 	);
 };

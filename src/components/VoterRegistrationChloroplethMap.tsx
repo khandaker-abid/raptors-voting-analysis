@@ -1,0 +1,440 @@
+import React, { useEffect, useState, useMemo } from "react";
+import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
+import { Paper, Typography, Box, Chip, Alert } from "@mui/material";
+import L from "leaflet";
+import type { Feature, FeatureCollection, Geometry } from "geojson";
+import type { StateVoterRegistrationData } from "../data/stateVoterRegistrationData";
+import { getStateVoterRegistrationData } from "../data/stateVoterRegistrationData";
+
+interface VoterRegistrationChloroplethMapProps {
+	stateName: string;
+	data: Array<{
+		county: string;
+		E1a: number;
+		lat?: number;
+		lng?: number;
+	}>;
+}
+
+type CountyFeature = Feature<
+	Geometry,
+	{
+		ste_name: string[];
+		coty_name: string[];
+		coty_name_long: string[];
+	}
+>;
+
+type CountyGeoJSONData = FeatureCollection<
+	Geometry,
+	{
+		ste_name: string[];
+		coty_name: string[];
+		coty_name_long: string[];
+	}
+>;
+
+const VoterRegistrationChloroplethMap: React.FC<
+	VoterRegistrationChloroplethMapProps
+> = ({ stateName }) => {
+
+	const [data, setData] = useState<StateVoterRegistrationData[]>([]);
+	const [geoData, setGeoData] = useState<FeatureCollection | null>(null);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
+
+	useEffect(() => {
+		const fetchData = async () => {
+		try {
+			const result = await getStateVoterRegistrationData(stateName);
+			setData(Array.isArray(result) ? result : []);
+		} catch (error) {
+			console.error('Error fetching voting equipment data:', error);
+		}
+		};
+		fetchData();
+	}, []);
+
+	// Calculate color scale for registered voters
+	const colorScale = useMemo(() => {
+		if (!data || data.length === 0) return null;
+
+		const values = data.map((d) => d.registeredVoterCount);
+		const maxValue = Math.max(...values);
+		const minValue = Math.min(...values);
+
+		// Create a quantile scale for better distribution
+		const range = [
+			"#e3f2fd", // Very low
+			"#bbdefb", // Low
+			"#90caf9", // Below average
+			"#64b5f6", // Average
+			"#42a5f5", // Above average
+			"#2196f3", // High
+			"#1976d2", // Very high
+		];
+
+		return (value: number) => {
+			if (value === 0) return "#f5f5f5"; // Special color for no data
+			const ratio = (value - minValue) / (maxValue - minValue);
+			const index = Math.floor(ratio * (range.length - 1));
+			return range[Math.min(index, range.length - 1)];
+		};
+	}, [data]);
+
+	// Create a data lookup map for efficient county data retrieval
+	const dataLookup = useMemo(() => {
+		const lookup = new Map<string, number>();
+		data.forEach((item) => {
+			// Normalize county names for better matching
+			const normalizedCounty = item.regionName
+				.toLowerCase()
+				.replace(/\s+/g, " ")
+				.trim();
+			lookup.set(normalizedCounty, item.registeredVoterCount);
+
+			// Also add without "county" suffix for broader matching
+			const withoutCounty = normalizedCounty.replace(/\s+county$/, "");
+			if (withoutCounty !== normalizedCounty) {
+				lookup.set(withoutCounty, item.registeredVoterCount);
+			}
+		});
+		return lookup;
+	}, [data]);
+
+	useEffect(() => {
+		const loadMapData = async () => {
+			if (!stateName) return;
+
+			setLoading(true);
+			setError(null);
+
+			try {
+				console.log(`Loading county data for choropleth: ${stateName}`);
+				const response = await fetch(
+					"/georef-united-states-of-america-county.geojson",
+				);
+
+				if (!response.ok) {
+					throw new Error(
+						`Failed to fetch county data: ${response.statusText}`,
+					);
+				}
+
+				const countyData = (await response.json()) as CountyGeoJSONData;
+
+				if (!countyData || !countyData.features) {
+					throw new Error("County GeoJSON data is invalid or empty");
+				}
+
+				// Filter counties by state name
+				const features = countyData.features.filter(
+					(feature: CountyFeature) =>
+						feature.properties.ste_name &&
+						feature.properties.ste_name.includes(stateName),
+				);
+
+				console.log(`Found ${features.length} counties for ${stateName}`);
+
+				if (features.length === 0) {
+					throw new Error(`No county data found for ${stateName}`);
+				}
+
+				// Create FeatureCollection for the map
+				const featureCollection: FeatureCollection = {
+					type: "FeatureCollection",
+					features: features,
+				};
+
+				// Calculate bounds for the map
+				const bounds = new L.LatLngBounds([]);
+				features.forEach((feature) => {
+					if (feature.geometry.type === "Polygon") {
+						feature.geometry.coordinates[0].forEach((coord) => {
+							bounds.extend([coord[1], coord[0]]); // [lat, lng]
+						});
+					} else if (feature.geometry.type === "MultiPolygon") {
+						feature.geometry.coordinates.forEach((polygon) => {
+							polygon[0].forEach((coord) => {
+								bounds.extend([coord[1], coord[0]]); // [lat, lng]
+							});
+						});
+					}
+				});
+
+				// Add padding to the bounds
+				const paddedBounds = bounds.pad(0.1);
+				setMapBounds(paddedBounds);
+
+				setGeoData(featureCollection);
+				setLoading(false);
+			} catch (err) {
+				console.error("Error loading choropleth map data:", err);
+				setError(
+					err instanceof Error ? err.message : "Failed to load map data",
+				);
+				setLoading(false);
+			}
+		};
+
+		loadMapData();
+	}, [stateName]);
+
+	// Style function for counties based on registered voter data
+	const getFeatureStyle = (feature?: Feature) => {
+		if (!feature || !colorScale) {
+			return {
+				fillColor: "#f5f5f5",
+				weight: 1,
+				opacity: 1,
+				color: "#bdbdbd",
+				dashArray: "",
+				fillOpacity: 0.7,
+			};
+		}
+
+		const countyFeature = feature as CountyFeature;
+		const countyName = (
+			countyFeature.properties.coty_name_long?.[0] ||
+			countyFeature.properties.coty_name?.[0] ||
+			"Unknown County"
+		)
+			.toLowerCase()
+			.replace(/\s+/g, " ")
+			.trim();
+
+		// Try multiple variations of the county name
+		let voterCount = dataLookup.get(countyName);
+		if (voterCount === undefined) {
+			// Try without "county" suffix
+			const withoutCounty = countyName.replace(/\s+county$/, "");
+			voterCount = dataLookup.get(withoutCounty);
+		}
+		if (voterCount === undefined) {
+			// Try adding "county" suffix
+			const withCounty = countyName.includes("county")
+				? countyName
+				: `${countyName} county`;
+			voterCount = dataLookup.get(withCounty);
+		}
+		voterCount = voterCount || 0;
+
+		const fillColor = colorScale(voterCount);
+
+		return {
+			fillColor,
+			weight: 1,
+			opacity: 1,
+			color: "#ffffff",
+			dashArray: "",
+			fillOpacity: 0.8,
+		};
+	};
+
+	// Event handlers for county features
+	const onEachFeature = (feature: Feature, layer: L.Layer) => {
+		const countyFeature = feature as CountyFeature;
+		const displayCountyName =
+			countyFeature.properties.coty_name_long?.[0] ||
+			countyFeature.properties.coty_name?.[0] ||
+			"Unknown County";
+
+		const normalizedCountyName = displayCountyName
+			.toLowerCase()
+			.replace(/\s+/g, " ")
+			.trim()
+			.split(" ")
+			.slice(0,-1).join(" ");
+
+		console.log(dataLookup)
+		console.log(normalizedCountyName)
+		const voterCount = dataLookup.get(normalizedCountyName) || 0;
+
+		// Create tooltip content
+		const tooltipContent = `
+			<div style="font-weight: bold; margin-bottom: 4px;">${displayCountyName}</div>
+			<div>Registered Voters: <span style="color: #2196f3; font-weight: bold;">${voterCount.toLocaleString()}</span></div>
+			${
+				voterCount === 0
+					? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">No data available</div>'
+					: ""
+			}
+		`;
+
+		layer.bindTooltip(tooltipContent, {
+			permanent: false,
+			direction: "center",
+			className: "custom-tooltip",
+		});
+
+		layer.on({
+			mouseover: (e) => {
+				const targetLayer = e.target;
+				targetLayer.setStyle({
+					weight: 3,
+					color: "#333333",
+					dashArray: "",
+					fillOpacity: 1.0,
+				});
+				targetLayer.bringToFront();
+			},
+			mouseout: (e) => {
+				const targetLayer = e.target;
+				targetLayer.setStyle(getFeatureStyle(feature));
+			},
+		});
+	};
+
+	if (!data || data.length === 0) {
+		return (
+			<Paper sx={{ p: 3, textAlign: "center" }}>
+				<Typography variant="body1" color="text.secondary">
+					No provisional ballot choropleth data available for this state.
+				</Typography>
+			</Paper>
+		);
+	}
+
+	if (loading) {
+		return (
+			<Paper sx={{ p: 3, textAlign: "center" }}>
+				<Typography>Loading choropleth map data...</Typography>
+			</Paper>
+		);
+	}
+
+	if (error) {
+		return (
+			<Paper sx={{ p: 3 }}>
+				<Alert severity="error">{error}</Alert>
+			</Paper>
+		);
+	}
+
+	if (!geoData) {
+		return (
+			<Paper sx={{ p: 3 }}>
+				<Alert severity="info">No map data available</Alert>
+			</Paper>
+		);
+	}
+
+	const maxValue = Math.max(...data.map((d) => d.registeredVoterCount));
+	const minValue = Math.min(...data.map((d) => d.registeredVoterCount));
+	const totalVotes = data.reduce((sum, d) => sum + d.registeredVoterCount, 0);
+
+	return (
+		<Paper sx={{ p: 3 }}>
+			<Box mb={3}>
+				<Typography variant="h6" gutterBottom fontWeight={600}>
+					Registered Voters Distribution - {stateName}
+				</Typography>
+				<Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
+					<Chip
+						label={`${data.length} Counties/Towns`}
+						size="small"
+						color="primary"
+					/>
+					<Chip
+						label={`Total: ${totalVotes.toLocaleString()} voters`}
+						size="small"
+					/>
+					<Chip
+						label={`Range: ${minValue.toLocaleString()} - ${maxValue.toLocaleString()}`}
+						size="small"
+					/>
+				</Box>
+			</Box>
+
+			<Box
+				sx={{
+					display: "flex",
+					justifyContent: "center",
+					border: "1px solid #e0e0e0",
+					borderRadius: 2,
+					padding: 0,
+					backgroundColor: "#fafafa",
+					height: 400,
+					width: "100%",
+					margin: "0 auto",
+					mb: 3,
+				}}>
+				<MapContainer
+					bounds={mapBounds || undefined}
+					zoom={8}
+					zoomSnap={0.1}
+					minZoom={6}
+					maxZoom={12}
+					maxBounds={mapBounds || undefined}
+					maxBoundsViscosity={1.0}
+					style={{ height: "100%", width: "100%", borderRadius: "8px" }}
+					scrollWheelZoom={true}>
+					<TileLayer
+						attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+						url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
+					/>
+					<GeoJSON
+						data={geoData}
+						style={getFeatureStyle}
+						onEachFeature={onEachFeature}
+					/>
+				</MapContainer>
+			</Box>
+
+			{/* Color Legend */}
+			<Box>
+				<Typography variant="subtitle2" gutterBottom fontWeight={600}>
+					Color Scale (Total Registered Voters)
+				</Typography>
+				<Box display="flex" alignItems="center" gap={0.5}>
+					<Typography variant="caption" sx={{ minWidth: 50 }}>
+						{minValue}
+					</Typography>
+					<Box
+						display="flex"
+						height={30}
+						flex={1}
+						border="1px solid #e0e0e0"
+						borderRadius={1}
+						overflow="hidden">
+						{colorScale &&
+							[
+								"#e3f2fd",
+								"#bbdefb",
+								"#90caf9",
+								"#64b5f6",
+								"#42a5f5",
+								"#2196f3",
+								"#1976d2",
+							].map((color, index) => (
+								<Box
+									key={index}
+									sx={{
+										flex: 1,
+										backgroundColor: color,
+										height: "100%",
+									}}
+								/>
+							))}
+					</Box>
+					<Typography
+						variant="caption"
+						sx={{ minWidth: 50, textAlign: "right" }}>
+						{maxValue}
+					</Typography>
+				</Box>
+				<Typography
+					variant="caption"
+					color="text.secondary"
+					display="block"
+					mt={1}>
+					Interactive choropleth map showing provisional ballot distribution
+					across counties. Hover over counties for detailed information.
+				</Typography>
+			</Box>
+		</Paper>
+	);
+};
+
+export default VoterRegistrationChloroplethMap;

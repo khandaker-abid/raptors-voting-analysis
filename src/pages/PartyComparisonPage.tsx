@@ -1,7 +1,9 @@
 import React from "react";
-import { Container, Typography, Paper, Box, Button } from "@mui/material";
+import { Container, Typography, Paper, Box, Button, Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import PartyComparisonTable from "../components/PartyComparisonTable";
 
 const PartyComparisonPage: React.FC = () => {
 	const navigate = useNavigate();
@@ -9,12 +11,14 @@ const PartyComparisonPage: React.FC = () => {
 	return (
 		<Container sx={{ py: 4 }}>
 			<Box display="flex" alignItems="center" gap={2} mb={4}>
-				<Button
+				{/* <Button
 					startIcon={<ArrowBackIcon />}
 					onClick={() => navigate("/")}
 					variant="outlined">
 					Back to Home
 				</Button>
+				probably not necessary since there's a home button, left just in case though
+				*/}
 				<Typography variant="h4" component="h1">
 					Party-Based Comparisons
 				</Typography>
@@ -22,17 +26,22 @@ const PartyComparisonPage: React.FC = () => {
 
 			<Box display="flex" flexDirection="column" gap={3}>
 				<Paper sx={{ padding: 3 }}>
-					<Typography variant="h6" gutterBottom>
-						Republican vs. Democratic States Analysis
-					</Typography>
-					<Typography variant="body1" paragraph>
-						Compare voting patterns, turnout rates, and registration trends
-						between Republican and Democratic states.
-					</Typography>
-					<Typography variant="body2" color="text.secondary">
-						Data visualizations and analysis will be implemented in the next
-						phase.
-					</Typography>
+					<Accordion>
+						<AccordionSummary expandIcon={<ExpandMoreIcon />}>
+							<Box display="flex" flexDirection="column">
+								<Typography variant="h6" gutterBottom>
+									Republican vs. Democratic States Analysis
+								</Typography>
+								<Typography variant="body1" paragraph>
+									Compare voting patterns, turnout rates, and registration trends
+									between Republican and Democratic states.
+								</Typography>
+							</Box>
+						</AccordionSummary>
+						<AccordionDetails>
+							<PartyComparisonTable republicanStateName="Arkansas" democraticStateName="Rhode Island"/>
+						</AccordionDetails>
+					</Accordion>
 				</Paper>
 
 				<Paper sx={{ padding: 3 }}>
