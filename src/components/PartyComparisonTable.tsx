@@ -139,7 +139,6 @@ const PartyComparisonTable: React.FC<PartyComparisonTableProps> = ({
 										align="right"
 										sx={{
 											fontWeight: "bold",
-											backgroundColor: "#e3f2fd",
 											color: "#880808"
 										}}>
 										{row.republicanData.toLocaleString()}
@@ -149,7 +148,6 @@ const PartyComparisonTable: React.FC<PartyComparisonTableProps> = ({
 										align="right"
 										sx={{
 											fontWeight: "bold",
-											backgroundColor: "#e3f2fd",
 											color: "primary.main"
 										}}>
 										{row.democraticData.toLocaleString()}

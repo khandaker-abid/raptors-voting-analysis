@@ -207,7 +207,6 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 											align="right"
 											sx={{
 												fontWeight: "bold",
-												backgroundColor: "#e3f2fd",
 											}}>
 											{row.E1a.toLocaleString()}
 										</TableCell>

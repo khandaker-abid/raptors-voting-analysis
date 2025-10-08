@@ -228,7 +228,6 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 										align="right"
 										sx={{
 											fontWeight: "bold",
-											backgroundColor: "#e3f2fd",
 										}}>
 										{row.quantity.toLocaleString()}
 									</TableCell>
@@ -278,7 +277,6 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
                                         align="right"						 
                                         sx={{
 											fontWeight: "bold",
-											backgroundColor: "#e3f2fd",
 											color: "#880808"
 									    }}>
 											{row.errorRate}
@@ -288,7 +286,6 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 										align="right"  
 										sx={{
 											fontWeight: "bold",
-											backgroundColor: "#e3f2fd",
 											color: "primary.main"
 										}}>
 											{row.reliability}

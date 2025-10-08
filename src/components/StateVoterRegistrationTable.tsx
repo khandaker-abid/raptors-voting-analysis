@@ -187,7 +187,6 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 										align="right"
 										sx={{
 											fontWeight: "bold",
-											backgroundColor: "#e3f2fd",
 										}}>
 										{row.registeredVoterCount.toLocaleString()}
 									</TableCell>
@@ -196,7 +195,6 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 										align="right"
 										sx={{
 											fontWeight: "bold",
-											backgroundColor: "#e3f2fd",
 											color: "#880808"
 										}}>
 										{row.republicanCount.toLocaleString()}
@@ -206,7 +204,6 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 										align="right"
 										sx={{
 											fontWeight: "bold",
-											backgroundColor: "#e3f2fd",
 											color: "primary.main"
 										}}>
 										{row.democraticCount.toLocaleString()}
@@ -216,7 +213,6 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 										align="right"
 										sx={{
 											fontWeight: "bold",
-											backgroundColor: "#e3f2fd",
 											color: "#301934"
 										}}>
 										{row.unaffiliatedPartyCount.toLocaleString()}

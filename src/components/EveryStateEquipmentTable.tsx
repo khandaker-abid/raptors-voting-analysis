@@ -164,7 +164,6 @@ const EveryStateEquipmentTable: React.FC = () => {
 										align="right"
 										sx={{
 											fontWeight: "bold",
-											backgroundColor: "#e3f2fd",
 										}}>
 										{row.dreNoVvpatNum.toLocaleString()}
 									</TableCell>
@@ -173,7 +172,6 @@ const EveryStateEquipmentTable: React.FC = () => {
 										align="right"
 										sx={{
 											fontWeight: "bold",
-											backgroundColor: "#e3f2fd",
 										}}>
 										{row.dreWithVvpatNum.toLocaleString()}
 									</TableCell>
@@ -182,7 +180,6 @@ const EveryStateEquipmentTable: React.FC = () => {
 										align="right"
 										sx={{
 											fontWeight: "bold",
-											backgroundColor: "#e3f2fd",
 										}}>
 										{row.ballotMarkingDeviceNum.toLocaleString()}
 									</TableCell>
@@ -191,7 +188,6 @@ const EveryStateEquipmentTable: React.FC = () => {
 										align="right"
 										sx={{
 											fontWeight: "bold",
-											backgroundColor: "#e3f2fd",
 										}}>
 										{row.scannerNum.toLocaleString()}
 									</TableCell>

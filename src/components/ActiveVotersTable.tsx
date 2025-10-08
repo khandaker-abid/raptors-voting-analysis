@@ -204,7 +204,6 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 										align="right"
 										sx={{
 											fontWeight: "bold",
-											backgroundColor: "#e3f2fd",
 										}}>
 										{row.totalVoters.toLocaleString()}
 									</TableCell>
