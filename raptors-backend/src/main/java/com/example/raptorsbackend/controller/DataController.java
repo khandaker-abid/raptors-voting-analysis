@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ public class DataController {
     private JsonFileService jsonFileService;
 
     @GetMapping("/per-state-equipment/{state}")
+    @Cacheable(value = "stateEquipmentCache", key = "#state")
     public List<Map<String, Object>> getEveryStateAllModelsData(@PathVariable String state) {
         try {
             List<Map<String, Object>> stateEquipment = jsonFileService.readJsonArray("every-state-all-models-data.json");
@@ -33,6 +35,7 @@ public class DataController {
     }
 
     @GetMapping("/every-state-equipment")
+    @Cacheable(value = "everyStateEquipmentCache")
     public List<Map<String, Object>> getEveryStateEquipmentData() {
         try {
             return jsonFileService.readJsonArray("every-state-equipment-data.json");
@@ -42,6 +45,7 @@ public class DataController {
     }
 
     @GetMapping("/party-comparison")
+    @Cacheable(value = "partyComparisonCache")
     public List<Map<String, Object>> getPartyComparisonData() {
         try {
             return jsonFileService.readJsonArray("party-comparison-data.json");
@@ -51,6 +55,7 @@ public class DataController {
     }
 
     @GetMapping("/state-registered-voters/{state}")
+    @Cacheable(value = "stateRegisteredVotersCache", key = "#state")
     public List<Map<String, Object>> getVoterRegistrationData(@PathVariable String state) {
         try {
             List<Map<String, Object>> allVoters = jsonFileService.readJsonArray("state-voter-registration-data.json");
@@ -63,6 +68,7 @@ public class DataController {
     }
 
     @GetMapping("/region-registered-voters/{region}")
+    @Cacheable(value = "regionRegisteredVotersCache", key = "#region")
     public List<Map<String, Object>> getRegionRegisteredVotersData(@PathVariable String region) {
         try {
             List<Map<String, Object>> allVoters = jsonFileService.readJsonArray("region-registered-voters-data.json");
@@ -75,6 +81,7 @@ public class DataController {
     }
 
     @GetMapping("/voting-equipment-summary")
+    @Cacheable(value = "votingEquipmentSummaryCache")
     public List<Map<String, Object>> getVotingEquipmentSummaryData() {
         try {
             return jsonFileService.readJsonArray("voting-equipment-summary-data.json");
