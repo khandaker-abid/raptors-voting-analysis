@@ -143,7 +143,7 @@ const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = 
 							align="left"
 							sx={{
 							fontWeight: "bold",
-							color: row.party === "Republican" ? "#880808" : row.party === "Democratic" ? "primary.main" : "black",
+							color: row.party === "Republican" ? "#880808" : row.party === "Democratic" ? "#083188ff" : "black",
 							}}
 						>
 							{row.party}
