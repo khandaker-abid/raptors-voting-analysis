@@ -5,6 +5,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import RegionRegisteredVotersTable from "../tables/RegionRegisteredVotersTable";
+import theme from "../theme";
 
 type CountyFeature = Feature<
 	Geometry,
@@ -162,10 +163,10 @@ const StateMap: React.FC<StateMapProps> = ({
 		if (isDetailState && detailStates.includes(stateName)) {
 			// County styling for detail states
 			return {
-				fillColor: "#2196F3",
+				fillColor: theme.palette.primary.main,
 				weight: 1,
 				opacity: 1,
-				color: "#1565C0",
+				color: theme.palette.primary.main,
 				dashArray: "",
 				fillOpacity: 0.3,
 			};

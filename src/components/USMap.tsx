@@ -66,7 +66,7 @@ const USMap: React.FC = () => {
 				const targetLayer = e.target;
 				targetLayer.setStyle({
 					weight: isDetailState ? 4 : 2,
-					color: isDetailState ? "#0d47a1" : "#757575",
+					color: isDetailState ? theme.palette.primary.main : "#757575",
 					dashArray: "",
 					fillOpacity: isDetailState ? 0.7 : 0.3,
 				});
@@ -75,10 +75,10 @@ const USMap: React.FC = () => {
 			mouseout: (e) => {
 				const targetLayer = e.target;
 				targetLayer.setStyle({
-					fillColor: isDetailState ? "#2196F3" : "#e0e0e0",
+					fillColor: isDetailState ? theme.palette.primary.main : "#e0e0e0",
 					weight: isDetailState ? 3 : 1,
 					opacity: 1,
-					color: isDetailState ? "#1565C0" : "#bdbdbd",
+					color: isDetailState ? theme.palette.primary.main : "#bdbdbd",
 					dashArray: "",
 					fillOpacity: isDetailState ? 0.5 : 0.2,
 				});
