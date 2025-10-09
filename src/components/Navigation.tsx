@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import logo from "../assets/raptors+compass.png";
 import { Link, useLocation } from "react-router-dom";
+import theme from "../theme";
 
 const Navigation: React.FC = () => {
 	const location = useLocation();
@@ -17,7 +18,7 @@ const Navigation: React.FC = () => {
 			position="static"
 			elevation={0}
 			sx={{
-				background: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
+				background: theme.palette.primary.main,
 				borderBottom: "1px solid rgba(255,255,255,0.1)",
 			}}>
 			<Container maxWidth="lg">

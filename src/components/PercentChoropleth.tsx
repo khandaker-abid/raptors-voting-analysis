@@ -2,6 +2,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import L from "leaflet";
+import theme from "../theme";
+import { lighten, darken } from "@mui/material/styles";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 
 
@@ -30,9 +32,21 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data }) => {
     }, [data]);
 
 
+    const COLOR_PALETTE = useMemo(() => {
+        const main = theme.palette.primary.main;
+        return [
+            lighten(main, 0.6),
+            lighten(main, 0.35),
+            lighten(main, 0.15),
+            main,
+            darken(main, 0.08),
+            darken(main, 0.24),
+            darken(main, 0.45),
+        ];
+    }, [theme.palette.primary.main]);
+
     const color = (p: number) => {
-        // 7 bins, monochrome blue
-        const stops = ["#e3f2fd", "#bbdefb", "#90caf9", "#64b5f6", "#42a5f5", "#2196f3", "#1e88e5"];
+        const stops = COLOR_PALETTE;
         const idx = Math.max(0, Math.min(stops.length - 1, Math.floor((p / 100) * stops.length)));
         return stops[idx];
     };
