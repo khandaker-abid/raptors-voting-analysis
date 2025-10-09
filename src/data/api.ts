@@ -13,7 +13,7 @@ import type {
 // Dev toggles
 // -------------------------------------------------------------------
 // Turn ON to always use mocks (frontend-only development).
-const USE_MOCKS = false;
+const USE_MOCKS = true;
 // When true, if all real URL attempts fail (500/404/etc.), we’ll
 // gracefully fall back to mock data so the UI keeps working.
 const AUTO_FALLBACK_TO_MOCK_ON_ERROR = true;
