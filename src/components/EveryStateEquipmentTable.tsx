@@ -15,38 +15,46 @@ import {
 	InputAdornment,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import type { EveryStateEquipmentData } from "../data/everyStateEquipmentData";
-import { getEveryStateEquipmentData} from "../data/everyStateEquipmentData";
+// [PATCH]: import RouterLink so the state name can be a link to the history page
+import { Link as RouterLink } from "react-router-dom";
 
-const EveryStateEquipmentTable: React.FC = () => { 
-    const [data, setData] = useState<EveryStateEquipmentData[]>([]);
-    const [page, setPage] = useState(0);
+import type { EveryStateEquipmentData } from "../data/everyStateEquipmentData";
+
+import axios from "axios";
+import { API_URL } from "../data/api";
+
+const EveryStateEquipmentTable: React.FC = () => {
+	const [data, setData] = useState<EveryStateEquipmentData[]>([]);
+	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [searchTerm, setSearchTerm] = useState("");
 
-    useEffect(() => {
-            const fetchData = async () => {
-            try {
-                const result = await getEveryStateEquipmentData();
-                setData(Array.isArray(result) ? result : []);
-            } catch (error) {
-                console.error('Error fetching voting equipment data:', error);
-            }
-            };
-            fetchData();
-     }, []);
+	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				const response = await axios.get<EveryStateEquipmentData[]>(`${API_URL}/every-state-equipment`);
+				setData(response.data);
+			} catch (err) {
+				console.log(err)
+				console.error(err);
+			}
+		};
+		fetchData();
+	}, []);
 
 	const filteredData = useMemo(() => {
 		if (!data) return [];
 		if (!searchTerm) return data;
 
 		return data.filter((row) =>
-			row.stateName.toLowerCase().includes(searchTerm.toLowerCase()),
+			row.stateName.toLowerCase().includes(searchTerm.toLowerCase())
 		);
 	}, [data, searchTerm]);
 
 	const sortedData = useMemo(() => {
-		return [...filteredData].sort((a, b) => a.stateName.localeCompare(b.stateName));
+		return [...filteredData].sort((a, b) =>
+			a.stateName.localeCompare(b.stateName)
+		);
 	}, [filteredData]);
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
@@ -54,7 +62,7 @@ const EveryStateEquipmentTable: React.FC = () => {
 	};
 
 	const handleChangeRowsPerPage = (
-		event: React.ChangeEvent<HTMLInputElement>,
+		event: React.ChangeEvent<HTMLInputElement>
 	) => {
 		setRowsPerPage(parseInt(event.target.value, 10));
 		setPage(0);
@@ -71,7 +79,7 @@ const EveryStateEquipmentTable: React.FC = () => {
 	}
 
 	return (
-		<Paper sx={{ p: 8,}}>
+		<Paper sx={{ p: 8 }}>
 			<Box mb={3}>
 				<Typography variant="h4" gutterBottom fontWeight={600} align="center">
 					Voting Equipment Counts By State
@@ -90,8 +98,9 @@ const EveryStateEquipmentTable: React.FC = () => {
 									position: "sticky",
 									left: 0,
 									zIndex: 3,
-                                    minWidth: 200
-								}}>
+									minWidth: 200,
+								}}
+							>
 								State
 							</TableCell>
 							<TableCell
@@ -100,8 +109,9 @@ const EveryStateEquipmentTable: React.FC = () => {
 									fontWeight: "bold",
 									backgroundColor: "primary.main",
 									color: "white",
-                                    minWidth: 200
-								}}>
+									minWidth: 200,
+								}}
+							>
 								DRE no VVPAT
 							</TableCell>
 							<TableCell
@@ -110,8 +120,9 @@ const EveryStateEquipmentTable: React.FC = () => {
 									fontWeight: "bold",
 									backgroundColor: "primary.main",
 									color: "white",
-                                    minWidth: 200
-								}}>
+									minWidth: 200,
+								}}
+							>
 								DRE with VVPAT
 							</TableCell>
 							<TableCell
@@ -120,8 +131,9 @@ const EveryStateEquipmentTable: React.FC = () => {
 									fontWeight: "bold",
 									backgroundColor: "primary.main",
 									color: "white",
-                                    minWidth: 200
-								}}>
+									minWidth: 200,
+								}}
+							>
 								Ballot Marking Device
 							</TableCell>
 							<TableCell
@@ -130,8 +142,9 @@ const EveryStateEquipmentTable: React.FC = () => {
 									fontWeight: "bold",
 									backgroundColor: "primary.main",
 									color: "white",
-                                    minWidth: 150
-								}}>
+									minWidth: 150,
+								}}
+							>
 								Scanner
 							</TableCell>
 						</TableRow>
@@ -143,7 +156,10 @@ const EveryStateEquipmentTable: React.FC = () => {
 								<TableRow
 									key={row.id}
 									hover
-									sx={{ "&:nth-of-type(even)": { backgroundColor: "#fafafa" } }}>
+									sx={{
+										"&:nth-of-type(even)": { backgroundColor: "#fafafa" },
+									}}
+								>
 									<TableCell
 										component="th"
 										scope="row"
@@ -153,42 +169,42 @@ const EveryStateEquipmentTable: React.FC = () => {
 											left: 0,
 											backgroundColor: index % 2 === 0 ? "white" : "#fafafa",
 											zIndex: 1,
-										}}>
-                                        <Typography
-                                            variant="body2">
-                                            {row.stateName}
-                                        </Typography>
+										}}
+									>
+										{/* [PATCH]: make the state name a link to the history page per GUI-14 */}
+										<Typography
+											component={RouterLink}
+											to={`/voting-equipment-history/${encodeURIComponent(
+												row.stateName
+											)}`}
+											variant="body2"
+											color="primary"
+											sx={{
+												textDecoration: "none",
+												"&:hover": { textDecoration: "underline" },
+											}}
+										>
+											{row.stateName}
+										</Typography>
 									</TableCell>
 
 									<TableCell
-										align="right"
-										sx={{
-											fontWeight: "bold",
-										}}>
+										align="right">
 										{row.dreNoVvpatNum.toLocaleString()}
 									</TableCell>
 
 									<TableCell
-										align="right"
-										sx={{
-											fontWeight: "bold",
-										}}>
+										align="right">
 										{row.dreWithVvpatNum.toLocaleString()}
 									</TableCell>
 
 									<TableCell
-										align="right"
-										sx={{
-											fontWeight: "bold",
-										}}>
+										align="right">
 										{row.ballotMarkingDeviceNum.toLocaleString()}
 									</TableCell>
 
 									<TableCell
-										align="right"
-										sx={{
-											fontWeight: "bold",
-										}}>
+										align="right">
 										{row.scannerNum.toLocaleString()}
 									</TableCell>
 								</TableRow>
@@ -199,15 +215,15 @@ const EveryStateEquipmentTable: React.FC = () => {
 
 			<Box
 				sx={{
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "space-between",
-				flexWrap: "wrap",
-				gap: 2,
-                pt:2,
-				px:6
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "space-between",
+					flexWrap: "wrap",
+					gap: 2,
+					pt: 2,
+					px: 6,
 				}}
-            >
+			>
 				<Box display="flex" alignItems="center" gap={2}>
 					<TextField
 						size="small"
@@ -223,24 +239,19 @@ const EveryStateEquipmentTable: React.FC = () => {
 						}}
 						sx={{ minWidth: 250 }}
 					/>
-					<Chip
-						label={`${filteredData.length} models`}
-						color="primary"
-						size="small"
-					/>
 				</Box>
-                <TablePagination
-                    component="div"
-                    count={sortedData.length}
-                    page={page}
-                    onPageChange={handleChangePage}
-                    rowsPerPage={rowsPerPage}
-                    onRowsPerPageChange={handleChangeRowsPerPage}
-                    rowsPerPageOptions={[5, 10, 25, 50]}
-                />
-            </Box>
+				<TablePagination
+					component="div"
+					count={sortedData.length}
+					page={page}
+					onPageChange={handleChangePage}
+					rowsPerPage={rowsPerPage}
+					onRowsPerPageChange={handleChangeRowsPerPage}
+					rowsPerPageOptions={[5, 10, 25, 50]}
+				/>
+			</Box>
 		</Paper>
 	);
-}
+};
 
-export default EveryStateEquipmentTable
+export default EveryStateEquipmentTable;

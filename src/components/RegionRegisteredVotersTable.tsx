@@ -19,6 +19,8 @@ import {
 import type { SelectChangeEvent } from "@mui/material/Select";
 import type { RegionRegisteredVotersData } from "../data/regionRegisteredVotersData";
 import { getRegionRegisteredVotersData} from "../data/regionRegisteredVotersData";
+import axios from "axios";
+import { API_URL } from "../data/api";
 
 interface RegionRegisteredVotersTableProps {
 	geographicUnitName: string;
@@ -27,7 +29,6 @@ interface RegionRegisteredVotersTableProps {
 const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = ({
     geographicUnitName,
 }) => { 
-	console.log(geographicUnitName)
 	const [data, setData] = useState<RegionRegisteredVotersData[]>([]);
     const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -35,12 +36,13 @@ const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = 
 
 	useEffect(() => {
 		const fetchData = async () => {
-		try {
-			const result = await getRegionRegisteredVotersData(geographicUnitName);
-			setData(Array.isArray(result) ? result : []);
-		} catch (error) {
-			console.error('Error fetching voting equipment data:', error);
-		}
+			try {
+				const response = await axios.get<RegionRegisteredVotersData[]>(`${API_URL}/region-registered-voters/${geographicUnitName}`);
+				setData(response.data);
+			} catch (err) {
+				console.log(err)
+				console.error(err);
+			}
 		};
 		fetchData();
 	}, []);
@@ -179,7 +181,6 @@ const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = 
 					<MenuItem value={"democratic"}>Democratic</MenuItem>
 					</Select>
 				</FormControl>
-				<Chip label={`${filteredData.length} voters`} color="primary" size="small" />
 				</Box>
 				<TablePagination
 				component="div"

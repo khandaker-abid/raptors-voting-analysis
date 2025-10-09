@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import axios from "axios";
 import {
 	Box,
 	Chip,
@@ -17,6 +18,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import type { StateVoterRegistrationData } from "../data/stateVoterRegistrationData";
 import {getStateVoterRegistrationData} from "../data/stateVoterRegistrationData";
+import { API_URL } from "../data/api";
 
 interface StateVoterRegistrationTableProps {
 	stateName: string;
@@ -32,12 +34,12 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 
 	useEffect(() => {
 		const fetchData = async () => {
-		try {
-			const result = await getStateVoterRegistrationData(stateName);
-			setData(Array.isArray(result) ? result : []);
-		} catch (error) {
-			console.error('Error fetching voting equipment data:', error);
-		}
+			try {
+				const response = await axios.get<StateVoterRegistrationData[]>(`${API_URL}/voter-registration`);
+				setData(response.data);
+			} catch (err) {
+				console.error(err);
+			}
 		};
 		fetchData();
 	}, []);

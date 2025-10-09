@@ -17,6 +17,8 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import type { VotingEquipmentSummaryData } from "../data/votingEquipmentSummaryData.ts";
 import { getVotingEquipmentSummary } from "../data/votingEquipmentSummaryData.ts";
+import axios from "axios";
+import { API_URL } from "../data/api.ts";
 
 
 const VotingEquipmentSummaryTable: React.FC = () => { 
@@ -27,12 +29,13 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 
 	useEffect(() => {
 		const fetchData = async () => {
-		try {
-			const result = await getVotingEquipmentSummary();
-			setData(Array.isArray(result) ? result : []);
-		} catch (error) {
-			console.error('Error fetching voting equipment data:', error);
-		}
+			try {
+				const response = await axios.get<VotingEquipmentSummaryData[]>(`${API_URL}/voting-equipment-summary`);
+				setData(response.data);
+			} catch (err) {
+				console.log(err)
+				console.error(err);
+			}
 		};
 		fetchData();
 	}, []);
@@ -223,17 +226,12 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 									</TableCell>
 
 									<TableCell
-										align="right"
-										sx={{
-											fontWeight: "bold",
-										}}>
+										align="right">
 										{row.quantity.toLocaleString()}
 									</TableCell>
 
                                     <TableCell
-										align="right"
-										sx={{
-										}}>
+										align="right">
 										{row.age.toLocaleString()}
 									</TableCell>
 
@@ -270,28 +268,17 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 									</TableCell>
 
                         			<TableCell										
-										align="right"  
-										sx={{
-											fontWeight: "bold",
-											color: "#880808"
-										}}>
+										align="right"  >
 											{row.errorRate}
 									</TableCell>
 
                                     <TableCell										
-										align="right"  
-										sx={{
-											fontWeight: "bold",
-											color: "primary.main"
-										}}>
+										align="right"  >
 											{row.reliability} {/* had toFixed before */}
 									</TableCell>
 
                                     <TableCell 
-										align="right"  
-										sx={{
-											fontWeight: "bold",
-										}}>
+										align="right"  >
 											{row.qualityMeasure} {/* had toFixed before */}
 									</TableCell>
 
@@ -326,11 +313,6 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 							),
 						}}
 						sx={{ minWidth: 250 }}
-					/>
-					<Chip
-						label={`${filteredData.length} models`}
-						color="primary"
-						size="small"
 					/>
 				</Box>
 				<TablePagination

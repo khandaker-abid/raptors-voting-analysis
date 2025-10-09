@@ -13,6 +13,9 @@ import {
 } from "@mui/material";
 import type { PartyComparisonData } from "../data/partyComparisonData";
 import { getPartyComparisonData } from "../data/partyComparisonData";
+import axios from "axios";
+import { API_URL } from "../data/api";
+
 
 interface PartyComparisonTableProps {
 	republicanStateName: string;
@@ -29,12 +32,13 @@ const PartyComparisonTable: React.FC<PartyComparisonTableProps> = ({
 
 	useEffect(() => {
 		const fetchData = async () => {
-		try {
-			const result = await getPartyComparisonData();
-			setData(Array.isArray(result) ? result : []);
-		} catch (error) {
-			console.error('Error fetching voting equipment data:', error);
-		}
+			try {
+				const response = await axios.get<PartyComparisonData[]>(`${API_URL}/party-comparison`);
+				setData(response.data);
+			} catch (err) {
+				console.log(err)
+				console.error(err);
+			}
 		};
 		fetchData();
 	}, []);
