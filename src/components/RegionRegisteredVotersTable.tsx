@@ -18,7 +18,6 @@ import {
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material/Select";
 import type { RegionRegisteredVotersData } from "../data/regionRegisteredVotersData";
-import { getRegionRegisteredVotersData} from "../data/regionRegisteredVotersData";
 import axios from "axios";
 import { API_URL } from "../data/api";
 
@@ -76,6 +75,7 @@ const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = 
     }
 
 	if (!data || data.length === 0) {
+		console.log(data?.length)
 		return (
 			<Paper sx={{ p: 3, textAlign: "center" }}>
 				<Typography variant="body1" color="text.secondary">

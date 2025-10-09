@@ -17,7 +17,6 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import type { StateVoterRegistrationData } from "../data/stateVoterRegistrationData";
-import {getStateVoterRegistrationData} from "../data/stateVoterRegistrationData";
 import { API_URL } from "../data/api";
 
 interface StateVoterRegistrationTableProps {
@@ -35,7 +34,7 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				const response = await axios.get<StateVoterRegistrationData[]>(`${API_URL}/voter-registration`);
+				const response = await axios.get<StateVoterRegistrationData[]>(`${API_URL}/state-registered-voters/${stateName}`);
 				setData(response.data);
 			} catch (err) {
 				console.error(err);
@@ -72,7 +71,6 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 
 
 	if (!data || data.length === 0) {
-		if(data.length === 0) console.log(1)
 		return (
 			<Paper sx={{ p: 3, textAlign: "center" }}>
 				<Typography variant="body1" color="text.secondary">

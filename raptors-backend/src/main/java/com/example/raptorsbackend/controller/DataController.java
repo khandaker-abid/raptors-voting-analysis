@@ -20,10 +20,13 @@ public class DataController {
     @Autowired
     private JsonFileService jsonFileService;
 
-    @GetMapping("/every-state-all-models")
-    public List<Map<String, Object>> getEveryStateAllModelsData() {
+    @GetMapping("/per-state-equipment/{state}")
+    public List<Map<String, Object>> getEveryStateAllModelsData(@PathVariable String state) {
         try {
-            return jsonFileService.readJsonArray("every-state-all-models-data.json");
+            List<Map<String, Object>> stateEquipment = jsonFileService.readJsonArray("every-state-all-models-data.json");
+            return stateEquipment.stream()
+                .filter(model -> state.equalsIgnoreCase((String) model.get("stateName")))
+                .toList();
         } catch (RuntimeException e) {
             return List.of(Map.of("error", "Failed to load data: " + e.getMessage()));
         }
@@ -47,10 +50,13 @@ public class DataController {
         }
     }
 
-    @GetMapping("/voter-registration")
-    public List<Map<String, Object>> getVoterRegistrationData() {
+    @GetMapping("/state-registered-voters/{state}")
+    public List<Map<String, Object>> getVoterRegistrationData(@PathVariable String state) {
         try {
-            return jsonFileService.readJsonArray("state-voter-registration-data.json");
+            List<Map<String, Object>> allVoters = jsonFileService.readJsonArray("state-voter-registration-data.json");
+            return allVoters.stream()
+                .filter(voter -> state.equalsIgnoreCase((String) voter.get("stateName")))
+                .toList();
         } catch (RuntimeException e) {
             return List.of(Map.of("error", "Failed to load data: " + e.getMessage()));
         }

@@ -16,7 +16,8 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import type { EveryStateAllModelsData } from "../data/everyStateAllModelsData.ts";
-import { getEveryStateAllModelsData} from "../data/everyStateAllModelsData.ts";
+import axios from "axios";
+import { API_URL } from "../data/api.ts";
 
 interface StateVotingEquipmentTableProps {
 	stateName: string;
@@ -32,14 +33,15 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 
     useEffect(() => {
         const fetchData = async () => {
-        try {
-            const result = await getEveryStateAllModelsData(stateName);
-            setData(Array.isArray(result) ? result : []);
-        } catch (error) {
-            console.error('Error fetching voting equipment data:', error);
-        }
-        };
-        fetchData();
+			try {
+				const response = await axios.get<EveryStateAllModelsData[]>(`${API_URL}/per-state-equipment/${stateName}`);
+				setData(response.data);
+			} catch (err) {
+				console.log(err)
+				console.error(err);
+			}
+		};
+		fetchData();
     }, []);
 
 	const filteredData = useMemo(() => {
