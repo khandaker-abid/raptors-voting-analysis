@@ -3,7 +3,7 @@ import { Container, Typography, Paper, Box, Button, Accordion, AccordionSummary,
 import { useNavigate } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import PartyComparisonTable from "../components/PartyComparisonTable";
+import PartyComparisonTable from "../tables/PartyComparisonTable";
 
 const PartyComparisonPage: React.FC = () => {
 	const navigate = useNavigate();

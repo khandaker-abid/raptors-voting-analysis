@@ -4,7 +4,7 @@ import { Box, Typography, Paper, Alert, Dialog, DialogContent, DialogTitle, Icon
 import CloseIcon from '@mui/icons-material/Close';
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
-import RegionRegisteredVotersTable from "./RegionRegisteredVotersTable";
+import RegionRegisteredVotersTable from "../tables/RegionRegisteredVotersTable";
 
 type CountyFeature = Feature<
 	Geometry,

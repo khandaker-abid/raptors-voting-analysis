@@ -18,7 +18,7 @@ import {
   getEarlyVotingComparisonData,
   getDropBoxVotingData,
 } from "../data/mockComparisons";
-import DropBoxBubbleChart from "../components/DropBoxBubbleChart";
+import DropBoxBubbleChart from "../charts/DropBoxBubbleChart";
 
 const RegistrationComparisonPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);

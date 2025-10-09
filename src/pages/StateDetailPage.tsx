@@ -31,14 +31,14 @@ import {
 } from "../data/provisionalBallotData";
 import { getActiveVotersData } from "../data/activeVotersData";
 import StateMap from "../components/StateMap";
-import ProvisionalBallotBarChart from "../components/ProvisionalBallotBarChart";
-import ProvisionalBallotTable from "../components/ProvisionalBallotTable";
+import ProvisionalBallotBarChart from "../charts/ProvisionalBallotBarChart";
+import ProvisionalBallotTable from "../tables/ProvisionalBallotTable";
 import ProvisionalBallotChoroplethMap from "../components/ProvisionalBallotChoroplethMap";
-import ActiveVotersBarChart from "../components/ActiveVotersBarChart";
-import ActiveVotersTable from "../components/ActiveVotersTable";
+import ActiveVotersBarChart from "../charts/ActiveVotersBarChart";
+import ActiveVotersTable from "../tables/ActiveVotersTable";
 import ActiveVotersChoroplethMap from "../components/ActiveVotersChoroplethMap";
-import StateVotingEquipmentTable from "../components/StateVotingEquipmentTable";
-import StateVoterRegistrationTable from "../components/StateVoterRegistrationTable";
+import StateVotingEquipmentTable from "../tables/StateVotingEquipmentTable";
+import StateVoterRegistrationTable from "../tables/StateVoterRegistrationTable";
 import VoterRegistrationChloroplethMap from "../components/VoterRegistrationChloroplethMap";
 
 // NEW (GUI-8/9/16/18)
@@ -48,15 +48,15 @@ import {
 	fetchRegistrationTrends,
 	fetchBlockBubbles,
 } from "../data/api";
-import PollbookDeletionsBarChart from "../components/PollbookDeletionsBarChart";
-import PollbookDeletionsTable from "../components/PollbookDeletionsTable";
-import MailRejectionsBarChart from "../components/MailRejectionsBarChart";
-import MailRejectionsTable from "../components/MailRejectionsTable";
+import PollbookDeletionsBarChart from "../charts/PollbookDeletionsBarChart";
+import PollbookDeletionsTable from "../tables/PollbookDeletionsTable";
+import MailRejectionsBarChart from "../charts/MailRejectionsBarChart";
+import MailRejectionsTable from "../tables/MailRejectionsTable";
 import PercentChoropleth from "../components/PercentChoropleth";
-import VoterRegistrationTrendChart from "../components/VoterRegistrationTrendChart";
+import VoterRegistrationTrendChart from "../charts/VoterRegistrationTrendChart";
 import VoterRegistrationBubbleOverlay from "../components/VoterRegistrationBubbleOverlay";
 // New imports for GUI-25 to GUI-27
-import EquipmentRejectedBubbleChart from "../components/EquipmentRejectedBubbleChart";
+import EquipmentRejectedBubbleChart from "../charts/EquipmentRejectedBubbleChart";
 import ResetButton from "../components/ResetButton";
 // Types
 import type {
@@ -236,10 +236,10 @@ const StateDetailPage: React.FC = () => {
 						onChange={handleTabChange}
 						aria-label="state data tabs">
 						<Tab label="State Map" />
-						{isDetail && <Tab label="Provisional Ballot Chart" />}
-						{isDetail && <Tab label="Provisional Ballot Table" />}
-						{isDetail && <Tab label="Choropleth Map" />}
-						{isDetail && <Tab label="Equipment vs Rejected Ballots" />}
+						{isDetail && <Tab label="Provisional Ballot" />}
+						{isDetail && <Tab label="Active Voters" />}
+						{isDetail && <Tab label="Pollbook Deletions" />}
+						{isDetail && <Tab label="Mail Rejections" />}
 					</Tabs>
 				</Box>
 

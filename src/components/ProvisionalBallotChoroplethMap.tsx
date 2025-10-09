@@ -310,21 +310,6 @@ const ProvisionalBallotChoroplethMap: React.FC<
 				<Typography variant="h6" gutterBottom fontWeight={600}>
 					Provisional Ballots Distribution - {stateName}
 				</Typography>
-				<Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
-					<Chip
-						label={`${data.length} Counties/Towns`}
-						size="small"
-						color="primary"
-					/>
-					<Chip
-						label={`Total: ${totalBallots.toLocaleString()} ballots`}
-						size="small"
-					/>
-					<Chip
-						label={`Range: ${minValue.toLocaleString()} - ${maxValue.toLocaleString()}`}
-						size="small"
-					/>
-				</Box>
 			</Box>
 
 			<Box

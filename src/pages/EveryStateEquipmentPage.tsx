@@ -1,5 +1,5 @@
 import React from "react";
-import EveryStateEquipmentTable from "../components/EveryStateEquipmentTable";
+import EveryStateEquipmentTable from "../tables/EveryStateEquipmentTable";
 import { Box } from "@mui/material";
 
 const EveryStateEquipmentPage: React.FC = () => {

@@ -219,19 +219,16 @@ export const getActiveVotersChartData = (data: ActiveVotersData[]) => {
 			category: "Active",
 			count: totalActive,
 			percentage: pct(totalActive, total),
-			color: "#42a5f5",
 		},
 		{
 			category: "Inactive",
 			count: totalInactive,
 			percentage: pct(totalInactive, total),
-			color: "#ef5350",
 		},
 		{
 			category: "Total",
 			count: total,
 			percentage: 100,
-			color: "#455a64",
 		},
 	];
 };

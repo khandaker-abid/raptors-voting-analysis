@@ -109,11 +109,6 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 						}}
 						sx={{ minWidth: 250 }}
 					/>
-					<Chip
-						label={`${filteredData.length} locations`}
-						color="primary"
-						size="small"
-					/>
 				</Box>
 			</Box>
 
