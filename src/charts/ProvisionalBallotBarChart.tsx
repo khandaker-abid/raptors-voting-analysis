@@ -1,149 +1,154 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { Paper, Typography, Box, Chip } from "@mui/material";
 import {
 	BarChart,
 	Bar,
 	XAxis,
 	YAxis,
 	CartesianGrid,
-	Tooltip,
-	Legend,
+	Tooltip as RechartsTooltip,
 	ResponsiveContainer,
+	Cell,
 } from "recharts";
-import { Box, Typography } from "@mui/material";
-import {
-	getProvisionalBallotCategories,
-	getStateCategoryTotals,
-} from "../data/provisionalBallotData";
+import theme from "../theme";
+
+interface TooltipData {
+	label: string;
+	description: string;
+	color: string;
+	value: number;
+}
 
 interface ProvisionalBallotBarChartProps {
-	stateName: string;
-	height?: number;
+	data: Array<{
+		county: string;
+		E2a: number;
+		E2b: number;
+		E2c: number;
+		E2d: number;
+		E2e: number;
+		E2f: number;
+		E2g: number;
+		E2h: number;
+		E2i: number;
+	}>;
+	categories: Array<{ key: string; label: string; description: string }>;
 }
 
-interface ChartData {
-	category: string;
-	categoryCode: string;
-	count: number;
-	description: string;
-}
+const COLORS = [
+	"#8884d8",
+	"#82ca9d",
+	"#ffc658",
+	"#ff7c7c",
+	"#8dd1e1",
+	"#d084d0",
+	"#ffb347",
+	"#67b7dc",
+	"#a4de6c",
+];
 
 const ProvisionalBallotBarChart: React.FC<ProvisionalBallotBarChartProps> = ({
-	stateName,
-	height = 400,
+	data,
+	categories,
 }) => {
-	const categories = getProvisionalBallotCategories();
-	const categoryTotals = getStateCategoryTotals(stateName);
+	// Aggregate data across all counties
+	const aggregatedData = useMemo(() => {
+		if (!data || data.length === 0) return [];
 
-	const chartData: ChartData[] = categories
-		.map((category) => ({
-			category: category.label,
-			categoryCode: category.key,
-			count: categoryTotals[category.key] || 0,
-			description: category.description,
-		}))
-		.filter((item) => item.count > 0); // Only show categories with data
+		const totals = categories.reduce((acc, cat) => {
+			acc[cat.key] = data.reduce((sum, county) => {
+				return sum + ((county[cat.key as keyof typeof county] as number) || 0);
+			}, 0);
+			return acc;
+		}, {} as Record<string, number>);
 
-	if (chartData.length === 0) {
-		return (
-			<Box
-				sx={{
-					height,
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "center",
-					color: "text.secondary",
-				}}>
-				<Typography>
-					No provisional ballot data available for {stateName}
-				</Typography>
-			</Box>
-		);
-	}
+		return categories.map((cat, index) => ({
+			category: cat.key,
+			label: cat.label,
+			value: totals[cat.key] || 0,
+			description: cat.description,
+			color: theme.palette.primary.main,
+		}));
+	}, [data, categories]);
 
-	// Custom tooltip component
 	const CustomTooltip = ({
 		active,
 		payload,
 	}: {
 		active?: boolean;
-		payload?: Array<{
-			payload: ChartData;
-			dataKey: string;
-			value: number;
-		}>;
-		label?: string;
+		payload?: { payload: TooltipData }[];
 	}) => {
-		if (active && payload && payload.length) {
-			const data = payload[0].payload as ChartData;
+		if (active && payload && payload[0]) {
+			const data = payload[0].payload;
 			return (
-				<Box
-					sx={{
-						backgroundColor: "background.paper",
-						border: "1px solid #ccc",
-						borderRadius: 2,
-						padding: 2,
-						boxShadow: 2,
-						maxWidth: 300,
-					}}>
-					<Typography variant="h6" gutterBottom color="primary">
-						{data.categoryCode}: {data.category}
+				<Paper sx={{ p: 2, maxWidth: 300 }}>
+					<Typography variant="subtitle2" fontWeight="bold">
+						{data.label}
 					</Typography>
-					<Typography variant="body1" gutterBottom>
-						<strong>Count:</strong> {data.count.toLocaleString()}
-					</Typography>
-					<Typography variant="body2" color="text.secondary">
+					<Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
 						{data.description}
 					</Typography>
-				</Box>
+					<Typography variant="h6" sx={{ mt: 1, color: data.color }}>
+						{data.value.toLocaleString()} ballots
+					</Typography>
+				</Paper>
 			);
 		}
 		return null;
 	};
 
+	const totalBallots = useMemo(() => {
+		return aggregatedData.reduce((sum, item) => sum + item.value, 0);
+	}, [aggregatedData]);
+
+	if (!data || data.length === 0) {
+		return (
+			<Paper sx={{ p: 3, textAlign: "center" }}>
+				<Typography variant="body1" color="text.secondary">
+					No provisional ballot data available for this state.
+				</Typography>
+			</Paper>
+		);
+	}
+
 	return (
-		<Box sx={{ width: "100%", height }}>
-			<ResponsiveContainer width="100%" height="100%">
+		<Paper sx={{ p: 3 }}>
+			<Box mb={3}>
+				<Typography variant="h6" gutterBottom fontWeight={600}>
+					Provisional Ballot Categories Analysis
+				</Typography>
+			</Box>
+
+			<ResponsiveContainer width="100%" height={400}>
 				<BarChart
-					data={chartData}
-					margin={{
-						top: 20,
-						right: 30,
-						left: 20,
-						bottom: 80,
-					}}>
-					<CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+					data={aggregatedData}
+					margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
+					<CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
 					<XAxis
-						dataKey="categoryCode"
+						dataKey="label"
 						angle={-45}
 						textAnchor="end"
 						height={100}
-						interval={0}
 						tick={{ fontSize: 12 }}
 					/>
 					<YAxis
 						tick={{ fontSize: 12 }}
-						tickFormatter={(value: number) => value.toLocaleString()}
+						label={{
+							value: "Number of Ballots",
+							angle: -90,
+							position: "insideLeft",
+							style: { fontSize: 12 },
+						}}
 					/>
-					<Tooltip content={<CustomTooltip />} />
-					<Legend
-						content={
-							<Box sx={{ textAlign: "center", py: 1 }}>
-								<Typography variant="subtitle2" color="primary">
-									Provisional Ballot Categories - {stateName}
-								</Typography>
-							</Box>
-						}
-					/>
-					<Bar
-						dataKey="count"
-						fill="#1976d2"
-						stroke="#1565c0"
-						strokeWidth={1}
-						radius={[2, 2, 0, 0]}
-					/>
+					<RechartsTooltip content={<CustomTooltip />} />
+					<Bar dataKey="value" radius={[8, 8, 0, 0]}>
+						{aggregatedData.map((entry, index) => (
+							<Cell key={`cell-${index}`} fill={entry.color} />
+						))}
+					</Bar>
 				</BarChart>
 			</ResponsiveContainer>
-		</Box>
+		</Paper>
 	);
 };
 

@@ -1,5 +1,5 @@
 import React from "react";
-import VotingEquipmentSummaryTable from "../components/VotingEquipmentSummaryTable";
+import VotingEquipmentSummaryTable from "../tables/VotingEquipmentSummaryTable";
 import { Box} from "@mui/material";
 
 

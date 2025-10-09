@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import type { ActiveVotersData } from "../data/activeVotersData";
 import { getActiveVotersChartData } from "../data/activeVotersData";
+import theme from "../theme";
 
 interface ActiveVotersBarChartProps {
 	data: ActiveVotersData[];
@@ -30,7 +31,9 @@ const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 
 	const orderedChartData = useMemo(() => {
 		const byCat = new Map(chartData.map((d) => [d.category.toLowerCase(), d]));
-		const fallbackColors = ["#42a5f5", "#ef5350", "#455a64"]; // Active, Inactive, Total
+		const fallbackColors = [theme.palette.primary.main, 
+								theme.palette.primary.main, 
+								theme.palette.primary.main]; // Active, Inactive, Total
 		return ORDER.map((label, i) => {
 			const found = byCat.get(label.toLowerCase());
 			return (
@@ -98,16 +101,6 @@ const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 				<Typography variant="h6" gutterBottom fontWeight={600}>
 					2024 EAVS Active vs Inactive Voters - {stateName}
 				</Typography>
-				<Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
-					<Typography variant="body2" color="text.secondary">
-						Total registered voters:
-					</Typography>
-					<Chip
-						label={`${totalVoters.toLocaleString()} voters`}
-						color="primary"
-						size="small"
-					/>
-				</Box>
 			</Box>
 
 			<ResponsiveContainer width="100%" height={400}>
@@ -130,30 +123,11 @@ const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 					<RechartsTooltip content={<CustomTooltip />} />
 					<Bar dataKey="count" radius={[8, 8, 0, 0]} barSize={120}>
 						{orderedChartData.map((entry, index) => (
-							<Cell key={`cell-${index}`} fill={entry.color} />
+							<Cell key={`cell-${index}`} fill={theme.palette.primary.main} />
 						))}
 					</Bar>
 				</BarChart>
 			</ResponsiveContainer>
-
-			{/* Summary Statistics */}
-			<Box mt={3} display="flex" gap={2} flexWrap="wrap" justifyContent="center">
-				{orderedChartData.map((item) => (
-					<Chip
-						key={item.category}
-						label={`${item.category}: ${item.count.toLocaleString()} (${item.percentage}%)`}
-						size="medium"
-						sx={{
-							backgroundColor: item.color,
-							color: "#fff",
-							fontWeight: 500,
-							"& .MuiChip-label": {
-								fontSize: "0.875rem",
-							},
-						}}
-					/>
-				))}
-			</Box>
 		</Paper>
 	);
 };

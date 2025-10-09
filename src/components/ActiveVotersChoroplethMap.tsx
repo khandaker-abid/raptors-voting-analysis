@@ -327,20 +327,6 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 				<Typography variant="h6" gutterBottom fontWeight={600}>
 					Active Voter Percentage Distribution - {stateName}
 				</Typography>
-				<Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
-					<Chip
-						label={`${getCountyCount(stateName)} Counties/Towns`}
-						size="small"
-						color="primary"
-					/>
-					<Chip
-						label={`Range: ${minPercentage.toFixed(
-							1,
-						)}% - ${maxPercentage.toFixed(1)}%`}
-						size="small"
-					/>
-					<Chip label={`Average: ${avgPercentage.toFixed(1)}%`} size="small" />
-				</Box>
 			</Box>
 
 			{/* Map Container */}
