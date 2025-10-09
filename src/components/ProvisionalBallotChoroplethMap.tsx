@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { Paper, Typography, Box, Chip, Alert } from "@mui/material";
+import { lighten, darken } from "@mui/material/styles";
+import theme from "../theme";
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 
@@ -40,7 +42,20 @@ const ProvisionalBallotChoroplethMap: React.FC<
 	const [error, setError] = useState<string | null>(null);
 	const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
 
-	// Calculate color scale for provisional ballots
+	// Derive palette from theme primary color so all choropleths match
+	const COLOR_PALETTE = useMemo(() => {
+		const main = theme.palette.primary.main;
+		return [
+			lighten(main, 0.6),
+			lighten(main, 0.35),
+			lighten(main, 0.15),
+			main,
+			darken(main, 0.08),
+			darken(main, 0.24),
+			darken(main, 0.45),
+		];
+	}, [theme.palette.primary.main]);
+
 	const colorScale = useMemo(() => {
 		if (!data || data.length === 0) return null;
 
@@ -48,24 +63,14 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		const maxValue = Math.max(...values);
 		const minValue = Math.min(...values);
 
-		// Create a quantile scale for better distribution
-		const range = [
-			"#e3f2fd", // Very low
-			"#bbdefb", // Low
-			"#90caf9", // Below average
-			"#64b5f6", // Average
-			"#42a5f5", // Above average
-			"#2196f3", // High
-			"#1976d2", // Very high
-		];
-
 		return (value: number) => {
-			if (value === 0) return "#f5f5f5"; // Special color for no data
+			if (value === 0) return "#f5f5f5";
+			if (maxValue === minValue) return COLOR_PALETTE[COLOR_PALETTE.length - 1];
 			const ratio = (value - minValue) / (maxValue - minValue);
-			const index = Math.floor(ratio * (range.length - 1));
-			return range[Math.min(index, range.length - 1)];
+			const index = Math.floor(ratio * (COLOR_PALETTE.length - 1));
+			return COLOR_PALETTE[Math.min(index, COLOR_PALETTE.length - 1)];
 		};
-	}, [data]);
+	}, [data, COLOR_PALETTE]);
 
 	// Create a data lookup map for efficient county data retrieval
 	const dataLookup = useMemo(() => {

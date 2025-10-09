@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { Paper, Typography, Box, Chip, Alert } from "@mui/material";
+import { lighten, darken } from "@mui/material/styles";
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import { getCountyCount } from "../data/stateShapes";
 import type { ActiveVotersData } from "../data/activeVotersData";
+import theme from "../theme";
 
 interface ActiveVotersChoroplethMapProps {
 	stateName: string;
@@ -38,6 +40,20 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 	const [error, setError] = useState<string | null>(null);
 	const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
 
+	// Derive a color palette from the theme primary color
+	const COLOR_PALETTE = useMemo(() => {
+		const main = theme.palette.primary.main;
+		return [
+			lighten(main, 0.6),
+			lighten(main, 0.35),
+			lighten(main, 0.15),
+			main,
+			darken(main, 0.08),
+			darken(main, 0.24),
+			darken(main, 0.45),
+		];
+	}, [theme.palette.primary.main]);
+
 	// Calculate color scale for active voter percentage
 	const colorScale = useMemo(() => {
 		if (!data || data.length === 0) return null;
@@ -46,24 +62,14 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 		const maxPercentage = Math.max(...percentages);
 		const minPercentage = Math.min(...percentages);
 
-		// Use the same blue color bins as the provisional ballot choropleth
-		const range = [
-			"#e3f2fd", // Very low
-			"#bbdefb", // Low
-			"#90caf9", // Below average
-			"#64b5f6", // Average
-			"#42a5f5", // Above average
-			"#2196f3", // High
-			"#1976d2", // Very high
-		];
-
 		return (value: number) => {
 			if (value === 0) return "#f5f5f5"; // Special color for no data
+			if (maxPercentage === minPercentage) return COLOR_PALETTE[COLOR_PALETTE.length - 1];
 			const ratio = (value - minPercentage) / (maxPercentage - minPercentage);
-			const index = Math.floor(ratio * (range.length - 1));
-			return range[Math.min(index, range.length - 1)];
+			const index = Math.floor(ratio * (COLOR_PALETTE.length - 1));
+			return COLOR_PALETTE[Math.min(index, COLOR_PALETTE.length - 1)];
 		};
-	}, [data]);
+	}, [data, COLOR_PALETTE]);
 
 	// Create a data lookup map for efficient county data retrieval
 	const dataLookup = useMemo(() => {
@@ -376,25 +382,16 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 						border="1px solid #e0e0e0"
 						borderRadius={1}
 						overflow="hidden">
-						{colorScale &&
-							[
-								"#e3f2fd",
-								"#bbdefb",
-								"#90caf9",
-								"#64b5f6",
-								"#42a5f5",
-								"#2196f3",
-								"#1976d2",
-							].map((color, index) => (
-								<Box
-									key={index}
-									sx={{
-										flex: 1,
-										backgroundColor: color,
-										height: "100%",
-									}}
-								/>
-							))}
+						{COLOR_PALETTE.map((color, index) => (
+							<Box
+								key={index}
+								sx={{
+									flex: 1,
+									backgroundColor: color,
+									height: "100%",
+								}}
+							/>
+						))}
 					</Box>
 					<Typography
 						variant="caption"

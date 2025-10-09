@@ -5,6 +5,7 @@ import { Box, Typography } from "@mui/material";
 import L from "leaflet";
 import type { Feature, Geometry, GeoJsonObject } from "geojson";
 import { getDetailStateDescription } from "../data/stateData";
+import theme from "../theme";
 
 type StateFeature = Feature<Geometry, { name: string; abbreviation: string }>;
 
@@ -30,10 +31,10 @@ const USMap: React.FC = () => {
 		const stateFeature = feature as StateFeature;
 		const isDetailState = detailStates.includes(stateFeature.properties.name);
 		return {
-			fillColor: isDetailState ? "#2196F3" : "#e0e0e0",
+			fillColor: isDetailState ? theme.palette.primary.main : "#e0e0e0",
 			weight: isDetailState ? 3 : 1,
 			opacity: 1,
-			color: isDetailState ? "#1565C0" : "#bdbdbd",
+			color: isDetailState ? theme.palette.primary.main : "#bdbdbd",
 			dashArray: "",
 			fillOpacity: isDetailState ? 0.5 : 0.2,
 		};
