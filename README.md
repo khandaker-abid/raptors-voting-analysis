@@ -21,7 +21,7 @@ registration data (EAVS, voting equipment, registration trends). Built for **CSE
 - **Spring Boot** - Fast, production-ready REST APIs with auto-config and a huge ecosystem.
 
 ### Databases
-- **PostgreSQL + PostGIS (star-ish schema)** -  Robust SQL + spatial analytics; clean, fast per-county/year aggregates.
+- **MongoDB/Mongo Atlas** -  (fill out desciption of why)
 
 ### 1) Install
 ```bash
