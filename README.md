@@ -21,7 +21,7 @@ registration data (EAVS, voting equipment, registration trends). Built for **CSE
 - **Spring Boot** - Fast, production-ready REST APIs with auto-config and a huge ecosystem.
 
 ### Databases
-- **PostgreSQL + PostGIS (star-ish schema)** -  Robust SQL + spatial analytics; clean, fast per-county/year aggregates.
+- **MongoDB/Mongo Atlas** -  (fill out desciption of why)
 
 ### 1) Install
 ```bash
@@ -35,35 +35,3 @@ npm run dev
 ``` cd raptors-backend
 ./mvnw spring-boot:run
 ```
-
-# GUI
-
-| Number | Checkbox |
-|--------|----------|
-| 1      | - [ ]      |
-| 2      | - [ ]      |
-| 3      | - [ ]      |
-| 4      | - [ ]      |
-| 5      | - [ ]      |
-| 6      | - [ ]      |
-| 7      | - [ ]      |
-| 8      | - [ ]      |
-| 9      | - [ ]      |
-| 10     | - [ ]      |
-| 11     | - [ ]      |
-| 12     | - [ ]      |
-| 13     | - [ ]      |
-| 14     | - [ ]      |
-| 15     | - [ ]      |
-| 16     | - [ ]      |
-| 17     | - [ ]      |
-| 18     | - [ ]      |
-| 19     | - [ ]      |
-| 20     | - [ ]      |
-| 21     | - [ ]      |
-| 22     | - [ ]      |
-| 23     | - [ ]      |
-| 24     | - [ ]      |
-| 25     | - [ ]      |
-| 26     | - [ ]      |
-| 27     | - [ ]      |
