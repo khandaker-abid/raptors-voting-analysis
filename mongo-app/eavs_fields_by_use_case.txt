@@ -1,0 +1,155 @@
+EAVS FIELDS BY GUI USE CASE
+===========================
+
+GUI-3: Provisional ballot bar chart (required)
+  - E2a: Provisional Ballots Cast Voter Not on List
+  - E2b: Provisional Ballots Cast Voter Lacked ID  
+  - E2c: Provisional Ballots Cast Election Official Challenged Eligibility
+  - E2d: Provisional Ballots Cast Another Person Challenged Eligibility
+  - E2e: Provisional Ballots Cast Voter Not Resident
+  - E2f: Provisional Ballots Cast Voter Registration Not Updated
+  - E2g: Provisional Ballots Cast Voter Did Not Surrender Mail Ballot
+  - E2h: Provisional Ballots Cast Judge Extended Voting Hours
+  - E2i: Provisional Ballots Cast Voter Used SDR
+  - E2j, E2k, E2l: Other provisional ballot reasons (if applicable)
+
+GUI-4: Provisional ballot table (required)
+  - E2a-E2i: All reasons for provisional ballot casting
+  - E2j, E2k, E2l: Other reasons (if applicable)
+  - FIPSCode, Jurisdiction_Name, State_Full, State_Abbr: Geographic identifiers
+
+GUI-5: Provisional ballot choropleth map (required)
+  - E1a: Total Provisional Ballots Cast
+  - FIPSCode, Jurisdiction_Name: For geographic mapping
+
+GUI-6: State voting equipment summary (required)
+  - F3a: DRE no VVPAT (binary)
+  - F4a: DRE with VVPAT (binary)
+  - F5a: Ballot Marking Device (binary)
+  - F6a: Scanner (binary)
+  - F3b_1, F3c_1, etc.: Equipment make/model and quantity details (not from main EAVS)
+  - F4b_1, F4c_1, etc.: Equipment make/model and quantity details (not from main EAVS)
+  - F5b_1, F5c_1, etc.: Equipment make/model and quantity details (not from main EAVS)
+  - F6b_1, F6c_1, etc.: Equipment make/model and quantity details (not from main EAVS)
+
+GUI-7: Display 2024 EAVS active voters (required)
+  - A1a: Total Reg (total registered voters)
+  - A1b: Total Active (total active registered voters)
+  - A1c: Total Inactive (total inactive registered voters)
+  - Calculated: Percentage = A1b / (A1b + A1c) for CVAP display
+
+GUI-8: Display 2024 EAVS pollbook deletions (preferred)
+  - A12b: Removed Moved
+  - A12c: Removed Death
+  - A12d: Removed Felony
+  - A12e: Removed Fail Response
+  - A12f: Removed Incompetent to Vote
+  - A12g: Removed Voter Request
+  - A12h: Removed Duplicate Records
+  - A12i, A12j, A12k: Other removal reasons (if applicable)
+
+GUI-9: Display mail ballots rejected (preferred)
+  - C9a: Total Mail Ballots Rejected
+  - C9b: Mail Ballots Rejected Because Late
+  - C9c: Mail Ballots Rejected Because Missing Voter Signature
+  - C9d: Mail Ballots Rejected Because Missing Witness Signature
+  - C9e: Mail Ballots Rejected Because Non-Matching Voter Signature
+  - C9f: Mail Ballots Rejected Because Unofficial Envelope
+  - C9g: Mail Ballots Rejected Because Ballot Missing from Envelope
+  - C9h: Mail Ballots Rejected Because No Secrecy Envelope
+  - C9i: Mail Ballots Rejected Because Multiple Ballots in One Envelope
+  - C9j: Mail Ballots Rejected Because Envelope Not Sealed
+  - C9k: Mail Ballots Rejected Because No Postmark
+  - C9l: Mail Ballots Rejected Because No Resident Address on Envelope
+  - C9m: Mail Ballots Rejected Because Voter Deceased
+  - C9n: Mail Ballots Rejected Because Voter Already Voted
+  - C9o: Mail Ballots Rejected Because Missing Documentation
+  - C9p: Mail Ballots Rejected Because Voter Not Eligible
+  - C9q: Mail Ballots Rejected Because No Ballot Application
+  - C9r, C9s, C9t: Other rejection reasons (if applicable)
+
+GUI-10: Display type of voting equipment (preferred)
+  - F3a: DRE no VVPAT (for mapping by region)
+  - F4a: DRE with VVPAT (for mapping by region)
+  - F5a: Ballot Marking Device (for mapping by region)
+  - F6a: Scanner (for mapping by region)
+  - Geographic identifiers for mapping
+
+GUI-11: Display relative age of voting equipment (preferred)
+  - Equipment age data (not from main EAVS but needed for calculation)
+  - F3a, F4a, F5a, F6a: Equipment type indicators
+
+GUI-12: Display voting equipment in US (required)
+  - F3a: DRE no VVPAT counts by state
+  - F4a: DRE with VVPAT counts by state
+  - F5a: Ballot Marking Device counts by state
+  - F6a: Scanner counts by state
+  - State_Full, State_Abbr: State identifiers
+
+GUI-13: Display of US voting equipment summary (required)
+  - F3a: DRE no VVPAT detailed information
+  - F4a: DRE with VVPAT detailed information
+  - F5a: Ballot Marking Device detailed information
+  - F6a: Scanner detailed information
+  - Equipment details (not from main EAVS): Make, model, age, OS, certification, scan rate, error rate, reliability
+
+GUI-14: Display voting equipment history for a state (required)
+  - F3a, F4a, F5a, F6a: Equipment type data over time
+  - Year: For historical comparison (2016, 2020, 2024)
+  - Equipment quantity by year type
+
+GUI-15: Compare Republican and Democratic states (required)
+  - A1a: Total registration data for turnout calculation
+  - C9a: Mail ballot rejection data
+  - C3a: Drop box data
+  - Calculated turnout: A1a vs actual participation
+  - Prepro-13: Felony voting policy data (external to EAVS)
+
+GUI-16: Compare changes in voter registration (preferred)
+  - A1a: Total registration (2016, 2020, 2024)
+  - Geographic identifiers for sorting
+
+GUI-17: Display voter registration data (required)
+  - A1a: Total registered voters
+  - A1b: Total active registered voters
+  - A1c: Total inactive registered voters
+  - Political party data: Separate from EAVS data
+
+GUI-18: Display voter registration bubble chart (preferred)
+  - Geographic data: FIPSCode, geometry
+  - Political party registration data (external to EAVS)
+
+GUI-19: Display registered voters (required)
+  - A1a: Total registered voters
+  - A1b: Active registered voters
+  - A1c: Inactive registered voters
+  - Political party data (external to EAVS)
+
+GUI-21: Compare voter registration data for opt-in and opt-out (required)
+  - A1a: Total registration
+  - A1b: Active registration
+  - A1c: Inactive registration
+  - Calculated turnout percentages
+
+GUI-22: Compare Republican and Democratic states (required)
+  - A1a: Total registration
+  - Calculated turnout percentages
+  - Registration and turnout data
+
+GUI-23: Compare Republican and Democratic states early voting (required)
+  - F1f: In Person Early Voting count
+  - F1d: Mail Votes count
+  - F1b: Physical Polling Place count
+  - Calculated percentages based on total votes
+
+GUI-24: Drop box voting bubble chart (required)
+  - C3a: Total Drop Boxes
+  - Presidential election results data (external to EAVS)
+  - Percentage calculations for party affiliation
+
+GUI-25: Bubble chart for voting equipment quality and rejected ballots (required)
+  - Equipment quality measures (not in EAVS but derived)
+  - C9a: Total Mail Ballots Rejected (for percentage calculation)
+  - B24a: UOCAVA Rejected Total (for percentage calculation)
+  - E1d: Provisional Ballots Rejected (for percentage calculation)
+  - Other participation data: F1a, F1d, F1f, F1e, F1b for total calculation
