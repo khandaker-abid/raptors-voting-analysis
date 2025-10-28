@@ -1,16 +1,17 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { Paper, Typography, Box, Chip, Alert } from "@mui/material";
 import { lighten, darken } from "@mui/material/styles";
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
-import { getCountyCount } from "../data/stateShapes";
 import type { ActiveVotersData } from "../data/activeVotersData";
 import theme from "../theme";
 
 interface ActiveVotersChoroplethMapProps {
 	stateName: string;
 	data: ActiveVotersData[];
+	/** Optional: change value (e.g., flip 0/1) when an external dialog closes to force-clear hover */
+	resetHoverKey?: number;
 }
 
 type CountyFeature = Feature<
@@ -34,11 +35,28 @@ type CountyGeoJSONData = FeatureCollection<
 const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 	stateName,
 	data,
+	resetHoverKey,
 }) => {
 	const [geoData, setGeoData] = useState<FeatureCollection | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
+
+	// Track map + GeoJSON + hovered layer so we can reliably clear highlight
+	const mapRef = useRef<L.Map | null>(null);
+	const geoRef = useRef<L.GeoJSON | null>(null);
+	const hoveredRef = useRef<L.Path | null>(null);
+
+	const clearHover = () => {
+		if (hoveredRef.current) {
+			try {
+				geoRef.current?.resetStyle(hoveredRef.current as any);
+			} catch {
+				// ignore if layer is detached
+			}
+			hoveredRef.current = null;
+		}
+	};
 
 	// Derive a color palette from the theme primary color
 	const COLOR_PALETTE = useMemo(() => {
@@ -64,8 +82,9 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 
 		return (value: number) => {
 			if (value === 0) return "#f5f5f5"; // Special color for no data
-			if (maxPercentage === minPercentage) return COLOR_PALETTE[COLOR_PALETTE.length - 1];
-			const ratio = (value - minPercentage) / (maxPercentage - minPercentage);
+			if (maxPercentage === minPercentage)
+				return COLOR_PALETTE[COLOR_PALETTE.length - 1];
+			const ratio = (value - minPercentage) / (maxPercentage - minPercentage || 1);
 			const index = Math.floor(ratio * (COLOR_PALETTE.length - 1));
 			return COLOR_PALETTE[Math.min(index, COLOR_PALETTE.length - 1)];
 		};
@@ -75,14 +94,9 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 	const dataLookup = useMemo(() => {
 		const lookup = new Map<string, ActiveVotersData>();
 		data.forEach((item) => {
-			// Normalize county names for better matching
-			const normalizedCounty = item.county
-				.toLowerCase()
-				.replace(/\s+/g, " ")
-				.trim();
+			const normalizedCounty = item.county.toLowerCase().replace(/\s+/g, " ").trim();
 			lookup.set(normalizedCounty, item);
 
-			// Also add without "county" suffix for broader matching
 			const withoutCounty = normalizedCounty.replace(/\s+county$/, "");
 			if (withoutCounty !== normalizedCounty) {
 				lookup.set(withoutCounty, item);
@@ -99,17 +113,10 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 			setError(null);
 
 			try {
-				console.log(
-					`Loading county data for active voters choropleth: ${stateName}`,
-				);
-				const response = await fetch(
-					"/georef-united-states-of-america-county.geojson",
-				);
+				const response = await fetch("/georef-united-states-of-america-county.geojson");
 
 				if (!response.ok) {
-					throw new Error(
-						`Failed to fetch county data: ${response.statusText}`,
-					);
+					throw new Error(`Failed to fetch county data: ${response.statusText}`);
 				}
 
 				const countyData = (await response.json()) as CountyGeoJSONData;
@@ -118,26 +125,21 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 					throw new Error("County GeoJSON data is invalid or empty");
 				}
 
-				// Filter counties by state name
 				const features = countyData.features.filter(
 					(feature: CountyFeature) =>
 						feature.properties.ste_name &&
-						feature.properties.ste_name.includes(stateName),
+						feature.properties.ste_name.includes(stateName)
 				);
-
-				console.log(`Found ${features.length} counties for ${stateName}`);
 
 				if (features.length === 0) {
 					throw new Error(`No county data found for ${stateName}`);
 				}
 
-				// Create FeatureCollection for the map
 				const featureCollection: FeatureCollection = {
 					type: "FeatureCollection",
 					features: features,
 				};
 
-				// Calculate bounds for the map
 				const bounds = new L.LatLngBounds([]);
 				features.forEach((feature) => {
 					if (feature.geometry.type === "Polygon") {
@@ -147,13 +149,12 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 					} else if (feature.geometry.type === "MultiPolygon") {
 						feature.geometry.coordinates.forEach((polygon) => {
 							polygon[0].forEach((coord) => {
-								bounds.extend([coord[1], coord[0]]); // [lat, lng]
+								bounds.extend([coord[1], coord[0]]);
 							});
 						});
 					}
 				});
 
-				// Add padding to the bounds
 				const paddedBounds = bounds.pad(0.1);
 				setMapBounds(paddedBounds);
 
@@ -192,15 +193,12 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 			.replace(/\s+/g, " ")
 			.trim();
 
-		// Try multiple variations of the county name
 		let countyData = dataLookup.get(countyName);
 		if (!countyData) {
-			// Try without "county" suffix
 			const withoutCounty = countyName.replace(/\s+county$/, "");
 			countyData = dataLookup.get(withoutCounty);
 		}
 		if (!countyData) {
-			// Try adding "county" suffix
 			const withCounty = countyName.includes("county")
 				? countyName
 				: `${countyName} county`;
@@ -220,7 +218,7 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 		};
 	};
 
-	// Event handlers for GeoJSON features
+	// Event handlers for GeoJSON features — with robust hover clearing
 	const onEachFeature = (feature: Feature, layer: L.Layer) => {
 		const countyFeature = feature as CountyFeature;
 		const countyName =
@@ -228,7 +226,6 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 			countyFeature.properties.coty_name?.[0] ||
 			"Unknown County";
 
-		// Get normalized name for data lookup
 		const normalizedName = countyName.toLowerCase().replace(/\s+/g, " ").trim();
 		let countyData = dataLookup.get(normalizedName);
 		if (!countyData) {
@@ -247,42 +244,62 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 		const activePercentage = countyData?.activePercentage || 0;
 
 		const tooltipContent = `
-			<div style="font-weight: bold; margin-bottom: 4px;">${countyName}</div>
-			<div>Active Voters: <span style="color: #2196f3;">${activeVoters.toLocaleString()}</span></div>
-			<div>Total Voters: <span style="color: #90caf9;">${totalVoters.toLocaleString()}</span></div>
-			<div>Active Percentage: <span style="color: #1976d2; font-weight: bold;">${activePercentage.toFixed(
-				1,
-			)}%</span></div>
-			${
-				activePercentage === 0
-					? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">No data available</div>'
-					: ""
+      <div style="font-weight: bold; margin-bottom: 4px;">${countyName}</div>
+      <div>Active Voters: <span style="color: #2196f3;">${activeVoters.toLocaleString()}</span></div>
+      <div>Total Voters: <span style="color: #90caf9;">${totalVoters.toLocaleString()}</span></div>
+      <div>Active Percentage: <span style="color: #1976d2; font-weight: bold;">${activePercentage.toFixed(
+			1
+		)}%</span></div>
+      ${activePercentage === 0
+				? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">No data available</div>'
+				: ""
 			}
-		`;
+    `;
 
-		layer.bindTooltip(tooltipContent, {
+		(layer as any).bindTooltip(tooltipContent, {
 			permanent: false,
 			direction: "center",
 			className: "custom-tooltip",
 		});
 
 		layer.on({
-			mouseover: (e) => {
-				const targetLayer = e.target;
+			mouseover: (e: any) => {
+				const targetLayer = e.target as L.Path;
+				hoveredRef.current = targetLayer;
 				targetLayer.setStyle({
 					weight: 3,
 					color: "#333",
 					dashArray: "",
 					fillOpacity: 0.8,
 				});
-				targetLayer.bringToFront();
+				if ((targetLayer as any).bringToFront) {
+					(targetLayer as any).bringToFront();
+				}
 			},
-			mouseout: (e) => {
-				const targetLayer = e.target;
-				targetLayer.setStyle(getFeatureStyle(feature));
+			mouseout: (e: any) => {
+				geoRef.current?.resetStyle(e.target as any);
+				if (hoveredRef.current === e.target) hoveredRef.current = null;
+			},
+			click: () => {
+				// Clear highlight proactively if a dialog opens on click
+				clearHover();
 			},
 		});
 	};
+
+	// Clear hover when cursor leaves the map container (covers dialog-open cases)
+	useEffect(() => {
+		const node = mapRef.current?.getContainer();
+		if (!node) return;
+		const handler = () => clearHover();
+		node.addEventListener("mouseleave", handler);
+		return () => node.removeEventListener("mouseleave", handler);
+	}, [mapRef.current]);
+
+	// Allow parent to force-clear when a dialog closes
+	useEffect(() => {
+		clearHover();
+	}, [resetHoverKey]);
 
 	if (loading) {
 		return (
@@ -333,6 +350,13 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 				<Typography variant="h6" gutterBottom fontWeight={600}>
 					Active Voter Percentage Distribution - {stateName}
 				</Typography>
+				<Box display="flex" gap={2} flexWrap="wrap">
+					<Chip label={`Avg: ${avgPercentage.toFixed(1)}%`} size="small" />
+					<Chip
+						label={`Range: ${minPercentage.toFixed(1)}% – ${maxPercentage.toFixed(1)}%`}
+						size="small"
+					/>
+				</Box>
 			</Box>
 
 			{/* Map Container */}
@@ -343,8 +367,10 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 					borderRadius: 2,
 					overflow: "hidden",
 					mb: 3,
-				}}>
+				}}
+			>
 				<MapContainer
+					ref={(m) => { mapRef.current = m; }}
 					bounds={mapBounds || undefined}
 					zoom={8}
 					zoomSnap={0.1}
@@ -353,12 +379,14 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 					maxBounds={mapBounds || undefined}
 					maxBoundsViscosity={1.0}
 					style={{ height: "100%", width: "100%", borderRadius: "8px" }}
-					scrollWheelZoom={true}>
+					scrollWheelZoom={true}
+				>
 					<TileLayer
 						attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
 						url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
 					/>
 					<GeoJSON
+						ref={geoRef as any}
 						data={geoData}
 						style={getFeatureStyle}
 						onEachFeature={onEachFeature}
@@ -381,7 +409,8 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 						flex={1}
 						border="1px solid #e0e0e0"
 						borderRadius={1}
-						overflow="hidden">
+						overflow="hidden"
+					>
 						{COLOR_PALETTE.map((color, index) => (
 							<Box
 								key={index}
@@ -393,19 +422,12 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 							/>
 						))}
 					</Box>
-					<Typography
-						variant="caption"
-						sx={{ minWidth: 50, textAlign: "right" }}>
+					<Typography variant="caption" sx={{ minWidth: 50, textAlign: "right" }}>
 						{maxPercentage.toFixed(1)}%
 					</Typography>
 				</Box>
-				<Typography
-					variant="caption"
-					color="text.secondary"
-					display="block"
-					mt={1}>
-					8-color scale showing percentage of active voters across
-					counties/towns
+				<Typography variant="caption" color="text.secondary" display="block" mt={1}>
+					8-color scale showing percentage of active voters across counties/towns.
 				</Typography>
 			</Box>
 		</Paper>

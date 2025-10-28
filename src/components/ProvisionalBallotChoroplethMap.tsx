@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { Paper, Typography, Box, Chip, Alert } from "@mui/material";
 import { lighten, darken } from "@mui/material/styles";
@@ -14,6 +14,8 @@ interface ProvisionalBallotChoroplethMapProps {
 		lat?: number;
 		lng?: number;
 	}>;
+	/** Optional: change value when an external dialog closes to force-clear hover */
+	resetHoverKey?: number;
 }
 
 type CountyFeature = Feature<
@@ -36,11 +38,27 @@ type CountyGeoJSONData = FeatureCollection<
 
 const ProvisionalBallotChoroplethMap: React.FC<
 	ProvisionalBallotChoroplethMapProps
-> = ({ stateName, data }) => {
+> = ({ stateName, data, resetHoverKey }) => {
 	const [geoData, setGeoData] = useState<FeatureCollection | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
+
+	// Track map + GeoJSON + hovered layer so we can reliably clear highlight
+	const mapRef = useRef<L.Map | null>(null);
+	const geoRef = useRef<L.GeoJSON | null>(null);
+	const hoveredRef = useRef<L.Path | null>(null);
+
+	const clearHover = () => {
+		if (hoveredRef.current) {
+			try {
+				geoRef.current?.resetStyle(hoveredRef.current as any);
+			} catch {
+				// layer might be detached; ignore
+			}
+			hoveredRef.current = null;
+		}
+	};
 
 	// Derive palette from theme primary color so all choropleths match
 	const COLOR_PALETTE = useMemo(() => {
@@ -66,7 +84,7 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		return (value: number) => {
 			if (value === 0) return "#f5f5f5";
 			if (maxValue === minValue) return COLOR_PALETTE[COLOR_PALETTE.length - 1];
-			const ratio = (value - minValue) / (maxValue - minValue);
+			const ratio = (value - minValue) / (maxValue - minValue || 1);
 			const index = Math.floor(ratio * (COLOR_PALETTE.length - 1));
 			return COLOR_PALETTE[Math.min(index, COLOR_PALETTE.length - 1)];
 		};
@@ -76,14 +94,12 @@ const ProvisionalBallotChoroplethMap: React.FC<
 	const dataLookup = useMemo(() => {
 		const lookup = new Map<string, number>();
 		data.forEach((item) => {
-			// Normalize county names for better matching
 			const normalizedCounty = item.county
 				.toLowerCase()
 				.replace(/\s+/g, " ")
 				.trim();
 			lookup.set(normalizedCounty, item.E1a);
 
-			// Also add without "county" suffix for broader matching
 			const withoutCounty = normalizedCounty.replace(/\s+county$/, "");
 			if (withoutCounty !== normalizedCounty) {
 				lookup.set(withoutCounty, item.E1a);
@@ -100,15 +116,12 @@ const ProvisionalBallotChoroplethMap: React.FC<
 			setError(null);
 
 			try {
-				console.log(`Loading county data for choropleth: ${stateName}`);
 				const response = await fetch(
-					"/georef-united-states-of-america-county.geojson",
+					"/georef-united-states-of-america-county.geojson"
 				);
 
 				if (!response.ok) {
-					throw new Error(
-						`Failed to fetch county data: ${response.statusText}`,
-					);
+					throw new Error(`Failed to fetch county data: ${response.statusText}`);
 				}
 
 				const countyData = (await response.json()) as CountyGeoJSONData;
@@ -121,10 +134,8 @@ const ProvisionalBallotChoroplethMap: React.FC<
 				const features = countyData.features.filter(
 					(feature: CountyFeature) =>
 						feature.properties.ste_name &&
-						feature.properties.ste_name.includes(stateName),
+						feature.properties.ste_name.includes(stateName)
 				);
-
-				console.log(`Found ${features.length} counties for ${stateName}`);
 
 				if (features.length === 0) {
 					throw new Error(`No county data found for ${stateName}`);
@@ -146,23 +157,18 @@ const ProvisionalBallotChoroplethMap: React.FC<
 					} else if (feature.geometry.type === "MultiPolygon") {
 						feature.geometry.coordinates.forEach((polygon) => {
 							polygon[0].forEach((coord) => {
-								bounds.extend([coord[1], coord[0]]); // [lat, lng]
+								bounds.extend([coord[1], coord[0]]);
 							});
 						});
 					}
 				});
 
-				// Add padding to the bounds
-				const paddedBounds = bounds.pad(0.1);
-				setMapBounds(paddedBounds);
-
+				setMapBounds(bounds.pad(0.1));
 				setGeoData(featureCollection);
 				setLoading(false);
 			} catch (err) {
 				console.error("Error loading choropleth map data:", err);
-				setError(
-					err instanceof Error ? err.message : "Failed to load map data",
-				);
+				setError(err instanceof Error ? err.message : "Failed to load map data");
 				setLoading(false);
 			}
 		};
@@ -193,15 +199,12 @@ const ProvisionalBallotChoroplethMap: React.FC<
 			.replace(/\s+/g, " ")
 			.trim();
 
-		// Try multiple variations of the county name
 		let ballotCount = dataLookup.get(countyName);
 		if (ballotCount === undefined) {
-			// Try without "county" suffix
 			const withoutCounty = countyName.replace(/\s+county$/, "");
 			ballotCount = dataLookup.get(withoutCounty);
 		}
 		if (ballotCount === undefined) {
-			// Try adding "county" suffix
 			const withCounty = countyName.includes("county")
 				? countyName
 				: `${countyName} county`;
@@ -221,7 +224,7 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		};
 	};
 
-	// Event handlers for county features
+	// Event handlers for county features — with robust hover clearing
 	const onEachFeature = (feature: Feature, layer: L.Layer) => {
 		const countyFeature = feature as CountyFeature;
 		const displayCountyName =
@@ -236,40 +239,59 @@ const ProvisionalBallotChoroplethMap: React.FC<
 
 		const ballotCount = dataLookup.get(normalizedCountyName) || 0;
 
-		// Create tooltip content
 		const tooltipContent = `
-			<div style="font-weight: bold; margin-bottom: 4px;">${displayCountyName}</div>
-			<div>Provisional Ballots: <span style="color: #2196f3; font-weight: bold;">${ballotCount.toLocaleString()}</span></div>
-			${
-				ballotCount === 0
-					? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">No data available</div>'
-					: ""
+      <div style="font-weight: bold; margin-bottom: 4px;">${displayCountyName}</div>
+      <div>Provisional Ballots: <span style="color: #2196f3; font-weight: bold;">${ballotCount.toLocaleString()}</span></div>
+      ${ballotCount === 0
+				? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">No data available</div>'
+				: ""
 			}
-		`;
+    `;
 
-		layer.bindTooltip(tooltipContent, {
+		(layer as any).bindTooltip(tooltipContent, {
 			permanent: false,
 			direction: "center",
 			className: "custom-tooltip",
 		});
 
 		layer.on({
-			mouseover: (e) => {
-				const targetLayer = e.target;
+			mouseover: (e: any) => {
+				const targetLayer = e.target as L.Path;
+				hoveredRef.current = targetLayer;
 				targetLayer.setStyle({
 					weight: 3,
 					color: "#333333",
 					dashArray: "",
 					fillOpacity: 1.0,
 				});
-				targetLayer.bringToFront();
+				if ((targetLayer as any).bringToFront) {
+					(targetLayer as any).bringToFront();
+				}
 			},
-			mouseout: (e) => {
-				const targetLayer = e.target;
-				targetLayer.setStyle(getFeatureStyle(feature));
+			mouseout: (e: any) => {
+				geoRef.current?.resetStyle(e.target as any);
+				if (hoveredRef.current === e.target) hoveredRef.current = null;
+			},
+			click: () => {
+				// If a dialog opens on click, proactively clear highlight
+				clearHover();
 			},
 		});
 	};
+
+	// Clear hover when cursor leaves the map container (covers dialog-open cases)
+	useEffect(() => {
+		const node = mapRef.current?.getContainer();
+		if (!node) return;
+		const handler = () => clearHover();
+		node.addEventListener("mouseleave", handler);
+		return () => node.removeEventListener("mouseleave", handler);
+	}, [mapRef.current]);
+
+	// Allow parent to force-clear when a dialog closes
+	useEffect(() => {
+		clearHover();
+	}, [resetHoverKey]);
 
 	if (!data || data.length === 0) {
 		return (
@@ -315,6 +337,13 @@ const ProvisionalBallotChoroplethMap: React.FC<
 				<Typography variant="h6" gutterBottom fontWeight={600}>
 					Provisional Ballots Distribution - {stateName}
 				</Typography>
+				<Box display="flex" gap={2} flexWrap="wrap">
+					<Chip label={`Total: ${totalBallots.toLocaleString()}`} size="small" />
+					<Chip
+						label={`Range: ${minValue.toLocaleString()} – ${maxValue.toLocaleString()}`}
+						size="small"
+					/>
+				</Box>
 			</Box>
 
 			<Box
@@ -329,8 +358,10 @@ const ProvisionalBallotChoroplethMap: React.FC<
 					width: "100%",
 					margin: "0 auto",
 					mb: 3,
-				}}>
+				}}
+			>
 				<MapContainer
+					ref={(m) => { mapRef.current = m; }}
 					bounds={mapBounds || undefined}
 					zoom={8}
 					zoomSnap={0.1}
@@ -339,12 +370,14 @@ const ProvisionalBallotChoroplethMap: React.FC<
 					maxBounds={mapBounds || undefined}
 					maxBoundsViscosity={1.0}
 					style={{ height: "100%", width: "100%", borderRadius: "8px" }}
-					scrollWheelZoom={true}>
+					scrollWheelZoom={true}
+				>
 					<TileLayer
 						attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
 						url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
 					/>
 					<GeoJSON
+						ref={geoRef as any}
 						data={geoData}
 						style={getFeatureStyle}
 						onEachFeature={onEachFeature}
@@ -367,40 +400,26 @@ const ProvisionalBallotChoroplethMap: React.FC<
 						flex={1}
 						border="1px solid #e0e0e0"
 						borderRadius={1}
-						overflow="hidden">
-						{colorScale &&
-							[
-								"#e3f2fd",
-								"#bbdefb",
-								"#90caf9",
-								"#64b5f6",
-								"#42a5f5",
-								"#2196f3",
-								"#1976d2",
-							].map((color, index) => (
-								<Box
-									key={index}
-									sx={{
-										flex: 1,
-										backgroundColor: color,
-										height: "100%",
-									}}
-								/>
-							))}
+						overflow="hidden"
+					>
+						{COLOR_PALETTE.map((color, index) => (
+							<Box
+								key={index}
+								sx={{
+									flex: 1,
+									backgroundColor: color,
+									height: "100%",
+								}}
+							/>
+						))}
 					</Box>
-					<Typography
-						variant="caption"
-						sx={{ minWidth: 50, textAlign: "right" }}>
+					<Typography variant="caption" sx={{ minWidth: 50, textAlign: "right" }}>
 						{maxValue}
 					</Typography>
 				</Box>
-				<Typography
-					variant="caption"
-					color="text.secondary"
-					display="block"
-					mt={1}>
-					Interactive choropleth map showing provisional ballot distribution
-					across counties. Hover over counties for detailed information.
+				<Typography variant="caption" color="text.secondary" display="block" mt={1}>
+					Interactive choropleth map showing provisional ballot distribution across
+					counties. Hover over counties for detailed information.
 				</Typography>
 			</Box>
 		</Paper>

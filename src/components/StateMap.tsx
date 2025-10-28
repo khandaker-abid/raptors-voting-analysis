@@ -1,7 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, GeoJSON} from "react-leaflet";
-import { Box, Typography, Paper, Alert, Dialog, DialogContent, DialogTitle, IconButton  } from "@mui/material";
-import CloseIcon from '@mui/icons-material/Close';
+import React, { useEffect, useRef, useState } from "react";
+import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
+import {
+	Box,
+	Typography,
+	Paper,
+	Alert,
+	Dialog,
+	DialogContent,
+	DialogTitle,
+	IconButton,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import RegionRegisteredVotersTable from "../tables/RegionRegisteredVotersTable";
@@ -32,7 +41,7 @@ interface StateMapProps {
 	isDetailState: boolean;
 }
 
-// Detail states that have county data - moved outside component to avoid dependency issues
+// Detail states that have county data
 const detailStates = ["Rhode Island", "Maryland", "Arkansas"];
 
 const StateMap: React.FC<StateMapProps> = ({
@@ -46,115 +55,159 @@ const StateMap: React.FC<StateMapProps> = ({
 	const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
 	const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
+	// Refs to manage highlight + map container events
+	const mapRef = useRef<L.Map | null>(null);
+	const geoJsonRef = useRef<L.GeoJSON<any> | null>(null);
+	const hoveredLayerRef = useRef<L.Path | null>(null);
+	const lastHoveredFeatureRef = useRef<Feature | undefined>(undefined);
+
+	/**
+	 * Robust de-highlighter.
+	 * - If we know the hovered layer, reset just that.
+	 * - If we don't (or caller asks), reset ALL layers.
+	 */
+	const clearHover = (resetAll = false) => {
+		const gj = geoJsonRef.current;
+		const hovered = hoveredLayerRef.current as any | null;
+
+		if (!gj) {
+			hoveredLayerRef.current = null;
+			lastHoveredFeatureRef.current = undefined;
+			return;
+		}
+
+		if (resetAll || !hovered) {
+			gj.getLayers().forEach((l) => {
+				try {
+					gj.resetStyle(l as any);
+				} catch {
+					/* ignore */
+				}
+			});
+		} else {
+			try {
+				gj.resetStyle(hovered);
+			} catch {
+				/* ignore */
+			}
+		}
+
+		hoveredLayerRef.current = null;
+		lastHoveredFeatureRef.current = undefined;
+	};
+
 	useEffect(() => {
 		const loadMapData = async () => {
 			if (!stateName) return;
 
 			setLoading(true);
 			setError(null);
+			clearHover(true);
 
 			try {
 				let features: (CountyFeature | StateFeature)[];
 
 				if (isDetailState && detailStates.includes(stateName)) {
-					// Load county data for detail states from data folder
-					console.log(`Loading county data for detail state: ${stateName}`);
+					// Load county data from /public
 					const response = await fetch(
-						"/src/data/georef-united-states-of-america-county.geojson",
+						"/georef-united-states-of-america-county.geojson"
 					);
-
 					if (!response.ok) {
-						throw new Error(
-							`Failed to fetch county data: ${response.statusText}`,
-						);
+						throw new Error(`Failed to fetch county data: ${response.statusText}`);
 					}
-
 					const countyData = (await response.json()) as CountyGeoJSONData;
-
-					if (!countyData || !countyData.features) {
+					if (!countyData?.features) {
 						throw new Error("County GeoJSON data is invalid or empty");
 					}
-
-					// Filter counties by state name
 					features = countyData.features.filter(
 						(feature: CountyFeature) =>
 							feature.properties.ste_name &&
-							feature.properties.ste_name.includes(stateName),
+							feature.properties.ste_name.includes(stateName)
 					);
-					console.log(`Found ${features.length} counties for ${stateName}`);
 				} else {
-					// Load state boundary data for non-detail states from data folder
-					console.log(`Loading state boundary data for: ${stateName}`);
-					const response = await fetch("/src/data/us-state-boundaries.geojson");
-
+					// Load state boundary data from /public
+					const response = await fetch("/us-state-boundaries.geojson");
 					if (!response.ok) {
-						throw new Error(
-							`Failed to fetch state data: ${response.statusText}`,
-						);
+						throw new Error(`Failed to fetch state data: ${response.statusText}`);
 					}
-
 					const stateData = (await response.json()) as StateGeoJSONData;
-
-					if (!stateData || !stateData.features) {
+					if (!stateData?.features) {
 						throw new Error("State GeoJSON data is invalid or empty");
 					}
-
-					// Filter to get the specific state
 					features = stateData.features.filter(
-						(feature: StateFeature) => feature.properties.name === stateName,
-					);
-					console.log(
-						`Found ${features.length} state boundary for ${stateName}`,
+						(feature: StateFeature) => feature.properties.name === stateName
 					);
 				}
 
 				if (features.length === 0) {
 					throw new Error(
-						`No ${
-							isDetailState ? "county" : "state"
-						} data found for ${stateName}`,
+						`No ${isDetailState ? "county" : "state"} data found for ${stateName}`
 					);
 				}
 
-				// Create FeatureCollection for the map
 				const featureCollection: FeatureCollection = {
 					type: "FeatureCollection",
-					features: features,
+					features,
 				};
 
-				// Calculate bounds for pan constraints
+				// Compute padded bounds for pan constraints
 				const bounds = new L.LatLngBounds([]);
 				features.forEach((feature) => {
 					if (feature.geometry.type === "Polygon") {
 						feature.geometry.coordinates[0].forEach((coord) => {
-							bounds.extend([coord[1], coord[0]]); // [lat, lng]
+							bounds.extend([coord[1], coord[0]]);
 						});
 					} else if (feature.geometry.type === "MultiPolygon") {
 						feature.geometry.coordinates.forEach((polygon) => {
 							polygon[0].forEach((coord) => {
-								bounds.extend([coord[1], coord[0]]); // [lat, lng]
+								bounds.extend([coord[1], coord[0]]);
 							});
 						});
 					}
 				});
-
-				// Add some padding to the bounds
-				const paddedBounds = bounds.pad(0.1);
-				setMapBounds(paddedBounds);
+				setMapBounds(bounds.pad(0.1));
 
 				setGeoData(featureCollection);
 				setLoading(false);
 			} catch (err) {
 				console.error("Error loading map data:", err);
-				setError(
-					err instanceof Error ? err.message : "Failed to load map data",
-				);
+				setError(err instanceof Error ? err.message : "Failed to load map data");
 				setLoading(false);
 			}
 		};
 
 		loadMapData();
+
+		// Cleanup on state swap/unmount
+		return () => clearHover(true);
 	}, [stateName, isDetailState]);
+
+	// Add robust "mouseleave" handling on the map container.
+	// Use an empty dep list so we attach once after mount.
+	useEffect(() => {
+		const map = mapRef.current;
+		if (!map) return;
+
+		const container = map.getContainer();
+		const handleLeave = () => {
+			// When the pointer leaves the map (e.g., to click the dialog X), ensure highlight is cleared
+			clearHover(true);
+		};
+		container.addEventListener("mouseleave", handleLeave);
+		container.addEventListener("touchend", handleLeave);
+		container.addEventListener("pointerleave", handleLeave);
+
+		return () => {
+			container.removeEventListener("mouseleave", handleLeave);
+			container.removeEventListener("touchend", handleLeave);
+			container.removeEventListener("pointerleave", handleLeave);
+		};
+	}, []);
+
+	// Also nuke any hover styling whenever the dialog opens OR closes.
+	useEffect(() => {
+		clearHover(true);
+	}, [selectedRegion]);
 
 	// Style function for map features
 	const getFeatureStyle = (feature?: Feature) => {
@@ -200,25 +253,36 @@ const StateMap: React.FC<StateMapProps> = ({
 			});
 
 			layer.on({
-				mouseover: (e) => {
-					const targetLayer = e.target;
-					targetLayer.setStyle({
+				mouseover: (e: any) => {
+					hoveredLayerRef.current = e.target;
+					lastHoveredFeatureRef.current = feature;
+					e.target.setStyle({
 						weight: 2,
 						color: "#0d47a1",
 						dashArray: "",
 						fillOpacity: 0.6,
 					});
-					targetLayer.bringToFront();
+					e.target.bringToFront();
 				},
-				mouseout: (e) => {
-					const targetLayer = e.target;
-					targetLayer.setStyle(getFeatureStyle(feature));
+				mouseout: () => {
+					clearHover();
 				},
-				click: (e) => {
-					const targetLayer = e.target;
-					// Set popup info with county name and click coordinates
+				click: (e: any) => {
+					// Explicitly remove hover style from the clicked feature before opening dialog
+					if (geoJsonRef.current) {
+						try {
+							geoJsonRef.current.resetStyle(e.target);
+						} catch {
+							/* ignore */
+						}
+					}
+					try {
+						(e.target as L.Layer).closeTooltip?.();
+					} catch {
+						/* ignore */
+					}
 					setSelectedRegion(countyName);
-				}
+				},
 			});
 		} else {
 			// State feature handling
@@ -229,19 +293,19 @@ const StateMap: React.FC<StateMapProps> = ({
 			});
 
 			layer.on({
-				mouseover: (e) => {
-					const targetLayer = e.target;
-					targetLayer.setStyle({
+				mouseover: (e: any) => {
+					hoveredLayerRef.current = e.target;
+					lastHoveredFeatureRef.current = feature;
+					e.target.setStyle({
 						weight: 3,
 						color: "#757575",
 						dashArray: "",
 						fillOpacity: 0.4,
 					});
-					targetLayer.bringToFront();
+					e.target.bringToFront();
 				},
-				mouseout: (e) => {
-					const targetLayer = e.target;
-					targetLayer.setStyle(getFeatureStyle(feature));
+				mouseout: () => {
+					clearHover();
 				},
 			});
 		}
@@ -279,7 +343,9 @@ const StateMap: React.FC<StateMapProps> = ({
 
 	const handleClose = () => {
 		setSelectedRegion(null);
-  	};
+		// Extra safety: ensure leftover highlight (if any) is cleared after closing the dialog
+		clearHover(true);
+	};
 
 	return (
 		<Paper elevation={2} sx={{ p: 3, textAlign: "center" }}>
@@ -297,49 +363,59 @@ const StateMap: React.FC<StateMapProps> = ({
 					height: 500,
 					width: "100%",
 					margin: "0 auto",
-				}}>
+				}}
+			>
 				<MapContainer
-					center={[center[1], center[0]]} // Note: Leaflet uses [lat, lng]
+					ref={mapRef}
+					center={[center[1], center[0]]} // Leaflet uses [lat, lng]
 					zoom={7}
 					minZoom={6}
 					maxZoom={12}
 					maxBounds={mapBounds || undefined}
 					maxBoundsViscosity={1.0}
 					style={{ height: "100%", width: "100%", borderRadius: "8px" }}
-					scrollWheelZoom={true}>
+					scrollWheelZoom={true}
+				>
 					<TileLayer
 						attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
 						url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
 					/>
 					<GeoJSON
+						ref={geoJsonRef as any}
 						data={geoData}
 						style={getFeatureStyle}
 						onEachFeature={onEachFeature}
 					/>
 				</MapContainer>
 			</Box>
+
 			<Dialog
 				open={!!selectedRegion}
 				onClose={handleClose}
-				maxWidth="lg" 
+				maxWidth="lg"
 				fullWidth={false}
-				
 				PaperProps={{
-				sx: {
-					width: '900px', 
-					maxHeight: '900px', 
-					m: 'auto',
-				},
+					sx: {
+						width: "900px",
+						maxHeight: "900px",
+						m: "auto",
+					},
 				}}
 			>
-				<DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-					All Registered Voters in {selectedRegion || 'All Counties'} 
+				<DialogTitle
+					sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+				>
+					All Registered Voters in {selectedRegion || "All Counties"}
 					<IconButton onClick={handleClose}>
 						<CloseIcon />
 					</IconButton>
 				</DialogTitle>
-				<DialogContent sx={{ p: 0, overflowY: 'auto' }}>
-				{selectedRegion && <RegionRegisteredVotersTable geographicUnitName={selectedRegion.split(" ").slice(0,-1).join(" ")} />}
+				<DialogContent sx={{ p: 0, overflowY: "auto" }}>
+					{selectedRegion && (
+						<RegionRegisteredVotersTable
+							geographicUnitName={selectedRegion.split(" ").slice(0, -1).join(" ")}
+						/>
+					)}
 				</DialogContent>
 			</Dialog>
 		</Paper>

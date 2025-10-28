@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { Paper, Typography, Box, Chip, Alert } from "@mui/material";
 import L from "leaflet";
@@ -14,6 +14,8 @@ interface VoterRegistrationChloroplethMapProps {
 		lat?: number;
 		lng?: number;
 	}>;
+	/** Optional: change value (e.g., flip 0/1) when your dialog closes to force-clear hover */
+	resetHoverKey?: number;
 }
 
 type CountyFeature = Feature<
@@ -36,25 +38,41 @@ type CountyGeoJSONData = FeatureCollection<
 
 const VoterRegistrationChloroplethMap: React.FC<
 	VoterRegistrationChloroplethMapProps
-> = ({ stateName }) => {
-
+> = ({ stateName, resetHoverKey }) => {
 	const [data, setData] = useState<StateVoterRegistrationData[]>([]);
 	const [geoData, setGeoData] = useState<FeatureCollection | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
 
+	// Refs to manage hover state and reset styles reliably
+	const mapRef = useRef<L.Map | null>(null);
+	const geoRef = useRef<L.GeoJSON | null>(null);
+	const hoveredRef = useRef<L.Path | null>(null);
+
+	const clearHover = () => {
+		if (hoveredRef.current) {
+			// resetStyle needs the same layer reference used by GeoJSON
+			try {
+				geoRef.current?.resetStyle(hoveredRef.current as any);
+			} catch {
+				// no-op if layer isn't part of current GeoJSON
+			}
+			hoveredRef.current = null;
+		}
+	};
+
 	useEffect(() => {
 		const fetchData = async () => {
-		try {
-			const result = await getStateVoterRegistrationData(stateName);
-			setData(Array.isArray(result) ? result : []);
-		} catch (error) {
-			console.error('Error fetching voting equipment data:', error);
-		}
+			try {
+				const result = await getStateVoterRegistrationData(stateName);
+				setData(Array.isArray(result) ? result : []);
+			} catch (error) {
+				console.error("Error fetching voting equipment data:", error);
+			}
 		};
 		fetchData();
-	}, []);
+	}, [stateName]);
 
 	// Calculate color scale for registered voters
 	const colorScale = useMemo(() => {
@@ -64,20 +82,19 @@ const VoterRegistrationChloroplethMap: React.FC<
 		const maxValue = Math.max(...values);
 		const minValue = Math.min(...values);
 
-		// Create a quantile scale for better distribution
 		const range = [
-			"#e3f2fd", // Very low
-			"#bbdefb", // Low
-			"#90caf9", // Below average
-			"#64b5f6", // Average
-			"#42a5f5", // Above average
-			"#2196f3", // High
-			"#1976d2", // Very high
+			"#e3f2fd",
+			"#bbdefb",
+			"#90caf9",
+			"#64b5f6",
+			"#42a5f5",
+			"#2196f3",
+			"#1976d2",
 		];
 
 		return (value: number) => {
-			if (value === 0) return "#f5f5f5"; // Special color for no data
-			const ratio = (value - minValue) / (maxValue - minValue);
+			if (value === 0) return "#f5f5f5";
+			const ratio = (value - minValue) / (maxValue - minValue || 1);
 			const index = Math.floor(ratio * (range.length - 1));
 			return range[Math.min(index, range.length - 1)];
 		};
@@ -87,14 +104,12 @@ const VoterRegistrationChloroplethMap: React.FC<
 	const dataLookup = useMemo(() => {
 		const lookup = new Map<string, number>();
 		data.forEach((item) => {
-			// Normalize county names for better matching
 			const normalizedCounty = item.regionName
 				.toLowerCase()
 				.replace(/\s+/g, " ")
 				.trim();
 			lookup.set(normalizedCounty, item.registeredVoterCount);
 
-			// Also add without "county" suffix for broader matching
 			const withoutCounty = normalizedCounty.replace(/\s+county$/, "");
 			if (withoutCounty !== normalizedCounty) {
 				lookup.set(withoutCounty, item.registeredVoterCount);
@@ -111,15 +126,12 @@ const VoterRegistrationChloroplethMap: React.FC<
 			setError(null);
 
 			try {
-				console.log(`Loading county data for choropleth: ${stateName}`);
 				const response = await fetch(
-					"/georef-united-states-of-america-county.geojson",
+					"/georef-united-states-of-america-county.geojson"
 				);
 
 				if (!response.ok) {
-					throw new Error(
-						`Failed to fetch county data: ${response.statusText}`,
-					);
+					throw new Error(`Failed to fetch county data: ${response.statusText}`);
 				}
 
 				const countyData = (await response.json()) as CountyGeoJSONData;
@@ -132,16 +144,13 @@ const VoterRegistrationChloroplethMap: React.FC<
 				const features = countyData.features.filter(
 					(feature: CountyFeature) =>
 						feature.properties.ste_name &&
-						feature.properties.ste_name.includes(stateName),
+						feature.properties.ste_name.includes(stateName)
 				);
-
-				console.log(`Found ${features.length} counties for ${stateName}`);
 
 				if (features.length === 0) {
 					throw new Error(`No county data found for ${stateName}`);
 				}
 
-				// Create FeatureCollection for the map
 				const featureCollection: FeatureCollection = {
 					type: "FeatureCollection",
 					features: features,
@@ -157,13 +166,12 @@ const VoterRegistrationChloroplethMap: React.FC<
 					} else if (feature.geometry.type === "MultiPolygon") {
 						feature.geometry.coordinates.forEach((polygon) => {
 							polygon[0].forEach((coord) => {
-								bounds.extend([coord[1], coord[0]]); // [lat, lng]
+								bounds.extend([coord[1], coord[0]]);
 							});
 						});
 					}
 				});
 
-				// Add padding to the bounds
 				const paddedBounds = bounds.pad(0.1);
 				setMapBounds(paddedBounds);
 
@@ -171,9 +179,7 @@ const VoterRegistrationChloroplethMap: React.FC<
 				setLoading(false);
 			} catch (err) {
 				console.error("Error loading choropleth map data:", err);
-				setError(
-					err instanceof Error ? err.message : "Failed to load map data",
-				);
+				setError(err instanceof Error ? err.message : "Failed to load map data");
 				setLoading(false);
 			}
 		};
@@ -204,15 +210,12 @@ const VoterRegistrationChloroplethMap: React.FC<
 			.replace(/\s+/g, " ")
 			.trim();
 
-		// Try multiple variations of the county name
 		let voterCount = dataLookup.get(countyName);
 		if (voterCount === undefined) {
-			// Try without "county" suffix
 			const withoutCounty = countyName.replace(/\s+county$/, "");
 			voterCount = dataLookup.get(withoutCounty);
 		}
 		if (voterCount === undefined) {
-			// Try adding "county" suffix
 			const withCounty = countyName.includes("county")
 				? countyName
 				: `${countyName} county`;
@@ -232,7 +235,7 @@ const VoterRegistrationChloroplethMap: React.FC<
 		};
 	};
 
-	// Event handlers for county features
+	// Event handlers for county features — now with robust hover reset
 	const onEachFeature = (feature: Feature, layer: L.Layer) => {
 		const countyFeature = feature as CountyFeature;
 		const displayCountyName =
@@ -245,52 +248,71 @@ const VoterRegistrationChloroplethMap: React.FC<
 			.replace(/\s+/g, " ")
 			.trim()
 			.split(" ")
-			.slice(0,-1).join(" ");
+			.slice(0, -1)
+			.join(" ");
 
-		console.log(dataLookup)
-		console.log(normalizedCountyName)
 		const voterCount = dataLookup.get(normalizedCountyName) || 0;
 
-		// Create tooltip content
 		const tooltipContent = `
-			<div style="font-weight: bold; margin-bottom: 4px;">${displayCountyName}</div>
-			<div>Registered Voters: <span style="color: #2196f3; font-weight: bold;">${voterCount.toLocaleString()}</span></div>
-			${
-				voterCount === 0
-					? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">No data available</div>'
-					: ""
+      <div style="font-weight: bold; margin-bottom: 4px;">${displayCountyName}</div>
+      <div>Registered Voters: <span style="color: #2196f3; font-weight: bold;">${voterCount.toLocaleString()}</span></div>
+      ${voterCount === 0
+				? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">No data available</div>'
+				: ""
 			}
-		`;
+    `;
 
-		layer.bindTooltip(tooltipContent, {
+		(layer as any).bindTooltip(tooltipContent, {
 			permanent: false,
 			direction: "center",
 			className: "custom-tooltip",
 		});
 
 		layer.on({
-			mouseover: (e) => {
-				const targetLayer = e.target;
+			mouseover: (e: any) => {
+				const targetLayer = e.target as L.Path;
+				hoveredRef.current = targetLayer;
 				targetLayer.setStyle({
 					weight: 3,
 					color: "#333333",
 					dashArray: "",
 					fillOpacity: 1.0,
 				});
-				targetLayer.bringToFront();
+				if ((targetLayer as any).bringToFront) {
+					(targetLayer as any).bringToFront();
+				}
 			},
-			mouseout: (e) => {
-				const targetLayer = e.target;
-				targetLayer.setStyle(getFeatureStyle(feature));
+			mouseout: (e: any) => {
+				// Reset just this layer's style
+				geoRef.current?.resetStyle(e.target as any);
+				if (hoveredRef.current === e.target) hoveredRef.current = null;
+			},
+			click: () => {
+				// Opening your dialog typically prevents mouseout from firing; clear highlight proactively
+				clearHover();
 			},
 		});
 	};
+
+	// Clear hover when the cursor leaves the map container (e.g., a dialog pops up)
+	useEffect(() => {
+		const node = mapRef.current?.getContainer();
+		if (!node) return;
+		const handler = () => clearHover();
+		node.addEventListener("mouseleave", handler);
+		return () => node.removeEventListener("mouseleave", handler);
+	}, [mapRef.current]);
+
+	// Optional: allow parent to force-clear when the dialog closes
+	useEffect(() => {
+		clearHover();
+	}, [resetHoverKey]);
 
 	if (!data || data.length === 0) {
 		return (
 			<Paper sx={{ p: 3, textAlign: "center" }}>
 				<Typography variant="body1" color="text.secondary">
-					No provisional ballot choropleth data available for this state.
+					No voter registration choropleth data available for this state.
 				</Typography>
 			</Paper>
 		);
@@ -331,15 +353,8 @@ const VoterRegistrationChloroplethMap: React.FC<
 					Registered Voters Distribution - {stateName}
 				</Typography>
 				<Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
-					<Chip
-						label={`${data.length} Counties/Towns`}
-						size="small"
-						color="primary"
-					/>
-					<Chip
-						label={`Total: ${totalVotes.toLocaleString()} voters`}
-						size="small"
-					/>
+					<Chip label={`${data.length} Counties/Towns`} size="small" color="primary" />
+					<Chip label={`Total: ${totalVotes.toLocaleString()} voters`} size="small" />
 					<Chip
 						label={`Range: ${minValue.toLocaleString()} - ${maxValue.toLocaleString()}`}
 						size="small"
@@ -359,8 +374,10 @@ const VoterRegistrationChloroplethMap: React.FC<
 					width: "100%",
 					margin: "0 auto",
 					mb: 3,
-				}}>
+				}}
+			>
 				<MapContainer
+					ref={(m) => { mapRef.current = m; }}
 					bounds={mapBounds || undefined}
 					zoom={8}
 					zoomSnap={0.1}
@@ -369,12 +386,14 @@ const VoterRegistrationChloroplethMap: React.FC<
 					maxBounds={mapBounds || undefined}
 					maxBoundsViscosity={1.0}
 					style={{ height: "100%", width: "100%", borderRadius: "8px" }}
-					scrollWheelZoom={true}>
+					scrollWheelZoom={true}
+				>
 					<TileLayer
 						attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
 						url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
 					/>
 					<GeoJSON
+						ref={geoRef as any}
 						data={geoData}
 						style={getFeatureStyle}
 						onEachFeature={onEachFeature}
@@ -397,7 +416,8 @@ const VoterRegistrationChloroplethMap: React.FC<
 						flex={1}
 						border="1px solid #e0e0e0"
 						borderRadius={1}
-						overflow="hidden">
+						overflow="hidden"
+					>
 						{colorScale &&
 							[
 								"#e3f2fd",
@@ -418,19 +438,13 @@ const VoterRegistrationChloroplethMap: React.FC<
 								/>
 							))}
 					</Box>
-					<Typography
-						variant="caption"
-						sx={{ minWidth: 50, textAlign: "right" }}>
+					<Typography variant="caption" sx={{ minWidth: 50, textAlign: "right" }}>
 						{maxValue}
 					</Typography>
 				</Box>
-				<Typography
-					variant="caption"
-					color="text.secondary"
-					display="block"
-					mt={1}>
-					Interactive choropleth map showing provisional ballot distribution
-					across counties. Hover over counties for detailed information.
+				<Typography variant="caption" color="text.secondary" display="block" mt={1}>
+					Interactive choropleth map showing voter registration distribution across
+					counties. Hover over counties for detailed information.
 				</Typography>
 			</Box>
 		</Paper>

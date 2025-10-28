@@ -11,10 +11,10 @@ import {
 	TableRow,
 	TablePagination,
 	Typography,
-    InputLabel,
-    MenuItem,
-    FormControl,
-    Select
+	InputLabel,
+	MenuItem,
+	FormControl,
+	Select
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material/Select";
 import type { RegionRegisteredVotersData } from "../data/regionRegisteredVotersData";
@@ -26,10 +26,10 @@ interface RegionRegisteredVotersTableProps {
 }
 
 const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = ({
-    geographicUnitName,
-}) => { 
+	geographicUnitName,
+}) => {
 	const [data, setData] = useState<RegionRegisteredVotersData[]>([]);
-    const [page, setPage] = useState(0);
+	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [party, setParty] = useState("all");
 
@@ -49,14 +49,14 @@ const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = 
 	const filteredData = useMemo(() => {
 		if (!data) return [];
 		if (party == "all") return data;
-        else if (party == "affiliated") return data.filter((x) => x.party.toLowerCase() != "unaffiliated")
-		else return data.filter((x) => {return x.party.toLowerCase() == party})
+		else if (party == "affiliated") return data.filter((x) => x.party.toLowerCase() != "unaffiliated")
+		else return data.filter((x) => { return x.party.toLowerCase() == party })
 	}, [data, party]);
 
 	const sortedData = useMemo(() => {
-		return [...filteredData].sort((a,b) => (
-            a.lastName.localeCompare(b.lastName) != 0 ? a.lastName.localeCompare(b.lastName) : a.firstName.localeCompare(b.firstName)
-        ));
+		return [...filteredData].sort((a, b) => (
+			a.lastName.localeCompare(b.lastName) != 0 ? a.lastName.localeCompare(b.lastName) : a.firstName.localeCompare(b.firstName)
+		));
 	}, [filteredData]);
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
@@ -70,9 +70,9 @@ const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = 
 		setPage(0);
 	};
 
-    const handleChangeParty = (event: SelectChangeEvent) => {
-        setParty(event.target.value);
-    }
+	const handleChangeParty = (event: SelectChangeEvent) => {
+		setParty(event.target.value);
+	}
 
 	if (!data || data.length === 0) {
 		return (
@@ -88,107 +88,107 @@ const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = 
 		<Paper sx={{ pb: 3, pl: 5, pr: 5, pt: 2 }}>
 			<TableContainer sx={{ maxHeight: 600, pb: 2, position: "relative" }}>
 				<Table stickyHeader size="small">
-				<TableHead>
-					<TableRow>
-					<TableCell
-						sx={{
-						fontWeight: "bold",
-						backgroundColor: "primary.main",
-						color: "white",
-						position: "sticky",
-						left: 0,
-						zIndex: 3,
-						}}
-					>
-						Last Name
-					</TableCell>
-					<TableCell
-						align="left"
-						sx={{
-						fontWeight: "bold",
-						backgroundColor: "primary.main",
-						color: "white",
-						}}
-					>
-						First Name
-					</TableCell>
-					<TableCell
-						align="left"
-						sx={{
-						fontWeight: "bold",
-						backgroundColor: "primary.main",
-						color: "white",
-						}}
-					>
-						Affiliated Party
-					</TableCell>
-					</TableRow>
-				</TableHead>
-				<TableBody>
-					{sortedData
-					.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-					.map((row) => (
-						<TableRow
-						key={row.id}
-						hover
-						sx={{ "&:nth-of-type(odd)": { backgroundColor: "#fafafa" } }}
-						>
-						<TableCell align="left">
-							<Typography variant="body2">{row.lastName}</Typography>
-						</TableCell>
-						<TableCell align="left">
-							<Typography variant="body2">{row.firstName}</Typography>
-						</TableCell>
-						<TableCell
-							align="left"
-							sx={{
-							fontWeight: "bold",
-							color: row.party === "Republican" ? "#880808" : row.party === "Democratic" ? "#083188ff" : "black",
-							}}
-						>
-							{row.party}
-						</TableCell>
+					<TableHead>
+						<TableRow>
+							<TableCell
+								sx={{
+									fontWeight: "bold",
+									backgroundColor: "primary.main",
+									color: "white",
+									position: "sticky",
+									left: 0,
+									zIndex: 3,
+								}}
+							>
+								Last Name
+							</TableCell>
+							<TableCell
+								align="left"
+								sx={{
+									fontWeight: "bold",
+									backgroundColor: "primary.main",
+									color: "white",
+								}}
+							>
+								First Name
+							</TableCell>
+							<TableCell
+								align="left"
+								sx={{
+									fontWeight: "bold",
+									backgroundColor: "primary.main",
+									color: "white",
+								}}
+							>
+								Affiliated Party
+							</TableCell>
 						</TableRow>
-					))}
-				</TableBody>
+					</TableHead>
+					<TableBody>
+						{sortedData
+							.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+							.map((row) => (
+								<TableRow
+									key={row.id}
+									hover
+									sx={{ "&:nth-of-type(odd)": { backgroundColor: "#fafafa" } }}
+								>
+									<TableCell align="left">
+										<Typography variant="body2">{row.lastName}</Typography>
+									</TableCell>
+									<TableCell align="left">
+										<Typography variant="body2">{row.firstName}</Typography>
+									</TableCell>
+									<TableCell
+										align="left"
+										sx={{
+											fontWeight: "bold",
+											color: row.party === "Republican" ? "#880808" : row.party === "Democratic" ? "#1876d2" : "black",
+										}}
+									>
+										{row.party}
+									</TableCell>
+								</TableRow>
+							))}
+					</TableBody>
 				</Table>
 			</TableContainer>
 
 			<Box
 				sx={{
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "space-between",
-				flexWrap: "wrap",
-				gap: 2,
-				px: 2,
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "space-between",
+					flexWrap: "wrap",
+					gap: 2,
+					px: 2,
 				}}
 			>
 				<Box display="flex" alignItems="center" gap={2}>
-				<FormControl sx={{ minWidth: 120 }} size="small">
-					<InputLabel id="party-select-small-label">Affiliation</InputLabel>
-					<Select
-					labelId="party-select-small-label"
-					id="party-select-small"
-					value={party}
-					label="affiliation"
-					onChange={handleChangeParty}
-					>
-					<MenuItem value={"all"}>All Parties</MenuItem>
-					<MenuItem value={"affiliated"}>Affiliated to Any Party</MenuItem>
-					<MenuItem value={"republican"}>Republican</MenuItem>
-					<MenuItem value={"democratic"}>Democratic</MenuItem>
-					</Select>
-				</FormControl>
+					<FormControl sx={{ minWidth: 120 }} size="small">
+						<InputLabel id="party-select-small-label">Affiliation</InputLabel>
+						<Select
+							labelId="party-select-small-label"
+							id="party-select-small"
+							value={party}
+							label="affiliation"
+							onChange={handleChangeParty}
+						>
+							<MenuItem value={"all"}>All Parties</MenuItem>
+							<MenuItem value={"affiliated"}>Affiliated to Any Party</MenuItem>
+							<MenuItem value={"republican"}>Republican</MenuItem>
+							<MenuItem value={"democratic"}>Democratic</MenuItem>
+						</Select>
+					</FormControl>
 				</Box>
 				<TablePagination
-				component="div"
-				count={sortedData.length}
-				page={page}
-				onPageChange={handleChangePage}
-				rowsPerPage={rowsPerPage}
-				onRowsPerPageChange={handleChangeRowsPerPage}
-				rowsPerPageOptions={[5, 10, 25, 50]}
+					component="div"
+					count={sortedData.length}
+					page={page}
+					onPageChange={handleChangePage}
+					rowsPerPage={rowsPerPage}
+					onRowsPerPageChange={handleChangeRowsPerPage}
+					rowsPerPageOptions={[5, 10, 25, 50]}
 				/>
 			</Box>
 		</Paper>

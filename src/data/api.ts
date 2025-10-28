@@ -9,9 +9,7 @@ import type {
     BlockBubblePayload,
 } from "./types";
 
-// -------------------------------------------------------------------
 // Dev toggles
-// -------------------------------------------------------------------
 // Turn ON to always use mocks (frontend-only development).
 const USE_MOCKS = true;
 // When true, if all real URL attempts fail (500/404/etc.), we’ll
@@ -21,9 +19,7 @@ const AUTO_FALLBACK_TO_MOCK_ON_ERROR = true;
 // Vite proxy should forward /api -> http://localhost:8080
 const base = "/api";
 
-// -------------------------------------------------------------------
 // State name -> USPS abbreviation (used by URL fallbacks)
-// -------------------------------------------------------------------
 const STATE_TO_ABBR: Record<string, string> = {
     Alabama: "AL",
     Alaska: "AK",
