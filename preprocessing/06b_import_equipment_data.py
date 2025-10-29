@@ -15,7 +15,7 @@ import sys
 import logging
 import csv
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict
 
 # Add utils to path
@@ -125,7 +125,7 @@ class EquipmentDataImporter:
                 'year': year,
                 'equipmentType': equipment_type,
                 'dataSource': 'VerifiedVoting.org',
-                'lastUpdated': datetime.utcnow(),
+                'lastUpdated': datetime.now(timezone.utc),
             }
             
             # Add relevant fields

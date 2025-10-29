@@ -240,6 +240,8 @@ const StateDetailPage: React.FC = () => {
 						{isDetail && <Tab label="Active Voters" />}
 						{isDetail && <Tab label="Pollbook Deletions" />}
 						{isDetail && <Tab label="Mail Rejections" />}
+						<Tab label="Voting Equipment" />
+						{isDetail && <Tab label="Voter Registration" />}
 					</Tabs>
 				</Box>
 
@@ -303,16 +305,16 @@ const StateDetailPage: React.FC = () => {
 					</Box>
 				</TabPanel>
 				<TabPanel value={tabValue} index={4}>
-							<EquipmentRejectedBubbleChart
-								data={[
-									{ county: "Travis", equipmentQuality: 85, rejectedPct: 2, party: "D" },
-									{ county: "Orange", equipmentQuality: 70, rejectedPct: 5, party: "R" },
-								]}
-								regressionLines={[
-									{ party: "D", coefficients: { a: 0.5, b: 1.2 } },
-									{ party: "R", coefficients: { a: 0.7, b: 1.0 } },
-								]}
-							/>
+					<EquipmentRejectedBubbleChart
+						data={[
+							{ county: "Travis", equipmentQuality: 85, rejectedPct: 2, party: "D" },
+							{ county: "Orange", equipmentQuality: 70, rejectedPct: 5, party: "R" },
+						]}
+						regressionLines={[
+							{ party: "D", coefficients: { a: 0.5, b: 1.2 } },
+							{ party: "R", coefficients: { a: 0.7, b: 1.0 } },
+						]}
+					/>
 				</TabPanel>
 				{/* Provisional Ballots Tab */}
 				{isDetail && (

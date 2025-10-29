@@ -1,0 +1,82 @@
+{
+    "database": {
+        "mongoUri": "mongodb://localhost:27017/",
+        "dbName": "voting_analysis"
+    },
+    "detailedStates": {
+        "comment": "Arkansas, Maryland, and Rhode Island are our detailed states",
+        "states": [
+            "Arkansas",
+            "Maryland",
+            "Rhode Island"
+        ],
+        "stateAbbrs": [
+            "AR",
+            "MD",
+            "RI"
+        ],
+        "optIn": "Rhode Island",
+        "optOutWithSameDayReg": "Maryland",
+        "optOutNoSameDayReg": "Arkansas",
+        "republicanDominated": "Arkansas",
+        "democraticDominated": "Maryland",
+        "voterRegistration": "Maryland",
+        "preclearance": "Maryland"
+    },
+    "apiKeys": {
+        "censusApiKey": "644d735ff54e8c3a4dca92a412fb5315b5dfd80b",
+        "geocodingApiKey": "AIzaSyBsVCHPrjEItxl6zqw_AQJ-6Vs_0T8cHi4",
+        "googleMapsApiKey": "AIzaSyBsVCHPrjEItxl6zqw_AQJ-6Vs_0T8cHi4",
+        "uspsConsumerKey": "6J8jHZLQAd0r4SdtV5PRfz0QH9GZFkGKsQKf7t1AKrMmc2GB",
+        "uspsConsumerSecret": "6J8jHZLQAd0r4SdtV5PRfz0QH9GZFkGKsQKf7t1AKrMmc2GB"
+    },
+    "dataSources": {
+        "eavs": {
+            "2024": "https://www.eac.gov/sites/default/files/2024/EAVS_2024_Dataset.xlsx",
+            "2020": "https://www.eac.gov/sites/default/files/2021/EAVS_2020_Dataset.xlsx",
+            "2016": "https://www.eac.gov/sites/default/files/2017/EAVS_2016_Dataset.xlsx"
+        },
+        "boundaries": {
+            "states": "https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_state_20m.zip",
+            "counties": "https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_county_20m.zip"
+        },
+        "voterRegistration": {
+            "comment": "Maryland voter registration data",
+            "maryland": "https://elections.maryland.gov/voter_registration/stats.html",
+            "arkansas": "https://www.sos.arkansas.gov/elections/voter-registration",
+            "rhodeIsland": "https://vote.sos.ri.gov/",
+            "note": "May require manual download or request"
+        },
+        "electionResults": {
+            "mitElectionLab": "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/42MVDX",
+            "comment": "2024 Presidential election results by county"
+        },
+        "cvap": {
+            "censusApi": "https://api.census.gov/data/2023/acs/acs5",
+            "specialTab": "https://www.census.gov/programs-surveys/decennial-census/about/voting-rights/cvap.html"
+        }
+    },
+    "processing": {
+        "batchSize": 10000,
+        "enableCaching": true,
+        "cacheDir": "./cache",
+        "parallelProcessing": true,
+        "maxWorkers": 4
+    },
+    "geocoding": {
+        "provider": "google",
+        "fallbackProvider": "census",
+        "rateLimit": 10000,
+        "cacheResults": true
+    },
+    "validation": {
+        "strictMode": false,
+        "requiredFields": [
+            "year",
+            "fipsCode",
+            "stateFull",
+            "stateAbbr"
+        ],
+        "skipMissingData": false
+    }
+}

@@ -32,7 +32,7 @@ const eavsDataSchema = {
     required: true,
     description: "State abbreviation"
   },
-  
+
   // Registration Data (GUI-7, GUI-17)
   A1a: {
     type: "Number", // Total Reg
@@ -46,7 +46,7 @@ const eavsDataSchema = {
     type: "Number", // Total Inactive
     description: "GUI-7: Total inactive registered voters (2024)"
   },
-  
+
   // Provisional Ballot Data (GUI-3, GUI-5)
   E1a: {
     type: "Number", // Total Provisional Ballots Cast
@@ -128,7 +128,7 @@ const eavsDataSchema = {
     type: "Number", // Provisional Rejected Already Voted
     description: "GUI-3: Provisional Rejected Already Voted"
   },
-  
+
   // Mail Ballot Rejections Data (GUI-9)
   C9a: {
     type: "Number", // Total Mail Ballots Rejected
@@ -198,7 +198,7 @@ const eavsDataSchema = {
     type: "Number", // Mail Ballots Rejected Because No Ballot Application
     description: "GUI-9: Mail Ballots Rejected Because No Ballot Application"
   },
-  
+
   // Pollbook Deletions Data (GUI-8)
   A12b: {
     type: "Number", // Removed Moved
@@ -228,7 +228,7 @@ const eavsDataSchema = {
     type: "Number", // Removed Duplicate Records
     description: "GUI-8: Removed Duplicate Records"
   },
-  
+
   // Voting Equipment Data (GUI-6, GUI-10, GUI-11, GUI-12, GUI-13, GUI-14)
   F3a: {
     type: "Number", // DRE no VVPAT (binary)
@@ -246,13 +246,13 @@ const eavsDataSchema = {
     type: "Number", // Scanner (binary)
     description: "GUI-6, GUI-10, GUI-12: Scanner present (1) or not (0)"
   },
-  
+
   // Drop Box Voting Data (GUI-24)
   C3a: {
     type: "Number", // Drop Boxes Total
     description: "GUI-24: Drop Boxes Total"
   },
-  
+
   // Voting Participation Data (needed for GUI-25 calculations)
   F1a: {
     type: "Number", // Total Voters
@@ -278,13 +278,29 @@ const eavsDataSchema = {
     type: "Number", // In Person Early Voting
     description: "GUI-23: In Person Early Voting (for early voting comparison)"
   },
-  
+
   // UOCAVA Data (Military/Overseas - needed for GUI-25)
   B24a: {
     type: "Number", // UOCAVA Rejected Total
     description: "GUI-25: UOCAVA Rejected Total (for quality chart)"
   },
-  
+
+  // Prepro-5: Data Completeness Score
+  dataCompletenessScore: {
+    type: "Number",
+    min: 0,
+    max: 1,
+    description: "Prepro-5: Measure of missing data (0 = all missing, 1 = complete)"
+  },
+  missingFieldCount: {
+    type: "Number",
+    description: "Number of fields with missing/null values"
+  },
+  totalFieldCount: {
+    type: "Number",
+    description: "Total number of expected fields"
+  },
+
   // Timestamps
   createdAt: {
     type: "Date",
@@ -309,71 +325,96 @@ const votingEquipmentDataSchema = {
     required: true,
     description: "Election year (2016, 2020, 2024)"
   },
-  
+
   // Equipment counts by state (for GUI-12)
   equipmentSummary: {
-      dreNoVVPAT: {
-        type: "Number",
-        description: "Total count of DRE no VVPAT equipment in state"
-      },
-      dreWithVVPAT: {
-        type: "Number",
-        description: "Total count of DRE with VVPAT equipment in state"
-      },
-      ballotMarkingDevice: {
-        type: "Number",
-        description: "Total count of Ballot Marking Device equipment in state"
-      },
-      scanner: {
-        type: "Number",
-        description: "Total count of Scanner equipment in state"
-      }
+    dreNoVVPAT: {
+      type: "Number",
+      description: "Total count of DRE no VVPAT equipment in state"
     },
-    // Detailed equipment list (for GUI-6)
-    equipmentDetails: {
-      type: "Array",
-      items: {
-        makeAndModel: {
-          type: "String",
-          description: "Manufacturer and model name of voting equipment"
-        },
-        equipmentType: {
-          type: "String",
-          enum: ["DRE no VVPAT", "DRE with VVPAT", "Ballot Marking Device", "Scanner"],
-          description: "Category of the equipment"
-        },
-        quantity: {
+    dreWithVVPAT: {
+      type: "Number",
+      description: "Total count of DRE with VVPAT equipment in state"
+    },
+    ballotMarkingDevice: {
+      type: "Number",
+      description: "Total count of Ballot Marking Device equipment in state"
+    },
+    scanner: {
+      type: "Number",
+      description: "Total count of Scanner equipment in state"
+    }
+  },
+  // Detailed equipment list (for GUI-6)
+  equipmentDetails: {
+    type: "Array",
+    items: {
+      makeAndModel: {
+        type: "String",
+        description: "Manufacturer and model name of voting equipment"
+      },
+      equipmentType: {
+        type: "String",
+        enum: ["DRE no VVPAT", "DRE with VVPAT", "Ballot Marking Device", "Scanner"],
+        description: "Category of the equipment"
+      },
+      quantity: {
+        type: "Number",
+        description: "Number of units of this equipment in the state"
+      },
+      equipmentAge: {
+        type: "Number", // in years
+        description: "Age of the equipment in years"
+      },
+      OS: {
+        type: "String",
+        description: "Operating system running on the equipment"
+      },
+      certification: {
+        type: "String",
+        enum: ["VVSG 2.0 certified", "VVSG 2.0 applied", "VVSG 1.1 certified", "VVSG 1.0 certified", "not certified"],
+        description: "Certification status of the equipment"
+      },
+      scanRate: {
+        type: "Number", // ballots per minute
+        description: "Scanning speed of the equipment in ballots per minute"
+      },
+      errorRate: {
+        type: "Number", // percentage
+        description: "Error rate percentage of the equipment"
+      },
+      reliability: {
+        type: "Number", // percentage or score
+        description: "Reliability score/rating of the equipment"
+      },
+      // Prepro-6: Equipment Quality Score
+      qualityScore: {
+        type: "Number",
+        min: 0,
+        max: 1,
+        description: "Prepro-6: Overall equipment quality score (0-1)"
+      },
+      qualityComponents: {
+        ageScore: {
           type: "Number",
-          description: "Number of units of this equipment in the state"
+          description: "Age component of quality score"
         },
-        equipmentAge: {
-          type: "Number", // in years
-          description: "Age of the equipment in years"
+        certificationScore: {
+          type: "Number",
+          description: "Certification component of quality score"
         },
-        OS: {
-          type: "String",
-          description: "Operating system running on the equipment"
+        osScore: {
+          type: "Number",
+          description: "Operating system component of quality score"
         },
-        certification: {
-          type: "String",
-          enum: ["VVSG 2.0 certified", "VVSG 2.0 applied", "VVSG 1.1 certified", "VVSG 1.0 certified", "not certified"],
-          description: "Certification status of the equipment"
-        },
-        scanRate: {
-          type: "Number", // ballots per minute
-          description: "Scanning speed of the equipment in ballots per minute"
-        },
-        errorRate: {
-          type: "Number", // percentage
-          description: "Error rate percentage of the equipment"
-        },
-        reliability: {
-          type: "Number", // percentage or score
-          description: "Reliability score/rating of the equipment"
+        performanceScore: {
+          type: "Number",
+          description: "Performance component of quality score"
         }
       }
+    }
   },
-  
+
   // Equipment history for GUI-14 (voting equipment changes over time)
   equipmentHistory: {
     type: "Array",
@@ -418,7 +459,7 @@ const boundaryDataSchema = {
     description: "Full state name"
   },
   boundaryType: {
-    type: "String", 
+    type: "String",
     enum: ["state", "county", "town"],
     required: true,
     description: "Type of boundary (state, county, town)"
@@ -444,7 +485,7 @@ const boundaryDataSchema = {
     default: "Date.now"
   },
   updatedAt: {
-    type: "Date", 
+    type: "Date",
     default: "Date.now"
   }
 };
@@ -474,7 +515,7 @@ const demographicDataSchema = {
     },
     byDemographic: {
       white: "Number",
-      hispanic: "Number", 
+      hispanic: "Number",
       africanAmerican: "Number",
       asian: "Number",
       nativeAmerican: "Number",
@@ -506,9 +547,13 @@ const demographicDataSchema = {
 // Felony Voting Data Schema (Prepro-13)
 const felonyVotingDataSchema = {
   _id: "ObjectId",
-  state: {
+  stateAbbr: {
     type: "String",
     required: true,
+    description: "State abbreviation"
+  },
+  state: {
+    type: "String",
     description: "Full state name"
   },
   felonyVotingPolicy: {
@@ -521,17 +566,271 @@ const felonyVotingDataSchema = {
     ],
     description: "State policy for felony voting rights"
   },
+  policyDescription: {
+    type: "String",
+    description: "Human-readable policy description"
+  },
+  policyDetails: {
+    type: "String",
+    description: "Detailed policy information"
+  },
+  lastUpdated: {
+    type: "Date",
+    description: "When policy was last verified"
+  },
+  source: {
+    type: "String",
+    description: "Source of policy information"
+  },
+  sourceUrl: {
+    type: "String",
+    description: "URL to policy source"
+  },
+  createdAt: {
+    type: "Date",
+    default: "Date.now"
+  },
+  updatedAt: {
+    type: "Date",
+    default: "Date.now"
+  }
+};
+
+// Voter Registration Data Schema (Prepro-7, Prepro-9, Prepro-10)
+const voterRegistrationSchema = {
+  _id: "ObjectId",
+  voterId: {
+    type: "String",
+    required: true,
+    description: "Unique voter ID from state system"
+  },
+  firstName: {
+    type: "String",
+    description: "Voter first name"
+  },
+  middleName: {
+    type: "String",
+    description: "Voter middle name"
+  },
+  lastName: {
+    type: "String",
+    description: "Voter last name"
+  },
+  suffix: {
+    type: "String",
+    description: "Name suffix (Jr., Sr., etc.)"
+  },
+  street: {
+    type: "String",
+    description: "Street address"
+  },
+  city: {
+    type: "String",
+    description: "City"
+  },
+  state: {
+    type: "String",
+    description: "State abbreviation"
+  },
+  zipCode: {
+    type: "String",
+    description: "ZIP code"
+  },
+  county: {
+    type: "String",
+    description: "County name"
+  },
+  partyCode: {
+    type: "String",
+    description: "Party affiliation code (R, D, U, L, G, etc.)"
+  },
+  partyName: {
+    type: "String",
+    description: "Full party name"
+  },
+  registrationDate: {
+    type: "Date",
+    description: "Date of registration"
+  },
+  voterStatus: {
+    type: "String",
+    enum: ["Active", "Inactive", "Removed"],
+    description: "Current voter status"
+  },
+
+  // Prepro-9: Census block assignment
+  censusBlock: {
+    type: "String",
+    description: "Census block GEOID (15-digit)"
+  },
+  censusTract: {
+    type: "String",
+    description: "Census tract"
+  },
+  censusBlockGroup: {
+    type: "String",
+    description: "Census block group"
+  },
+
+  // Prepro-10: EAVS region assignment
+  eavsRegionFips: {
+    type: "String",
+    description: "FIPS code for county or town"
+  },
+  eavsRegionName: {
+    type: "String",
+    description: "Name of EAVS geographic unit"
+  },
+
+  // Prepro-8: Validation from automated service
+  addressValidated: {
+    type: "Boolean",
+    description: "Whether address was validated"
+  },
+  validationDate: {
+    type: "Date",
+    description: "Date of address validation"
+  },
+  validationNotes: {
+    type: "String",
+    description: "Notes from validation service"
+  },
+
+  // Geocoding results
+  latitude: {
+    type: "Number",
+    description: "Latitude coordinate"
+  },
+  longitude: {
+    type: "Number",
+    description: "Longitude coordinate"
+  },
+  geocodingSource: {
+    type: "String",
+    enum: ["census", "nominatim", "google", "manual"],
+    description: "Source of geocoding"
+  },
+  geocodingQuality: {
+    type: "String",
+    enum: ["exact", "interpolated", "approximate", "failed"],
+    description: "Quality of geocoding match"
+  },
+
+  createdAt: {
+    type: "Date",
+    default: "Date.now"
+  },
+  updatedAt: {
+    type: "Date",
+    default: "Date.now"
+  }
+};
+
+// Election Results Schema (Prepro-11)
+const electionResultsSchema = {
+  _id: "ObjectId",
+  year: {
+    type: "Number",
+    required: true,
+    description: "Election year"
+  },
+  state: {
+    type: "String",
+    required: true,
+    description: "Full state name"
+  },
+  stateAbbr: {
+    type: "String",
+    required: true,
+    description: "State abbreviation"
+  },
+  fipsCode: {
+    type: "String",
+    required: true,
+    description: "FIPS code for county/town"
+  },
+  jurisdictionName: {
+    type: "String",
+    required: true,
+    description: "Name of jurisdiction (county or town)"
+  },
+
+  // Presidential race results
+  totalVotes: {
+    type: "Number",
+    description: "Total votes cast in jurisdiction"
+  },
+  republicanVotes: {
+    type: "Number",
+    description: "Votes for Republican candidate"
+  },
+  republicanCandidate: {
+    type: "String",
+    description: "Name of Republican candidate"
+  },
+  democraticVotes: {
+    type: "Number",
+    description: "Votes for Democratic candidate"
+  },
+  democraticCandidate: {
+    type: "String",
+    description: "Name of Democratic candidate"
+  },
+  otherVotes: {
+    type: "Number",
+    description: "Votes for all other candidates"
+  },
+
+  // Calculated percentages
+  republicanPercent: {
+    type: "Number",
+    description: "Republican vote percentage"
+  },
+  democraticPercent: {
+    type: "Number",
+    description: "Democratic vote percentage"
+  },
+
+  // Dominant party
+  dominantParty: {
+    type: "String",
+    enum: ["R", "D", "Other"],
+    description: "Party with most votes"
+  },
+  marginOfVictory: {
+    type: "Number",
+    description: "Percentage point difference between top two candidates"
+  },
+
+  createdAt: {
+    type: "Date",
+    default: "Date.now"
+  },
+  updatedAt: {
+    type: "Date",
+    default: "Date.now"
+  }
 };
 
 const detailedStateDataSchema = {}
 
+// Index definitions
+const indexes = {
+  year: 1,
+  fipsCode: 1,
+  stateAbbr: 1,
+  state: 1,
+  voterId: 1
+};
+
 module.exports = {
   eavsDataSchema,
-  eavsFlattenedSchema,
   detailedStateDataSchema,
   votingEquipmentDataSchema,
   boundaryDataSchema,
   demographicDataSchema,
   felonyVotingDataSchema,
+  voterRegistrationSchema,
+  electionResultsSchema,
   indexes
 };

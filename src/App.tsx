@@ -16,7 +16,7 @@ const App: React.FC = () => {
 					width: "100%",
 				}}>
 				<Navigation />
-				<Box component="main" sx={{ flexGrow: 1, width: "100%" }}>
+				<Box component="main" sx={{ flexGrow: 1, width: "100%", mt: "90px" }}>
 					<AppRoutes />
 				</Box>
 			</Box>

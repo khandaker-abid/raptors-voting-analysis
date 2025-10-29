@@ -53,6 +53,10 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		if (hoveredRef.current) {
 			try {
 				geoRef.current?.resetStyle(hoveredRef.current as any);
+				// Close tooltip
+				if ((hoveredRef.current as any).closeTooltip) {
+					(hoveredRef.current as any).closeTooltip();
+				}
 			} catch {
 				// layer might be detached; ignore
 			}
@@ -267,10 +271,20 @@ const ProvisionalBallotChoroplethMap: React.FC<
 				if ((targetLayer as any).bringToFront) {
 					(targetLayer as any).bringToFront();
 				}
+				// Ensure tooltip opens
+				if (!targetLayer.isTooltipOpen()) {
+					targetLayer.openTooltip();
+				}
 			},
 			mouseout: (e: any) => {
 				geoRef.current?.resetStyle(e.target as any);
 				if (hoveredRef.current === e.target) hoveredRef.current = null;
+				// Ensure tooltip closes
+				try {
+					(e.target as L.Path).closeTooltip();
+				} catch {
+					/* ignore */
+				}
 			},
 			click: () => {
 				// If a dialog opens on click, proactively clear highlight
@@ -281,19 +295,23 @@ const ProvisionalBallotChoroplethMap: React.FC<
 
 	// Clear hover when cursor leaves the map container (covers dialog-open cases)
 	useEffect(() => {
-		const node = mapRef.current?.getContainer();
-		if (!node) return;
-		const handler = () => clearHover();
-		node.addEventListener("mouseleave", handler);
-		return () => node.removeEventListener("mouseleave", handler);
-	}, [mapRef.current]);
+		const map = mapRef.current;
+		if (!map) return;
+
+		const node = map.getContainer();
+		const handleLeave = () => clearHover();
+
+		node.addEventListener("mouseleave", handleLeave);
+
+		return () => {
+			node.removeEventListener("mouseleave", handleLeave);
+		};
+	}, [geoData]);
 
 	// Allow parent to force-clear when a dialog closes
 	useEffect(() => {
 		clearHover();
-	}, [resetHoverKey]);
-
-	if (!data || data.length === 0) {
+	}, [resetHoverKey]); if (!data || data.length === 0) {
 		return (
 			<Paper sx={{ p: 3, textAlign: "center" }}>
 				<Typography variant="body1" color="text.secondary">

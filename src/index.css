@@ -8,29 +8,28 @@
 html {
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow: auto;
 }
 
 body {
   width: 100%;
-    height: 100%;
-    overflow: hidden;
+  height: 100%;
+  overflow: auto;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   line-height: 1.6;
 }
 
 #root {
   width: 100%;
-  height: 100vh;
-    overflow-y: auto;
-    overflow-x: hidden;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 :root {
   font-synthesis: none;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Custom styles for Leaflet map tooltips */
@@ -43,9 +42,9 @@ body {
   font-size: 12px !important;
   font-weight: 500 !important;
   z-index: 1000 !important;
-    pointer-events: none !important;
-    white-space: nowrap !important;
-    max-width: none !important;
+  pointer-events: none !important;
+  white-space: nowrap !important;
+  max-width: none !important;
 }
 
 .custom-tooltip::before {
@@ -56,6 +55,7 @@ body {
 .leaflet-tooltip-pane {
   z-index: 1000 !important;
 }
+
 /* Leaflet map container improvements */
 .leaflet-container {
   background: #f5f5f5 !important;
@@ -66,6 +66,7 @@ body {
 .us-map-container .leaflet-container {
   overflow: visible !important;
 }
+
 .leaflet-control-zoom a {
   background-color: white !important;
   border: 1px solid #ccc !important;
@@ -74,4 +75,29 @@ body {
 
 .leaflet-control-zoom a:hover {
   background-color: #f5f5f5 !important;
+}
+
+/* Remove black outline on click/focus for map features */
+.leaflet-interactive {
+  outline: none !important;
+}
+
+.leaflet-interactive:focus {
+  outline: none !important;
+}
+
+path.leaflet-interactive {
+  outline: none !important;
+}
+
+path.leaflet-interactive:focus {
+  outline: none !important;
+}
+
+svg.leaflet-zoom-animated path {
+  outline: none !important;
+}
+
+.no-outline {
+  outline: none !important;
 }

@@ -65,6 +65,7 @@ const StateMap: React.FC<StateMapProps> = ({
 	 * Robust de-highlighter.
 	 * - If we know the hovered layer, reset just that.
 	 * - If we don't (or caller asks), reset ALL layers.
+	 * - Also closes all tooltips.
 	 */
 	const clearHover = (resetAll = false) => {
 		const gj = geoJsonRef.current;
@@ -80,6 +81,10 @@ const StateMap: React.FC<StateMapProps> = ({
 			gj.getLayers().forEach((l) => {
 				try {
 					gj.resetStyle(l as any);
+					// Close tooltip for each layer
+					if ((l as any).closeTooltip) {
+						(l as any).closeTooltip();
+					}
 				} catch {
 					/* ignore */
 				}
@@ -87,6 +92,9 @@ const StateMap: React.FC<StateMapProps> = ({
 		} else {
 			try {
 				gj.resetStyle(hovered);
+				if (hovered.closeTooltip) {
+					hovered.closeTooltip();
+				}
 			} catch {
 				/* ignore */
 			}
@@ -183,16 +191,19 @@ const StateMap: React.FC<StateMapProps> = ({
 	}, [stateName, isDetailState]);
 
 	// Add robust "mouseleave" handling on the map container.
-	// Use an empty dep list so we attach once after mount.
+	// Attach after the map mounts and whenever geoData changes
 	useEffect(() => {
 		const map = mapRef.current;
 		if (!map) return;
 
 		const container = map.getContainer();
 		const handleLeave = () => {
-			// When the pointer leaves the map (e.g., to click the dialog X), ensure highlight is cleared
-			clearHover(true);
+			// Only clear if dialog is not open
+			if (!selectedRegion) {
+				clearHover(true);
+			}
 		};
+
 		container.addEventListener("mouseleave", handleLeave);
 		container.addEventListener("touchend", handleLeave);
 		container.addEventListener("pointerleave", handleLeave);
@@ -202,10 +213,11 @@ const StateMap: React.FC<StateMapProps> = ({
 			container.removeEventListener("touchend", handleLeave);
 			container.removeEventListener("pointerleave", handleLeave);
 		};
-	}, []);
+	}, [geoData, selectedRegion]);
 
-	// Also nuke any hover styling whenever the dialog opens OR closes.
+	// Clear all highlights and close all tooltips when dialog state changes
 	useEffect(() => {
+		// Always clear when dialog opens OR closes
 		clearHover(true);
 	}, [selectedRegion]);
 
@@ -222,6 +234,7 @@ const StateMap: React.FC<StateMapProps> = ({
 				color: theme.palette.primary.main,
 				dashArray: "",
 				fillOpacity: 0.3,
+				className: "no-outline", // Remove focus outline
 			};
 		} else {
 			// State boundary styling for non-detail states
@@ -232,6 +245,7 @@ const StateMap: React.FC<StateMapProps> = ({
 				color: "#bdbdbd",
 				dashArray: "",
 				fillOpacity: 0.2,
+				className: "no-outline", // Remove focus outline
 			};
 		}
 	};
@@ -254,6 +268,9 @@ const StateMap: React.FC<StateMapProps> = ({
 
 			layer.on({
 				mouseover: (e: any) => {
+					// Don't highlight if dialog is open
+					if (selectedRegion) return;
+
 					hoveredLayerRef.current = e.target;
 					lastHoveredFeatureRef.current = feature;
 					e.target.setStyle({
@@ -263,24 +280,41 @@ const StateMap: React.FC<StateMapProps> = ({
 						fillOpacity: 0.6,
 					});
 					e.target.bringToFront();
-				},
-				mouseout: () => {
-					clearHover();
-				},
-				click: (e: any) => {
-					// Explicitly remove hover style from the clicked feature before opening dialog
-					if (geoJsonRef.current) {
-						try {
-							geoJsonRef.current.resetStyle(e.target);
-						} catch {
-							/* ignore */
-						}
+					// Ensure tooltip opens
+					if (!e.target.isTooltipOpen()) {
+						e.target.openTooltip();
 					}
+				},
+				mouseout: (e: any) => {
+					// Don't process if dialog is open
+					if (selectedRegion) return;
+
+					clearHover();
+					// Ensure tooltip closes
 					try {
-						(e.target as L.Layer).closeTooltip?.();
+						e.target.closeTooltip();
 					} catch {
 						/* ignore */
 					}
+				},
+				click: (e: any) => {
+					// Immediately reset the clicked layer's style to remove hover highlight
+					const gj = geoJsonRef.current;
+					if (gj && e.target) {
+						gj.resetStyle(e.target);
+					}
+					// Close tooltip on the clicked element
+					try {
+						e.target.closeTooltip();
+					} catch {
+						/* ignore */
+					}
+					// Clear all hover state
+					clearHover(true);
+					// Clear refs immediately
+					hoveredLayerRef.current = null;
+					lastHoveredFeatureRef.current = undefined;
+					// Open dialog
 					setSelectedRegion(countyName);
 				},
 			});
@@ -294,6 +328,9 @@ const StateMap: React.FC<StateMapProps> = ({
 
 			layer.on({
 				mouseover: (e: any) => {
+					// Don't highlight if dialog is open
+					if (selectedRegion) return;
+
 					hoveredLayerRef.current = e.target;
 					lastHoveredFeatureRef.current = feature;
 					e.target.setStyle({
@@ -303,9 +340,22 @@ const StateMap: React.FC<StateMapProps> = ({
 						fillOpacity: 0.4,
 					});
 					e.target.bringToFront();
+					// Ensure tooltip opens
+					if (!e.target.isTooltipOpen()) {
+						e.target.openTooltip();
+					}
 				},
-				mouseout: () => {
+				mouseout: (e: any) => {
+					// Don't process if dialog is open
+					if (selectedRegion) return;
+
 					clearHover();
+					// Ensure tooltip closes
+					try {
+						e.target.closeTooltip();
+					} catch {
+						/* ignore */
+					}
 				},
 			});
 		}
@@ -342,9 +392,53 @@ const StateMap: React.FC<StateMapProps> = ({
 	}
 
 	const handleClose = () => {
+		// Immediately and forcefully close all tooltips and reset all styles
+		const gj = geoJsonRef.current;
+		const map = mapRef.current;
+
+		if (gj) {
+			gj.eachLayer((layer: any) => {
+				try {
+					// Force close any open tooltip first
+					if (layer.closeTooltip) {
+						layer.closeTooltip();
+					}
+					// Make sure tooltip is really closed
+					if (layer.isTooltipOpen && layer.isTooltipOpen()) {
+						layer.closeTooltip();
+					}
+					// Reset style to default - this should remove the highlight
+					gj.resetStyle(layer);
+					// Force the layer to re-apply its original style
+					if (layer.setStyle) {
+						const defaultStyle = getFeatureStyle(layer.feature);
+						layer.setStyle(defaultStyle);
+					}
+					// Force Leaflet to redraw this specific layer
+					if (layer._updatePath) {
+						layer._updatePath();
+					}
+					// Alternative: force redraw by removing and re-adding to map
+					if (layer.redraw) {
+						layer.redraw();
+					}
+				} catch (e) {
+					console.warn("Error resetting layer style:", e);
+				}
+			});
+
+			// Force the entire GeoJSON layer to redraw
+			if (map) {
+				// Invalidate the map size to force a complete redraw
+				map.invalidateSize({ pan: false });
+			}
+		}
+
+		// Clear refs
+		hoveredLayerRef.current = null;
+		lastHoveredFeatureRef.current = undefined;
+		// Close the dialog
 		setSelectedRegion(null);
-		// Extra safety: ensure leftover highlight (if any) is cleared after closing the dialog
-		clearHover(true);
 	};
 
 	return (

@@ -37,6 +37,7 @@ const USMap: React.FC = () => {
 			color: isDetailState ? theme.palette.primary.main : "#bdbdbd",
 			dashArray: "",
 			fillOpacity: isDetailState ? 0.5 : 0.2,
+			className: "no-outline", // Remove focus outline
 		};
 	};
 
@@ -46,11 +47,10 @@ const USMap: React.FC = () => {
 		const isDetailState = detailStates.includes(stateFeature.properties.name);
 
 		const tooltipContent = isDetailState
-			? `${
-					stateFeature.properties.name
-			  } (Detailed Data Available)<br/>${getDetailStateDescription(
-					stateFeature.properties.name,
-			  )}`
+			? `${stateFeature.properties.name
+			} (Detailed Data Available)<br/>${getDetailStateDescription(
+				stateFeature.properties.name,
+			)}`
 			: stateFeature.properties.name;
 
 		layer.bindTooltip(tooltipContent, {
@@ -83,7 +83,17 @@ const USMap: React.FC = () => {
 					fillOpacity: isDetailState ? 0.5 : 0.2,
 				});
 			},
-			click: () => {
+			click: (e) => {
+				// Reset style to remove hover effect before navigating
+				const targetLayer = e.target;
+				targetLayer.setStyle({
+					fillColor: isDetailState ? theme.palette.primary.main : "#e0e0e0",
+					weight: isDetailState ? 3 : 1,
+					opacity: 1,
+					color: isDetailState ? theme.palette.primary.main : "#bdbdbd",
+					dashArray: "",
+					fillOpacity: isDetailState ? 0.5 : 0.2,
+				});
 				navigate(`/state/${encodeURIComponent(stateFeature.properties.name)}`);
 			},
 		});

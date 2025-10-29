@@ -1,25 +1,34 @@
 const mongoose = require('mongoose');
-const { eavsDataSchema, detailedStateDataSchema, votingEquipmentDataSchema, boundaryDataSchema, demographicDataSchema, felonyVotingDataSchema, indexes } = require('../schema.cjs');
+const {
+  eavsDataSchema,
+  detailedStateDataSchema,
+  votingEquipmentDataSchema,
+  boundaryDataSchema,
+  demographicDataSchema,
+  felonyVotingDataSchema,
+  voterRegistrationSchema,
+  electionResultsSchema,
+  indexes
+} = require('../schema.cjs');
 
 const eavsDataSchemaMongoose = new mongoose.Schema(eavsDataSchema);
-
 const detailedStateDataSchemaMongoose = new mongoose.Schema(detailedStateDataSchema);
-
 const votingEquipmentDataSchemaMongoose = new mongoose.Schema(votingEquipmentDataSchema);
-
 const boundaryDataSchemaMongoose = new mongoose.Schema(boundaryDataSchema);
-
 const demographicDataSchemaMongoose = new mongoose.Schema(demographicDataSchema);
-
 const felonyVotingDataSchemaMongoose = new mongoose.Schema(felonyVotingDataSchema);
+const voterRegistrationSchemaMongoose = new mongoose.Schema(voterRegistrationSchema);
+const electionResultsSchemaMongoose = new mongoose.Schema(electionResultsSchema);
 
 Object.entries(indexes).forEach(([field, indexConfig]) => {
-  eavsDataSchemaMongoose.index({ [field]: indexConfig }); 
+  eavsDataSchemaMongoose.index({ [field]: indexConfig });
   detailedStateDataSchemaMongoose.index({ [field]: indexConfig });
   votingEquipmentDataSchemaMongoose.index({ [field]: indexConfig });
   boundaryDataSchemaMongoose.index({ [field]: indexConfig });
   demographicDataSchemaMongoose.index({ [field]: indexConfig });
   felonyVotingDataSchemaMongoose.index({ [field]: indexConfig });
+  voterRegistrationSchemaMongoose.index({ [field]: indexConfig });
+  electionResultsSchemaMongoose.index({ [field]: indexConfig });
 });
 
 // Create Mongoose models
@@ -29,6 +38,8 @@ const VotingEquipmentData = mongoose.model('VotingEquipmentData', votingEquipmen
 const BoundaryData = mongoose.model('BoundaryData', boundaryDataSchemaMongoose);
 const DemographicData = mongoose.model('DemographicData', demographicDataSchemaMongoose);
 const FelonyVotingData = mongoose.model('FelonyVotingData', felonyVotingDataSchemaMongoose);
+const VoterRegistration = mongoose.model('VoterRegistration', voterRegistrationSchemaMongoose);
+const ElectionResults = mongoose.model('ElectionResults', electionResultsSchemaMongoose);
 
 // Export
 module.exports = {
@@ -37,5 +48,7 @@ module.exports = {
   VotingEquipmentData,
   BoundaryData,
   DemographicData,
-  FelonyVotingData
+  FelonyVotingData,
+  VoterRegistration,
+  ElectionResults
 };

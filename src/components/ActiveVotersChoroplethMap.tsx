@@ -51,6 +51,10 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 		if (hoveredRef.current) {
 			try {
 				geoRef.current?.resetStyle(hoveredRef.current as any);
+				// Close tooltip
+				if ((hoveredRef.current as any).closeTooltip) {
+					(hoveredRef.current as any).closeTooltip();
+				}
 			} catch {
 				// ignore if layer is detached
 			}
@@ -275,10 +279,20 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 				if ((targetLayer as any).bringToFront) {
 					(targetLayer as any).bringToFront();
 				}
+				// Ensure tooltip opens
+				if (!targetLayer.isTooltipOpen()) {
+					targetLayer.openTooltip();
+				}
 			},
 			mouseout: (e: any) => {
 				geoRef.current?.resetStyle(e.target as any);
 				if (hoveredRef.current === e.target) hoveredRef.current = null;
+				// Ensure tooltip closes
+				try {
+					(e.target as L.Path).closeTooltip();
+				} catch {
+					/* ignore */
+				}
 			},
 			click: () => {
 				// Clear highlight proactively if a dialog opens on click
@@ -289,19 +303,23 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 
 	// Clear hover when cursor leaves the map container (covers dialog-open cases)
 	useEffect(() => {
-		const node = mapRef.current?.getContainer();
-		if (!node) return;
-		const handler = () => clearHover();
-		node.addEventListener("mouseleave", handler);
-		return () => node.removeEventListener("mouseleave", handler);
-	}, [mapRef.current]);
+		const map = mapRef.current;
+		if (!map) return;
+
+		const node = map.getContainer();
+		const handleLeave = () => clearHover();
+
+		node.addEventListener("mouseleave", handleLeave);
+
+		return () => {
+			node.removeEventListener("mouseleave", handleLeave);
+		};
+	}, [geoData]);
 
 	// Allow parent to force-clear when a dialog closes
 	useEffect(() => {
 		clearHover();
-	}, [resetHoverKey]);
-
-	if (loading) {
+	}, [resetHoverKey]); if (loading) {
 		return (
 			<Paper sx={{ p: 3, textAlign: "center" }}>
 				<Typography variant="body1">Loading map data...</Typography>

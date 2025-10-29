@@ -15,14 +15,21 @@ const Navigation: React.FC = () => {
 
 	return (
 		<AppBar
-			position="static"
+			position="fixed"
 			elevation={0}
 			sx={{
+				top: 0,
+				left: 0,
+				right: 0,
+				zIndex: 1100,
 				background: theme.palette.primary.main,
 				borderBottom: "1px solid rgba(255,255,255,0.1)",
+				minHeight: 90,
+				height: "auto",
+				flexShrink: 0,
 			}}>
 			<Container maxWidth="lg">
-				<Toolbar sx={{ px: 0 }}>
+				<Toolbar sx={{ px: 0, minHeight: { xs: 90, sm: 90 }, height: "auto" }}>
 					<Typography
 						variant="h5"
 						component="div"
@@ -30,16 +37,19 @@ const Navigation: React.FC = () => {
 							flexGrow: 1,
 							fontWeight: 700,
 							letterSpacing: "-0.02em",
+							display: "flex",
+							alignItems: "center",
+							whiteSpace: "nowrap",
 						}}>
 						<Box
 							component="img"
 							src={logo}
 							alt="Raptors Compass"
-							sx={{ height: 70, width: 70, mr: 1.5, display: "inline-block", verticalAlign: "middle", borderRadius: 1, objectFit: 'cover' }}
+							sx={{ height: 70, width: 70, mr: 1.5, display: "inline-block", verticalAlign: "middle", borderRadius: 1, objectFit: 'cover', flexShrink: 0 }}
 						/>
 						Raptors Voter's Compass
 					</Typography>
-					<Box sx={{ display: "flex", gap: 1 }}>
+					<Box sx={{ display: "flex", gap: 1, alignItems: "center", flexShrink: 0 }}>
 						<Button
 							color="inherit"
 							component={Link}

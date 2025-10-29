@@ -6,7 +6,7 @@ const SplashPage: React.FC = () => {
 	return (
 		<Box
 			sx={{
-				height: "calc(100vh - 65px)", // Full viewport height minus nav bar
+				height: "calc(100vh - 90px)", // Full viewport height minus nav bar (90px)
 				width: "100%",
 				display: "flex",
 				alignItems: "center",
