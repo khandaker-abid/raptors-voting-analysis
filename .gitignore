@@ -48,16 +48,28 @@ env/
 htmlcov/
 
 # Preprocessing cache (large downloaded files)
+# Note: We commit election_results and equipment CSVs for full automation
 preprocessing/cache/*
+!preprocessing/cache/.gitkeep
+
+# Exception 1: Election Results (MIT Election Lab data - committed for automation)
 !preprocessing/cache/election_results/
 preprocessing/cache/election_results/*
 !preprocessing/cache/election_results/countypres_*.csv
+!preprocessing/cache/election_results/.gitkeep
+
+# Exception 2: Equipment Data (VerifiedVoting CSVs - committed for automation)
 !preprocessing/cache/equipment/
 preprocessing/cache/equipment/*
 !preprocessing/cache/equipment/*.csv
+!preprocessing/cache/equipment/.gitkeep
+
+# Preprocessing temporary/cache files
 preprocessing/*.cache
 preprocessing/.cache/
 preprocessing/logs/
+preprocessing/logs/*
+!preprocessing/logs/.gitkeep
 
 # Preprocessing - temporary/generated files
 preprocessing/*.zip
@@ -66,6 +78,10 @@ preprocessing/*.xlsx
 preprocessing/*.xls
 preprocessing/import_equipment.py
 preprocessing/import_manual_equipment.py
+preprocessing/*.pyc
+preprocessing/.DS_Store
+preprocessing/*_output.log
+preprocessing/preprocessing_output.log
 
 # MongoDB data (if running locally)
 data/db/
