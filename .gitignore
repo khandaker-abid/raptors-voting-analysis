@@ -23,4 +23,62 @@ dist-ssr
 *.sln
 *.sw?
 
+# Environment variables
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.envrc
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Preprocessing cache (large downloaded files)
+preprocessing/cache/*
+!preprocessing/cache/election_results/
+preprocessing/cache/election_results/*
+!preprocessing/cache/election_results/countypres_*.csv
+!preprocessing/cache/equipment/
+preprocessing/cache/equipment/*
+!preprocessing/cache/equipment/*.csv
+preprocessing/*.cache
+preprocessing/.cache/
+preprocessing/logs/
+
+# Preprocessing - temporary/generated files
+preprocessing/*.zip
+preprocessing/*.csv
+preprocessing/*.xlsx
+preprocessing/*.xls
+preprocessing/import_equipment.py
+preprocessing/import_manual_equipment.py
+
+# MongoDB data (if running locally)
+data/db/
+dump/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
