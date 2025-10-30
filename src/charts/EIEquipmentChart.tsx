@@ -27,6 +27,7 @@ import {
     CircularProgress,
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material";
+import { ExportButton } from "../components/ExportButton";
 
 interface ProbabilityCurvePoint {
     qualityScore: number; // 0-100
@@ -149,9 +150,24 @@ const EIEquipmentChart: React.FC<Props> = ({ stateName }) => {
 
     return (
         <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-                Ecological Inference: Equipment Quality Access by Demographic
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                <Typography variant="h6" gutterBottom>
+                    Ecological Inference: Equipment Quality Access by Demographic
+                </Typography>
+                <ExportButton
+                    chartId="ei-equipment-chart"
+                    chartName={`ei-equipment-${stateName}`}
+                    tableData={chartData}
+                    tableColumns={[
+                        { header: "Quality Score", accessor: "qualityScore" },
+                        ...selectedDemographics.map(demo => ({
+                            header: demo,
+                            accessor: demo,
+                        })),
+                    ]}
+                    tableName={`ei-equipment-data-${stateName}`}
+                />
+            </Box>
 
             <Alert severity="info" sx={{ mb: 2 }}>
                 This chart shows the probability distribution of equipment quality scores across different
@@ -186,7 +202,7 @@ const EIEquipmentChart: React.FC<Props> = ({ stateName }) => {
                 </FormControl>
             </Box>
 
-            <ResponsiveContainer width="100%" height={400}>
+            <ResponsiveContainer width="100%" height={400} id="ei-equipment-chart">
                 <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis

@@ -49,6 +49,7 @@ import {
 	fetchRegistrationTrends,
 	fetchBlockBubbles,
 	fetchEquipmentVsRejected,
+	fetchDropboxBubbles,
 } from "../data/api";
 import { calculatePowerRegression } from "../utils/regression";
 import PollbookDeletionsBarChart from "../charts/PollbookDeletionsBarChart";
@@ -62,9 +63,10 @@ import VoterRegistrationBubbleOverlay from "../components/VoterRegistrationBubbl
 import EquipmentRejectedBubbleChart from "../charts/EquipmentRejectedBubbleChart";
 import ResetButton from "../components/ResetButton";
 
-// New component imports for integration (GUI-10, GUI-19, GUI-27, GUI-28, GUI-29)
+// New component imports for integration (GUI-10, GUI-19, GUI-24, GUI-27, GUI-28, GUI-29)
 import RegisteredVotersList from "../components/RegisteredVotersList";
 import VotingEquipmentTypeChoropleth from "../components/VotingEquipmentTypeChoropleth";
+import DropboxBubbleChart from "../charts/DropboxBubbleChart";
 import GinglesChart from "../charts/GinglesChart";
 import EIEquipmentChart from "../charts/EIEquipmentChart";
 import EIRejectedBallotsChart from "../charts/EIRejectedBallotsChart";
@@ -127,6 +129,11 @@ const StateDetailPage: React.FC = () => {
 		return decodedStateName === "Maryland";
 	}, [decodedStateName]);
 
+	// Check if this is a party state (Republican or Democratic dominated)
+	const isPartyState = useMemo(() => {
+		return decodedStateName === "Arkansas" || decodedStateName === "Maryland";
+	}, [decodedStateName]);
+
 	// Get provisional ballot data
 	const provisionalData = useMemo(() => {
 		return getProvisionalBallotData(decodedStateName);
@@ -174,6 +181,10 @@ const StateDetailPage: React.FC = () => {
 	const [equipVsRejectedData, setEquipVsRejectedData] = React.useState<any[]>([]);
 	const [equipVsRejectedLoading, setEquipVsRejectedLoading] = React.useState(false);
 
+	// State for GUI-24: Dropbox Bubble Chart
+	const [dropboxBubbleData, setDropboxBubbleData] = React.useState<any[]>([]);
+	const [dropboxBubbleLoading, setDropboxBubbleLoading] = React.useState(false);
+
 	React.useEffect(() => {
 		if (!decodedStateName) return;
 
@@ -187,6 +198,8 @@ const StateDetailPage: React.FC = () => {
 		setShowBubbles(false);
 		setEquipVsRejectedData([]);
 		setEquipVsRejectedLoading(true);
+		setDropboxBubbleData([]);
+		setDropboxBubbleLoading(true);
 
 		let alive = true;
 		(async () => {
@@ -237,6 +250,24 @@ const StateDetailPage: React.FC = () => {
 					setEquipVsRejectedLoading(false);
 				}
 			}
+
+			// GUI-24: Fetch dropbox bubble data (for Arkansas & Maryland)
+			if (decodedStateName === "Arkansas" || decodedStateName === "Maryland") {
+				try {
+					const dropboxData = await fetchDropboxBubbles(decodedStateName);
+					if (alive) {
+						setDropboxBubbleData(dropboxData);
+						setDropboxBubbleLoading(false);
+					}
+				} catch (e) {
+					if (alive) {
+						setDropboxBubbleData([]);
+						setDropboxBubbleLoading(false);
+					}
+				}
+			} else {
+				if (alive) setDropboxBubbleLoading(false);
+			}
 		})();
 
 		return () => {
@@ -264,6 +295,7 @@ const StateDetailPage: React.FC = () => {
 	const IDX_EQUIPMENT = idx++;
 	const IDX_EQUIPMENT_TYPES = isDetail ? idx++ : -1; // NEW - GUI-10
 	const IDX_REG = isDetail ? idx++ : -1;
+	const IDX_DROPBOX = isPartyState ? idx++ : -1; // NEW - GUI-24
 	const IDX_GINGLES = isPreclearance ? idx++ : -1; // NEW - GUI-27
 	const IDX_EI_EQUIPMENT = isPreclearance ? idx++ : -1; // NEW - GUI-28
 	const IDX_EI_REJECTED = isPreclearance ? idx++ : -1; // NEW - GUI-29
@@ -285,6 +317,7 @@ const StateDetailPage: React.FC = () => {
 						<Tab label="Voting Equipment" />
 						{isDetail && <Tab label="Equipment Types" />}
 						{isDetail && <Tab label="Voter Registration" />}
+						{isPartyState && <Tab label="Drop Box Analysis" />}
 						{isPreclearance && <Tab label="Gingles Analysis" />}
 						{isPreclearance && <Tab label="EI Equipment" />}
 						{isPreclearance && <Tab label="EI Rejected" />}
@@ -723,6 +756,30 @@ const StateDetailPage: React.FC = () => {
 									</Box>
 								</Box>
 							</Box>
+						</Box>
+					</TabPanel>
+				)}
+
+				{/* NEW: Drop Box Analysis Tab - GUI-24 (Arkansas & Maryland) */}
+				{isPartyState && IDX_DROPBOX >= 0 && (
+					<TabPanel value={tabValue} index={IDX_DROPBOX}>
+						<Box sx={{ p: 3 }}>
+							<Alert severity="info" sx={{ mb: 3 }}>
+								<strong>Drop Box Voting Analysis</strong> - This bubble chart shows
+								the relationship between Republican vote percentage and drop box
+								voting usage in each county. Each bubble represents one county,
+								colored red for Republican majority or blue for Democratic majority.
+							</Alert>
+							{dropboxBubbleLoading ? (
+								<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+									<CircularProgress />
+								</Box>
+							) : (
+								<DropboxBubbleChart
+									data={dropboxBubbleData}
+									stateName={decodedStateName}
+								/>
+							)}
 						</Box>
 					</TabPanel>
 				)}

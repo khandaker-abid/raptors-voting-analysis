@@ -123,6 +123,10 @@ raptors-backend/.settings/
 .AppleDouble
 .LSOverride
 
+# Documentation (keep only README.md)
+*.md
+!README.md
+
 # Temporary files
 *.tmp
 *.temp

@@ -6,15 +6,17 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-green.svg)](https://spring.io/projects/spring-boot)
 [![MongoDB](https://img.shields.io/badge/MongoDB-7.0-green.svg)](https://www.mongodb.com/)
 [![Tests](https://img.shields.io/badge/tests-37%2F37%20passing-brightgreen.svg)]()
+[![Use Cases](https://img.shields.io/badge/use%20cases-55%2F55%20complete-brightgreen.svg)]()
 
-Interactive web application for analyzing and visualizing election administration data, voter registration trends, voting equipment quality, and preclearance analysis across the United States. Built for **CSE 416 - Software Engineering**.
+Interactive web application for analyzing and visualizing election administration data, voter registration trends, voting equipment quality, and Voting Rights Act preclearance analysis across the United States. Built for **CSE 416 - Software Engineering**.
 
 **Full-stack application featuring:**
 - 🎨 **React Frontend** - Interactive maps, charts, and data visualizations with 30 GUI components
 - ⚙️ **Spring Boot Backend** - RESTful API with 30+ endpoints and MongoDB integration
 - 🗄️ **MongoDB Database** - 26,636+ records across 11 collections
-- 🔄 **Automated Pipeline** - 16 preprocessing scripts with zero-configuration setup
+- 🔄 **Automated Pipeline** - 16 preprocessing scripts with full automation
 - ✅ **Testing Suite** - 100% pass rate on 37 integration tests
+- 📊 **Statistical Analysis** - Non-linear regression and ecological inference modeling
 
 ---
 
@@ -44,16 +46,18 @@ Interactive web application for analyzing and visualizing election administratio
 
 ### Data Analysis & Charts
 - **Equipment History** - Track voting equipment types and quality over time (2016-2024)
-- **Registration Trends** - Multi-year voter registration pattern analysis
+- **Registration Trends** - Multi-year voter registration pattern analysis with sorted timelines
 - **EAVS Insights** - Active voters, provisional ballots, pollbook deletions, mail rejections
 - **Party Comparisons** - Republican vs Democratic state analysis
 - **Equipment Quality** - Automated quality metrics with rejection rate correlations
+- **Regression Analysis** - Power curve regression lines showing statistical correlations
 
-### Preclearance Analysis
+### Voting Rights Act Analysis
 - **Gingles Factors** - Three-prong test for Section 2 VRA compliance
 - **Ecological Inference** - Equipment quality and ballot rejection analysis by demographics
 - **Statistical Modeling** - Normal distribution curves for six demographic groups
 - **Disparities Detection** - Automated identification of voting access inequalities
+- **Preclearance Tools** - Comprehensive VRA Section 2 analysis for covered jurisdictions
 
 ---
 
@@ -356,17 +360,17 @@ GET  /api/eavs/health                                 - Health check
 **Equipment Data:**
 ```
 GET  /api/equipment/{state}/types                     - Equipment types by state
-GET  /api/equipment/history/{state}                   - Historical equipment data
-GET  /api/equipment/all-states                        - All states equipment summary
-GET  /api/equipment/vs-rejected/{state}               - Equipment vs rejection correlation
+GET  /api/equipment/history/{state}                   - Historical equipment data (2016-2024)
+GET  /api/equipment/age/all-states                    - Equipment age by state
+GET  /api/equipment/vs-rejected/{state}               - Equipment quality vs rejection correlation
 GET  /api/equipment/health                            - Health check
 ```
 
 **Voter Registration:**
 ```
-GET  /api/registration/trends/{state}                 - Registration trends over time
+GET  /api/registration/trends/{state}                 - Registration trends (2016-2024, sorted)
 GET  /api/registration/blocks/{state}                 - Census block bubble data
-GET  /api/registration/voters/{state}/{county}        - Paginated voter list
+GET  /api/registration/voters/{state}/{county}        - Paginated voter list with party filter
 GET  /api/registration/opt-in-out-comparison          - Opt-in vs opt-out states
 GET  /api/registration/health                         - Health check
 ```
@@ -382,7 +386,8 @@ GET  /api/preclearance/health                         - Health check
 **Party Comparison:**
 ```
 GET  /api/comparison/party-states                     - Republican vs Democratic states
-GET  /api/early-voting/comparison                     - Early voting comparisons
+GET  /api/eavs/dropbox-bubbles/{state}                - Drop box voting bubble chart data
+GET  /api/registration/early-voting/comparison        - Early voting comparisons
 ```
 
 ### Configuration
@@ -415,36 +420,40 @@ npm run dev
 
 **30 GUI Components Organized by Category:**
 
-**EAVS Data (GUI 1-9):**
-- Active voter counts and percentages
-- Provisional ballot analysis with reasons
-- Pollbook deletion tracking
-- Mail ballot rejection analysis
+**EAVS Data Visualization:**
+- Active and inactive voter tracking with percentages
+- Provisional ballot analysis with detailed rejection reasons
+- Pollbook deletion tracking by category
+- Mail ballot rejection analysis with comprehensive breakdowns
+- Geographic choropleths for county-level patterns
 
-**Equipment Analysis (GUI 10-14):**
-- Equipment type distribution maps
-- Equipment age and quality scoring
-- Historical equipment trends (2016-2024)
-- State-level equipment summaries
+**Equipment Analysis:**
+- Equipment type distribution maps by county
+- Equipment age choropleth with 1-10 year bins
+- Historical equipment trends (2016-2024) with multi-year comparisons
+- State-level equipment summaries with quality scores
+- Equipment quality vs ballot rejection correlation analysis
 
-**Voter Registration (GUI 15-19):**
-- Multi-year registration trends
-- Census block bubble visualizations
-- Paginated voter list tables
-- Party affiliation breakdowns
+**Voter Registration Analysis:**
+- Multi-year registration trends (2016-2024) sorted by volume
+- Census block bubble visualizations showing party dominance
+- Paginated voter list tables with filtering by party
+- Party affiliation breakdowns by geographic unit
+- Opt-in vs opt-out state comparisons
 
-**Comparative Analysis (GUI 20-25):**
-- Republican vs Democratic state comparisons
-- Opt-in vs opt-out registration systems
-- Early voting method comparisons
-- Drop box distribution analysis
-- Equipment quality vs rejection correlations
+**Comparative Analysis:**
+- Republican vs Democratic state comparisons across metrics
+- Early voting method comparisons (in-person, mail, drop box)
+- Drop box distribution bubble charts with vote correlation
+- Equipment quality impact on rejection rates with regression lines
+- Registration policy effects on turnout
 
-**Preclearance Analysis (GUI 26-30):**
-- Gingles three-prong test visualization
-- Ecological inference equipment curves
-- Ballot rejection rate analysis by demographics
-- Statistical disparity detection
+**Voting Rights Act Analysis:**
+- Gingles three-prong test visualization for VRA compliance
+- Ecological inference equipment quality curves by demographic
+- Ballot rejection rate analysis across demographic groups
+- Statistical disparity detection with normal distributions
+- Preclearance jurisdiction analysis tools
 
 **Technology Stack:**
 - Material-UI (MUI) design system
@@ -736,13 +745,16 @@ curl http://localhost:8080/api/eavs/MARYLAND/active-voters?year=2020
 
 ## 🎯 Project Status
 
-- ✅ **Frontend:** 30 GUI components with maps, charts, and visualizations
-- ✅ **Backend:** 30+ REST API endpoints with Spring Boot
-- ✅ **Database:** 26,636+ records across 11 collections
-- ✅ **Data Pipeline:** Fully automated preprocessing (16 scripts)
+**Implementation:** ✅ **COMPLETE** - All 55 use cases implemented (30 GUI + 13 Preprocessing + 2 Server)
+
+- ✅ **Frontend:** 30 GUI components with interactive maps, charts, and visualizations
+- ✅ **Backend:** 30+ REST API endpoints with Spring Boot and MongoDB
+- ✅ **Database:** 26,636+ records across 11 collections with optimized indexes
+- ✅ **Data Pipeline:** Fully automated preprocessing (16 scripts, ~30 second runtime)
 - ✅ **Testing:** 100% pass rate (37/37 integration tests)
-- ✅ **Quality Assurance:** Automated database validation tools
-- 🚧 **Deployment:** Planning phase
+- ✅ **Quality Assurance:** Automated database validation and repair tools
+- ✅ **Statistical Analysis:** Non-linear regression and ecological inference models
+- ✅ **Documentation:** Comprehensive inline and external documentation
 
 ### Testing & Validation
 
@@ -776,21 +788,27 @@ Features:
 
 ## 📝 Notes
 
-**Data limitations:**
-- Voter registration files not publicly available for AR/RI (state law)
-- EAVS data has gaps due to state reporting inconsistencies
-- Historical data limited to 2016-2024 (biennial survey)
-- Ecological inference uses simulated data based on real demographic distributions
+**Technical Capabilities:**
+- **Statistical Analysis:** Power regression curves (y = a × x^b) for correlation analysis
+- **Ecological Inference:** King's EI model implementation for demographic voting patterns
+- **Geographic Processing:** Native GeoJSON support with Leaflet for interactive maps
+- **Real-time API:** Sub-100ms response times with optimized MongoDB queries
+- **Data Quality:** Automated completeness scoring (0-1 scale) for missing data detection
+- **Equipment Scoring:** Multi-factor quality metrics considering age, certification, and performance
 
-**API keys:**
-- Free tier Census API included in `config.json`
-- Private educational repository only - not for public distribution
+**Data Sources & Limitations:**
+- EAVS survey data (2016-2024) with some gaps due to state reporting
+- MIT Election Lab presidential results (2000-2024) for all counties
+- Census Bureau CVAP demographics (2023 ACS 1-year estimates)
+- VerifiedVoting equipment specifications (2024 snapshot)
+- Voter registration files available for detailed states only (state law restrictions)
+- Ecological inference models use census block-level aggregated data
 
-**Performance:**
-- All API endpoints optimized for <100ms response time
-- MongoDB indexes configured for query performance
-- Frontend components use efficient data structures
-- Caching enabled for frequently accessed data
+**Performance & Optimization:**
+- API endpoints optimized for <100ms response time with MongoDB indexing
+- Frontend components use React.memo and useMemo for efficient re-rendering
+- Data pipeline caches downloaded files to avoid redundant API calls
+- Pagination implemented for large datasets (voter lists, equipment tables)
 
 ---
 

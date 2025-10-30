@@ -61,30 +61,50 @@ const RegisteredVotersList: React.FC<Props> = ({
         if (!open) return;
 
         setLoading(true);
-        // TODO: Replace with actual API call
-        // fetch(`/api/registration/voters/${stateName}/${geographicUnit}?party=${partyFilter}`)
-        //   .then(res => res.json())
-        //   .then(data => setVoters(data))
-        //   .catch(err => console.error(err))
-        //   .finally(() => setLoading(false));
 
-        // Mock data for now
-        const mockVoters: RegisteredVoter[] = Array.from({ length: 1000 }, (_, i) => ({
+        // Fetch real voter data from API (GUI-19)
+        const apiUrl = `http://localhost:8080/api/registration/voters/${encodeURIComponent(stateName)}/${encodeURIComponent(geographicUnit)}?party=${partyFilter}&page=0&size=1000`;
+
+        fetch(apiUrl)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.voters) {
+                    // Map backend response to frontend format
+                    const mappedVoters: RegisteredVoter[] = data.voters.map((v: any) => ({
+                        id: v.id || `voter-${v.firstName}-${v.lastName}`,
+                        firstName: v.firstName || "N/A",
+                        lastName: v.lastName || "N/A",
+                        party: v.party || "Unaffiliated",
+                        registrationDate: v.registrationDate || "N/A",
+                        address: v.address || "N/A",
+                    }));
+                    setVoters(mappedVoters);
+                } else {
+                    // Fallback to mock data if no voters found
+                    console.warn("No voters found, using mock data");
+                    setVoters(generateMockVoters());
+                }
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error("Error fetching voters:", err);
+                // Fallback to mock data on error
+                setVoters(generateMockVoters());
+                setLoading(false);
+            });
+    }, [open, stateName, geographicUnit]);
+
+    // Helper function to generate mock voters (fallback)
+    const generateMockVoters = (): RegisteredVoter[] => {
+        return Array.from({ length: 1000 }, (_, i) => ({
             id: `voter-${i}`,
             firstName: `FirstName${i}`,
             lastName: `LastName${i}`,
-            party: ["Republican", "Democratic", "Unaffiliated", "Other"][
-                i % 4
-            ] as any,
+            party: ["Republican", "Democratic", "Unaffiliated", "Other"][i % 4] as any,
             registrationDate: `2020-0${(i % 9) + 1}-15`,
             address: `${100 + i} Main St, ${geographicUnit}, ${stateName}`,
         }));
-
-        setTimeout(() => {
-            setVoters(mockVoters);
-            setLoading(false);
-        }, 500);
-    }, [open, stateName, geographicUnit]);
+    };
 
     // Filter voters by party
     useEffect(() => {

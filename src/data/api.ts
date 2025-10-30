@@ -389,4 +389,28 @@ export async function fetchEarlyVotingComparison(): Promise<any[]> {
     return tryUrls(urls, mockData, `early-voting-comparison`);
 }
 
+/**
+ * GUI-24: Fetch drop box voting bubble chart data
+ * Shows relationship between drop box voting and Republican vote percentage
+ * Arkansas has drop box data for 2020, Maryland for 2024
+ */
+export async function fetchDropboxBubbles(state: string, year?: number): Promise<any[]> {
+    const s = encodeURIComponent(state);
+    const abbr = STATE_TO_ABBR[state] || state.slice(0, 2).toUpperCase();
+
+    // Use 2020 for Arkansas (has drop box data), 2024 for Maryland
+    const defaultYear = state === "Arkansas" ? 2020 : 2024;
+    const queryYear = year || defaultYear;
+
+    const urls = [
+        `${base}/eavs/dropbox-bubbles/${s}?year=${queryYear}`,
+        `${base}/eavs/dropbox-bubbles/${abbr}?year=${queryYear}`,
+    ];
+
+    // Mock data fallback
+    const mockData = [] as any[];
+
+    return tryUrls(urls, mockData, `dropbox-bubbles (${state})`);
+}
+
 export const API_URL = 'http://localhost:8080/api/data';
