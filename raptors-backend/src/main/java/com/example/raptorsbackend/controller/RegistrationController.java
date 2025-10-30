@@ -16,6 +16,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/registration")
 @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:5173" })
+@SuppressWarnings("unchecked")
 public class RegistrationController {
 
     @Autowired

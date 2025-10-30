@@ -33,7 +33,8 @@ public class EAVSController {
         query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
 
         @SuppressWarnings("unchecked")
-        List<Map<String, Object>> results = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "eavsData");
+        List<Map<String, Object>> results = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
+                "eavsData");
 
         return results.stream().map(doc -> {
             Map<String, Object> row = new HashMap<>();
@@ -70,7 +71,8 @@ public class EAVSController {
         query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
 
         @SuppressWarnings("unchecked")
-        List<Map<String, Object>> results = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "eavsData");
+        List<Map<String, Object>> results = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
+                "eavsData");
 
         return results.stream().map(doc -> {
             Map<String, Object> row = new HashMap<>();
@@ -105,7 +107,8 @@ public class EAVSController {
         query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
 
         @SuppressWarnings("unchecked")
-        List<Map<String, Object>> results = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "eavsData");
+        List<Map<String, Object>> results = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
+                "eavsData");
 
         return results.stream().map(doc -> {
             Map<String, Object> row = new HashMap<>();
@@ -156,7 +159,8 @@ public class EAVSController {
         query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
 
         @SuppressWarnings("unchecked")
-        List<Map<String, Object>> results = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "eavsData");
+        List<Map<String, Object>> results = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
+                "eavsData");
 
         return results.stream().map(doc -> {
             Map<String, Object> row = new HashMap<>();

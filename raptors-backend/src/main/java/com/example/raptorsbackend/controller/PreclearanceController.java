@@ -15,6 +15,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/preclearance")
 @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:5173" })
+@SuppressWarnings("unchecked")
 public class PreclearanceController {
 
     @Autowired
@@ -29,7 +30,8 @@ public class PreclearanceController {
         Query query = new Query();
         query.addCriteria(Criteria.where("state").is(state));
 
-        List<Map> precincts = mongoTemplate.find(query, Map.class, "precinct_demographics");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> precincts = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "precinct_demographics");
 
         List<Map<String, Object>> data = precincts.stream().map(precinct -> {
             Map<String, Object> row = new HashMap<>();
@@ -71,7 +73,8 @@ public class PreclearanceController {
             query.addCriteria(Criteria.where("demographic").is(demographic));
         }
 
-        List<Map> results = mongoTemplate.find(query, Map.class, "ei_equipment_analysis");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> results = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "ei_equipment_analysis");
 
         Map<String, Object> result = new HashMap<>();
         result.put("state", state);
@@ -80,7 +83,7 @@ public class PreclearanceController {
         // Probability curves: quality score (0-100) -> probability density
         List<Map<String, Object>> curves = new ArrayList<>();
 
-        for (Map doc : results) {
+        for (Map<String, Object> doc : results) {
             Map<String, Object> curve = new HashMap<>();
             curve.put("demographic", doc.get("demographic"));
             curve.put("data", doc.get("curve")); // Array of {qualityScore: x, probability: y}
@@ -110,7 +113,8 @@ public class PreclearanceController {
             query.addCriteria(Criteria.where("demographic").is(demographic));
         }
 
-        List<Map> results = mongoTemplate.find(query, Map.class, "ei_rejection_analysis");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> results = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "ei_rejection_analysis");
 
         Map<String, Object> result = new HashMap<>();
         result.put("state", state);
@@ -119,7 +123,7 @@ public class PreclearanceController {
         // Probability curves: rejection probability -> probability density
         List<Map<String, Object>> curves = new ArrayList<>();
 
-        for (Map doc : results) {
+        for (Map<String, Object> doc : results) {
             Map<String, Object> curve = new HashMap<>();
             curve.put("demographic", doc.get("demographic"));
             curve.put("data", doc.get("curve")); // Array of {rejectionProbability: x, probability: y}
@@ -156,7 +160,8 @@ public class PreclearanceController {
                 .and("analysis_type").is("equipment_quality"));
         long fullQueryCount = mongoTemplate.count(fullQuery, "ei_equipment_analysis");
 
-        List<Map> sample = mongoTemplate.find(new Query().limit(1), Map.class, "ei_equipment_analysis");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> sample = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(new Query().limit(1), Map.class, "ei_equipment_analysis");
 
         return Map.of(
                 "totalDocuments", count,

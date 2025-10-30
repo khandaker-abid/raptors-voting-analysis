@@ -10,7 +10,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import java.time.Year;
 
 /**
  * Controller for voting equipment data
@@ -19,6 +18,7 @@ import java.time.Year;
 @RestController
 @RequestMapping("/api/equipment")
 @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:5173" })
+@SuppressWarnings("unchecked")
 public class EquipmentController {
 
     @Autowired
@@ -33,17 +33,19 @@ public class EquipmentController {
         Query query = new Query();
         query.addCriteria(Criteria.where("state").is(state));
 
-        List<Map> results = mongoTemplate.find(query, Map.class, "votingEquipmentData");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> results = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "votingEquipmentData");
 
         return results.stream().map(doc -> {
             Map<String, Object> row = new HashMap<>();
             row.put("geographicUnit", doc.get("county"));
 
             // Count equipment types
-            List<Map> equipments = (List<Map>) doc.getOrDefault("equipments", new ArrayList<>());
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> equipments = (List<Map<String, Object>>) doc.getOrDefault("equipments", new ArrayList<>());
             Map<String, Integer> typeCounts = new HashMap<>();
 
-            for (Map equip : equipments) {
+            for (Map<String, Object> equip : equipments) {
                 String type = (String) equip.get("type");
                 int quantity = ((Number) equip.getOrDefault("quantity", 1)).intValue();
                 typeCounts.put(type, typeCounts.getOrDefault(type, 0) + quantity);
@@ -80,16 +82,17 @@ public class EquipmentController {
      */
     @GetMapping("/age/all-states")
     public List<Map<String, Object>> getAllStatesEquipmentAge() {
-        List<Map> allEquipment = mongoTemplate.findAll(Map.class, "votingEquipmentData");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> allEquipment = (List<Map<String, Object>>)(List<?>) mongoTemplate.findAll(Map.class, "votingEquipmentData");
 
         Map<String, List<Integer>> stateAges = new HashMap<>();
-        int currentYear = Year.now().getValue();
 
-        for (Map doc : allEquipment) {
+        for (Map<String, Object> doc : allEquipment) {
             String state = (String) doc.get("state");
-            List<Map> equipments = (List<Map>) doc.getOrDefault("equipments", new ArrayList<>());
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> equipments = (List<Map<String, Object>>) doc.getOrDefault("equipments", new ArrayList<>());
 
-            for (Map equip : equipments) {
+            for (Map<String, Object> equip : equipments) {
                 Object ageObj = equip.get("age");
                 if (ageObj != null) {
                     int age = ((Number) ageObj).intValue();

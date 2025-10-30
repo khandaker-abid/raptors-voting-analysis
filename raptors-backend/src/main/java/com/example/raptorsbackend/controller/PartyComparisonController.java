@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/comparison")
 @CrossOrigin(origins = "*")
+@SuppressWarnings("unchecked")
 public class PartyComparisonController {
 
     @Autowired
