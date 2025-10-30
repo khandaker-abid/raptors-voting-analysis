@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
 	Box,
-	Chip,
 	Paper,
 	Table,
 	TableBody,
@@ -16,24 +15,35 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import type { VotingEquipmentSummaryData } from "../data/votingEquipmentSummaryData.ts";
-import { getVotingEquipmentSummary } from "../data/votingEquipmentSummaryData.ts";
-import axios from "axios";
-import { API_URL } from "../data/api.ts";
+import { fetchEquipmentSummary } from "../data/api.ts";
 
 
-const VotingEquipmentSummaryTable: React.FC = () => { 
+const VotingEquipmentSummaryTable: React.FC = () => {
 	const [data, setData] = useState<VotingEquipmentSummaryData[]>([]);
-    const [page, setPage] = useState(0);
+	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [searchTerm, setSearchTerm] = useState("");
 
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				const response = await axios.get<VotingEquipmentSummaryData[]>(`${API_URL}/voting-equipment-summary`);
-				setData(response.data);
+				const response = await fetchEquipmentSummary();
+				// Map backend response to frontend format
+				const mappedData: VotingEquipmentSummaryData[] = response.map((item: any, index: number) => ({
+					id: index + 1,
+					equipmentProvider: item.provider || "Unknown",
+					model: item.model || "Unknown",
+					quantity: item.quantity || 0,
+					age: item.age || 0,
+					os: item.os || "Unknown",
+					certification: item.certification || "Not certified",
+					scanRate: item.scanRate || 0,
+					errorRate: item.errorRate || 0,
+					reliability: item.reliability || 0,
+					qualityMeasure: item.qualityScore || 0,
+				}));
+				setData(mappedData);
 			} catch (err) {
-				console.log(err)
 				console.error(err);
 			}
 		};
@@ -78,8 +88,8 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 	}
 
 	return (
-		<Paper sx={{ p:4 }}>
-			<Box mb={3} sx={{ p:3 }} >
+		<Paper sx={{ p: 4 }}>
+			<Box mb={3} sx={{ p: 3 }} >
 				<Typography variant="h4" gutterBottom align="center" fontWeight={600}>
 					US Voting Equipment Summary
 				</Typography>
@@ -147,7 +157,7 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 								}}>
 								Certification
 							</TableCell>
-                            <TableCell
+							<TableCell
 								align="center"
 								sx={{
 									fontWeight: "bold",
@@ -156,7 +166,7 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 								}}>
 								Scan Rate
 							</TableCell>
-                            <TableCell
+							<TableCell
 								align="center"
 								sx={{
 									fontWeight: "bold",
@@ -165,7 +175,7 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 								}}>
 								Error Rate
 							</TableCell>
-                            <TableCell
+							<TableCell
 								align="center"
 								sx={{
 									fontWeight: "bold",
@@ -174,7 +184,7 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 								}}>
 								Reliability
 							</TableCell>
-                            <TableCell
+							<TableCell
 								align="center"
 								sx={{
 									fontWeight: "bold",
@@ -203,8 +213,8 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 											backgroundColor: index % 2 === 0 ? "white" : "#fafafa",
 											zIndex: 1,
 											overflow: 'hidden',
-                      						textOverflow: 'ellipsis',
-                     						whiteSpace: 'nowrap',
+											textOverflow: 'ellipsis',
+											whiteSpace: 'nowrap',
 										}}>
 										<Typography
 											variant="body2">
@@ -212,12 +222,12 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 										</Typography>
 									</TableCell>
 
-									<TableCell 
+									<TableCell
 										align="left"
-										sx = {{
+										sx={{
 											overflow: 'hidden',
-                      						textOverflow: 'ellipsis',
-                      						whiteSpace: 'nowrap',
+											textOverflow: 'ellipsis',
+											whiteSpace: 'nowrap',
 										}}>
 										<Typography
 											variant="body2">
@@ -230,17 +240,17 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 										{row.quantity.toLocaleString()}
 									</TableCell>
 
-                                    <TableCell
+									<TableCell
 										align="right">
 										{row.age.toLocaleString()}
 									</TableCell>
 
-									<TableCell 
+									<TableCell
 										align="left"
 										sx={{
 											overflow: 'hidden',
-                     						textOverflow: 'ellipsis',
-                      						whiteSpace: 'nowrap',
+											textOverflow: 'ellipsis',
+											whiteSpace: 'nowrap',
 										}}>
 										<Typography
 											variant="body2">
@@ -248,12 +258,12 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 										</Typography>
 									</TableCell>
 
-									<TableCell 
+									<TableCell
 										align="left"
 										sx={{
 											overflow: 'hidden',
-                      						textOverflow: 'ellipsis',
-                      						whiteSpace: 'nowrap',
+											textOverflow: 'ellipsis',
+											whiteSpace: 'nowrap',
 										}}>
 										<Typography
 											variant="body2">
@@ -267,19 +277,19 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 										</Typography>
 									</TableCell>
 
-                        			<TableCell										
+									<TableCell
 										align="right"  >
-											{row.errorRate}
+										{row.errorRate}
 									</TableCell>
 
-                                    <TableCell										
+									<TableCell
 										align="right"  >
-											{row.reliability} {/* had toFixed before */}
+										{row.reliability} {/* had toFixed before */}
 									</TableCell>
 
-                                    <TableCell 
+									<TableCell
 										align="right"  >
-											{row.qualityMeasure} {/* had toFixed before */}
+										{row.qualityMeasure} {/* had toFixed before */}
 									</TableCell>
 
 								</TableRow>
@@ -290,13 +300,13 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 
 			<Box
 				sx={{
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "space-between",
-				flexWrap: "wrap",
-				gap: 2,
-				p: 4,
-				px:6
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "space-between",
+					flexWrap: "wrap",
+					gap: 2,
+					p: 4,
+					px: 6
 				}}
 			>
 				<Box display="flex" alignItems="center" gap={2}>

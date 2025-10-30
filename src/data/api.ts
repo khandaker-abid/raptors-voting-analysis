@@ -1,4 +1,4 @@
-// Centralized, typed fetch helpers for the Java backend (or local mocks).
+// Centralized typed fetch helpers for the Java backend (or local mocks).
 
 import type {
     ActiveVotersRow,
@@ -11,7 +11,7 @@ import type {
 
 // Dev toggles
 // Turn ON to always use mocks (frontend-only development).
-const USE_MOCKS = true;
+const USE_MOCKS = false;
 // When true, if all real URL attempts fail (500/404/etc.), we’ll
 // gracefully fall back to mock data so the UI keeps working.
 const AUTO_FALLBACK_TO_MOCK_ON_ERROR = true;
@@ -297,6 +297,96 @@ export async function fetchBlockBubbles(state: string): Promise<BlockBubblePaylo
     ];
 
     return tryUrls(urls, M_BUBBLES, `registration-block-bubbles (${state})`);
+}
+
+/**
+ * GUI-15 & GUI-22: Fetch party comparison data
+ * Compares Republican vs Democratic vs Split states
+ */
+export async function fetchPartyComparison(): Promise<any> {
+    const urls = [
+        `${base}/comparison/party-states`,
+    ];
+
+    // Mock data fallback
+    const mockData = {
+        republican: { count: 0, avgRegistrationRate: 0, avgTurnout: 0 },
+        democratic: { count: 0, avgRegistrationRate: 0, avgTurnout: 0 },
+        split: { count: 0, avgRegistrationRate: 0, avgTurnout: 0 },
+        stateDetails: { Republican: [], Democratic: [], Split: [] }
+    };
+
+    return tryUrls(urls, mockData, `party-comparison`);
+}
+
+/**
+ * GUI-12: Fetch equipment data for all states (table view)
+ */
+export async function fetchEquipmentAllStates(): Promise<any[]> {
+    const urls = [
+        `${base}/equipment/all-states`,
+    ];
+
+    // Mock data fallback
+    const mockData = [] as any[];
+
+    return tryUrls(urls, mockData, `equipment-all-states`);
+}
+
+/**
+ * GUI-13: Fetch equipment summary by provider/model
+ */
+export async function fetchEquipmentSummary(): Promise<any[]> {
+    const urls = [
+        `${base}/equipment/summary`,
+    ];
+
+    // Mock data fallback
+    const mockData = [] as any[];
+
+    return tryUrls(urls, mockData, `equipment-summary`);
+}
+
+/**
+ * GUI-25: Fetch equipment quality vs rejected ballots
+ */
+export async function fetchEquipmentVsRejected(state: string): Promise<any[]> {
+    const urls = [
+        `${base}/equipment/vs-rejected/${state}`,
+    ];
+
+    // Mock data fallback
+    const mockData = [] as any[];
+
+    return tryUrls(urls, mockData, `equipment-vs-rejected (${state})`);
+}
+
+/**
+ * GUI-21: Fetch opt-in/opt-out registration comparison
+ */
+export async function fetchOptInOutComparison(): Promise<any[]> {
+    const urls = [
+        `${base}/registration/opt-in-out-comparison`,
+    ];
+
+    // Mock data fallback
+    const mockData = [] as any[];
+
+    return tryUrls(urls, mockData, `opt-in-out-comparison`);
+}
+
+/**
+ * GUI-23: Fetch early voting comparison
+ */
+export async function fetchEarlyVotingComparison(): Promise<any[]> {
+    const urls = [
+        `${base}/registration/early-voting/comparison`,
+    ];
+
+    // Mock data fallback
+    const mockData = [] as any[];
+
+    return tryUrls(urls, mockData, `early-voting-comparison`);
 }
 
 export const API_URL = 'http://localhost:8080/api/data';

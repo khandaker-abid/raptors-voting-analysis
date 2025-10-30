@@ -4,8 +4,22 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+pnpm-deb# Preprocessing temporary/generated files
+preprocessing/*.zip
+preprocessing/*.csv
+preprocessing/*.xlsx
+preprocessing/*.xls
+preprocessing/import_equipment.py
+preprocessing/import_manual_equipment.py
+preprocessing/*.pyc
+preprocessing/.DS_Store
+preprocessing/*_output.log
+preprocessing/preprocessing_output.log
+
+# Test and validation outputs
+test_results.log
+validation_report.txt
+*.test.logna-debug.log*
 
 node_modules
 dist
@@ -87,6 +101,23 @@ preprocessing/preprocessing_output.log
 data/db/
 dump/
 
+# Backend build artifacts (Spring Boot / Maven)
+raptors-backend/target/
+raptors-backend/.mvn/
+raptors-backend/mvnw
+raptors-backend/mvnw.cmd
+raptors-backend/*.jar
+raptors-backend/*.war
+raptors-backend/backend.log
+raptors-backend/nohup.out
+
+# Backend IDE files
+raptors-backend/.idea/
+raptors-backend/*.iml
+raptors-backend/.classpath
+raptors-backend/.project
+raptors-backend/.settings/
+
 # macOS
 .DS_Store
 .AppleDouble
@@ -98,3 +129,4 @@ dump/
 *.swp
 *.swo
 *~
+nohup.out

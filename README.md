@@ -5,14 +5,16 @@
 [![Node.js](https://img.shields.io/badge/node.js-18%2B-green.svg)](https://nodejs.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-green.svg)](https://spring.io/projects/spring-boot)
 [![MongoDB](https://img.shields.io/badge/MongoDB-7.0-green.svg)](https://www.mongodb.com/)
+[![Tests](https://img.shields.io/badge/tests-37%2F37%20passing-brightgreen.svg)]()
 
-Interactive web application for analyzing and visualizing election administration data, voter registration trends, and voting equipment quality across the United States. Built for **CSE 416 - Software Engineering**.
+Interactive web application for analyzing and visualizing election administration data, voter registration trends, voting equipment quality, and preclearance analysis across the United States. Built for **CSE 416 - Software Engineering**.
 
 **Full-stack application featuring:**
-- 🎨 **React Frontend** - Interactive maps, charts, and data visualizations
-- ⚙️ **Spring Boot Backend** - RESTful API with MongoDB integration
-- 🗄️ **MongoDB Database** - 20,840+ records of election data
-- 🔄 **Automated Pipeline** - Zero-configuration data preprocessing
+- 🎨 **React Frontend** - Interactive maps, charts, and data visualizations with 30 GUI components
+- ⚙️ **Spring Boot Backend** - RESTful API with 30+ endpoints and MongoDB integration
+- 🗄️ **MongoDB Database** - 26,636+ records across 11 collections
+- 🔄 **Automated Pipeline** - 16 preprocessing scripts with zero-configuration setup
+- ✅ **Testing Suite** - 100% pass rate on 37 integration tests
 
 ---
 
@@ -35,53 +37,62 @@ Interactive web application for analyzing and visualizing election administratio
 
 ## ✨ Features
 
-### Interactive Maps
-- **State & County Choropleths** - Visualize voting data geographically
-- **Bubble Overlays** - Compare voter registration across regions
-- **Dynamic Filtering** - Filter by state, year, and data completeness
+### Interactive Maps & Visualizations
+- **Geographic Choropleths** - State and county-level voting data visualizations
+- **Census Block Bubbles** - Voter registration overlays with demographic data
+- **Dynamic Filtering** - Filter by state, year, party, and data completeness
 
-### Data Visualizations
-- **Bar & Line Charts** - Voter trends, deletions, rejections over time
-- **Equipment History** - Track voting equipment quality and age
-- **Registration Trends** - Analyze voter registration patterns
+### Data Analysis & Charts
+- **Equipment History** - Track voting equipment types and quality over time (2016-2024)
+- **Registration Trends** - Multi-year voter registration pattern analysis
+- **EAVS Insights** - Active voters, provisional ballots, pollbook deletions, mail rejections
+- **Party Comparisons** - Republican vs Democratic state analysis
+- **Equipment Quality** - Automated quality metrics with rejection rate correlations
 
-### Comprehensive Data Analysis
-- **EAVS Data (2016-2024)** - Election Administration and Voting Survey
-- **Voter Registration** - Detailed state-level registration data
-- **Equipment Quality Scores** - Automated quality metrics (0-1 scale)
-- **Data Completeness** - Track missing data across jurisdictions
-- **Demographic Analysis** - CVAP (Citizen Voting Age Population) data
-- **Felony Voting Policies** - State-by-state policy tracking
+### Preclearance Analysis
+- **Gingles Factors** - Three-prong test for Section 2 VRA compliance
+- **Ecological Inference** - Equipment quality and ballot rejection analysis by demographics
+- **Statistical Modeling** - Normal distribution curves for six demographic groups
+- **Disparities Detection** - Automated identification of voting access inequalities
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **React 18** - Modern UI components with hooks
-- **TypeScript** - Type-safe development
-- **Vite** - Lightning-fast build tool
-- **Material-UI (MUI)** - Professional component library
-- **Leaflet + React-Leaflet** - Interactive maps
-- **Recharts** - Responsive data visualizations
+- **React 19.1** - Modern UI components with hooks
+- **TypeScript 5.8** - Type-safe development
+- **Vite 7.1** - Lightning-fast build tool
+- **Material-UI (MUI) 7.3** - Professional component library
+- **Leaflet + React-Leaflet** - Interactive geographic maps
+- **Recharts 3.2** - Responsive data visualizations
+- **Axios** - HTTP client for API communication
 
 ### Backend
 - **Spring Boot 3.5.6** - Production-ready REST API
-- **Java 17** - Modern Java features
-- **MongoDB** - Flexible NoSQL database for geospatial data
-- **Mongoose** - ODM for MongoDB (Node.js schemas)
+- **Java 17** - Modern Java features with Maven build
+- **MongoDB 7.0+** - NoSQL database with native GeoJSON support
+- **Spring Data MongoDB** - Data access layer
+- **CORS Support** - Cross-origin resource sharing enabled
 
 ### Data Pipeline
-- **Python 3.12** - ETL/preprocessing scripts
+- **Python 3.12** - 16 automated ETL/preprocessing scripts
 - **Pandas** - Data manipulation and analysis
-- **GeoPandas** - Geospatial data processing
+- **NumPy** - Statistical modeling and computations
 - **PyMongo** - MongoDB driver for Python
+- **Requests** - HTTP library for API calls
+
+### Testing & Validation
+- **Integration Tests** - 37 automated tests covering all endpoints
+- **Database Validation** - Automated schema and data integrity checks
+- **Performance Testing** - Response time validation (<100ms target)
 
 ### APIs & Data Sources
 - **Census Bureau API** - CVAP demographic data
-- **USPS Address Validation API** - Voter address verification
-- **EAC EAVS Datasets** - Election administration data
+- **EAC EAVS Datasets** - Election administration surveys (2016-2024)
 - **Census TIGER/Line** - Geographic boundaries
+- **MIT Election Lab** - Presidential election results (2000-2024)
+- **VerifiedVoting** - Voting equipment specifications
 
 ---
 
@@ -134,7 +145,7 @@ cd preprocessing
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-./run_all_preprocessing.sh  # Populates MongoDB (~21 seconds)
+./run_all_preprocessing.sh  # Populates MongoDB (~30 seconds)
 cd ..
 
 # Terminal 2 - Start backend
@@ -145,6 +156,9 @@ cd raptors-backend
 # Terminal 3 - Start frontend
 npm install
 npm run dev  # Runs on http://localhost:5173
+
+# Terminal 4 (Optional) - Run integration tests
+python test_integration.py  # Validates entire stack
 ```
 
 Then configure frontend to use real data:
@@ -173,31 +187,42 @@ Frontend will use mock data - perfect for UI development without database setup.
 raptors-voting-analysis/
 ├── src/                          # React frontend source
 │   ├── components/              # Reusable UI components
-│   ├── pages/                   # Page components
+│   ├── pages/                   # Page components (30 GUI features)
 │   ├── charts/                  # Chart components (Recharts)
 │   ├── tables/                  # Table components
 │   ├── data/                    # API client & data utilities
 │   └── assets/                  # Images, icons
 │
 ├── preprocessing/               # Python data pipeline ⭐
-│   ├── 01-13_*.py              # 13 preprocessing scripts
+│   ├── 01-16_*.py              # 16 preprocessing scripts
+│   │   ├── 01-04: Boundaries   # Geographic data
+│   │   ├── 05-06: EAVS/Quality # Survey data & quality metrics
+│   │   ├── 07-10: Voters       # Registration & geocoding
+│   │   ├── 11-13: Elections    # Results, CVAP, policies
+│   │   ├── 14-15: GUI Data     # Equipment history, bubbles
+│   │   └── 16: EI Analysis     # Ecological inference
 │   ├── utils/                   # Shared utilities
 │   │   ├── database.py         # MongoDB connection
-│   │   ├── geocoding.py        # Address geocoding
 │   │   ├── census_api.py       # Census API wrapper
 │   │   └── geojson_tools.py    # GeoJSON utilities
 │   ├── config.json              # Database & API configuration
-│   ├── run_all_preprocessing.sh # Master script
+│   ├── run_all_preprocessing.sh # Master automation script
 │   └── validate_preprocessing.py # Data validation
 │
 ├── raptors-backend/             # Spring Boot backend
 │   ├── src/main/java/          # Java source code
-│   │   └── com/raptors/        # Application packages
-│   │       ├── controller/     # REST controllers
+│   │   └── com/example/raptorsbackend/
+│   │       ├── controller/     # REST controllers (6 files)
+│   │       │   ├── EAVSController.java
+│   │       │   ├── EquipmentController.java
+│   │       │   ├── RegistrationController.java
+│   │       │   ├── PreclearanceController.java
+│   │       │   ├── PartyComparisonController.java
+│   │       │   └── DataController.java
 │   │       ├── service/        # Business logic
-│   │       ├── repository/     # MongoDB repositories
 │   │       └── model/          # Data models
-│   └── pom.xml                 # Maven dependencies
+│   ├── pom.xml                 # Maven dependencies
+│   └── target/                 # Compiled JAR files
 │
 ├── mongo-app/                   # MongoDB schemas
 │   ├── schema.cjs              # Collection schemas
@@ -207,6 +232,8 @@ raptors-voting-analysis/
 ├── public/                      # Static assets
 │   └── *.geojson               # US geographic boundaries
 │
+├── test_integration.py          # Integration test suite (37 tests)
+├── validate_database.py         # Database validation tool
 ├── package.json                 # Node.js dependencies
 ├── vite.config.ts              # Vite configuration
 ├── tsconfig.json               # TypeScript configuration
@@ -226,11 +253,11 @@ cd preprocessing
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-./run_all_preprocessing.sh  # Runs all 13 scripts
+./run_all_preprocessing.sh  # Runs all 16 scripts
 python validate_preprocessing.py  # Verify results
 ```
 
-**Runtime:** ~21 seconds | **Status:** Fully automated with cached data files
+**Runtime:** ~30 seconds | **Status:** Fully automated with cached data files
 
 ### Data Sources
 
@@ -239,6 +266,8 @@ python validate_preprocessing.py  # Verify results
 - State/county boundaries from Census TIGER/Line
 - CVAP demographics from Census API
 - Felony voting policies (50 states)
+- Equipment history trends (2016-2024)
+- Census block geocoded voters
 
 **Committed data files:**
 - MIT Election Lab results: `countypres_2000-2024.csv` (8.4 MB)
@@ -248,30 +277,55 @@ All data files are cached and committed to the repository for zero-setup deploym
 
 ### Pipeline Details
 
-The pipeline runs 13 automated scripts that:
-1. Download geographic boundaries (states and counties)
-2. Parse EAVS survey data (2016-2024)
-3. Calculate data completeness and quality scores
-4. Import voting equipment specifications
-5. Fetch demographic data from Census API
-6. Collect state felony voting policies
+The pipeline runs 16 automated scripts organized by function:
 
-**Total runtime:** ~21 seconds | **Configuration:** Included in `preprocessing/config.json`
+**Geographic Setup (Scripts 1-4):**
+1. Download state/county boundaries
+2. Download EAVS survey data (2016-2024)
+3. Populate EAVS database
+4. Download geographic boundaries
+
+**Data Quality (Scripts 5-6):**
+5. Calculate data completeness metrics
+6. Calculate equipment quality scores
+
+**Voter Analysis (Scripts 7-10):**
+7. Download voter registration data
+8. Automated voter analysis
+9. Geocode voters to census blocks
+10. Assign voters to EAVS regions
+
+**Supplementary Data (Scripts 11-13):**
+11. Download election results
+12. Download CVAP demographic data
+13. Collect felony voting policies
+
+**GUI Data Generation (Scripts 14-16):**
+14. Generate equipment history trends
+15. Generate census block bubbles
+16. Generate ecological inference analysis
+
+**Total runtime:** ~30 seconds | **Configuration:** `preprocessing/config.json`
 
 For detailed script documentation, see [`preprocessing/README.md`](preprocessing/README.md).
 
 ### Database Collections
 
-After running the pipeline, MongoDB contains 20,840+ records:
+After running the pipeline, MongoDB contains 26,636+ records across 11 collections:
 
 | Collection | Documents | Description |
 |------------|-----------|-------------|
-| `boundaryData` | 152 | State & county GeoJSON boundaries |
 | `eavsData` | 19,388 | EAVS survey records (2016-2024) |
+| `census_block_voters` | 4,510 | Geocoded voter registration by census block |
+| `equipment_history` | 1,120 | Equipment type trends over time |
 | `votingEquipmentData` | 1,008 | Equipment specifications and quality metrics |
-| `electionResults` | 138 | 2024 Presidential results by county |
+| `ei_precinct_analysis` | 154 | Ecological inference precinct-level data |
+| `boundaryData` | 152 | State & county GeoJSON boundaries |
+| `electionResults` | 138 | Presidential election results by county |
 | `demographicData` | 104 | CVAP demographic data |
 | `felonyVotingData` | 50 | State felony voting policies |
+| `ei_equipment_analysis` | 6 | EI equipment quality curves by demographic |
+| `ei_rejection_analysis` | 6 | EI ballot rejection curves by demographic |
 
 **Focus States:** Arkansas (Republican), Maryland (Democratic), Rhode Island (Opt-in)
 
@@ -290,13 +344,45 @@ cd raptors-backend
 
 ### Key Endpoints
 
+**EAVS Data:**
 ```
-GET  /api/eavs/states           - EAVS data by state
-GET  /api/eavs/states/{abbr}    - EAVS data for specific state
-GET  /api/boundaries/states     - State boundary GeoJSON
-GET  /api/boundaries/counties   - County boundaries
-GET  /api/equipment/quality     - Equipment quality scores
-GET  /api/demographics/cvap     - CVAP demographic data
+GET  /api/eavs/{state}/active-voters?year=2024        - Active/inactive voter counts
+GET  /api/eavs/{state}/provisional-ballots?year=2024  - Provisional ballot data
+GET  /api/eavs/{state}/pollbook-deletions?year=2024   - Voter removal reasons
+GET  /api/eavs/{state}/mail-rejections?year=2024      - Mail ballot rejection reasons
+GET  /api/eavs/health                                 - Health check
+```
+
+**Equipment Data:**
+```
+GET  /api/equipment/{state}/types                     - Equipment types by state
+GET  /api/equipment/history/{state}                   - Historical equipment data
+GET  /api/equipment/all-states                        - All states equipment summary
+GET  /api/equipment/vs-rejected/{state}               - Equipment vs rejection correlation
+GET  /api/equipment/health                            - Health check
+```
+
+**Voter Registration:**
+```
+GET  /api/registration/trends/{state}                 - Registration trends over time
+GET  /api/registration/blocks/{state}                 - Census block bubble data
+GET  /api/registration/voters/{state}/{county}        - Paginated voter list
+GET  /api/registration/opt-in-out-comparison          - Opt-in vs opt-out states
+GET  /api/registration/health                         - Health check
+```
+
+**Preclearance Analysis:**
+```
+GET  /api/preclearance/gingles/{state}                - Gingles three-prong test
+GET  /api/preclearance/ei-equipment/{state}           - EI equipment quality curves
+GET  /api/preclearance/ei-rejected/{state}            - EI rejection rate curves
+GET  /api/preclearance/health                         - Health check
+```
+
+**Party Comparison:**
+```
+GET  /api/comparison/party-states                     - Republican vs Democratic states
+GET  /api/early-voting/comparison                     - Early voting comparisons
 ```
 
 ### Configuration
@@ -327,20 +413,44 @@ npm run dev
 
 ### Features
 
-**Interactive Maps:**
-- State and county choropleth visualizations
-- Bubble overlays for voter registration data
-- Dynamic filtering by state, year, and data quality
+**30 GUI Components Organized by Category:**
 
-**Data Visualizations:**
-- Bar/line charts for voter trends and rejections
-- Equipment quality and age tracking
-- Registration pattern analysis
+**EAVS Data (GUI 1-9):**
+- Active voter counts and percentages
+- Provisional ballot analysis with reasons
+- Pollbook deletion tracking
+- Mail ballot rejection analysis
 
-**Components:**
+**Equipment Analysis (GUI 10-14):**
+- Equipment type distribution maps
+- Equipment age and quality scoring
+- Historical equipment trends (2016-2024)
+- State-level equipment summaries
+
+**Voter Registration (GUI 15-19):**
+- Multi-year registration trends
+- Census block bubble visualizations
+- Paginated voter list tables
+- Party affiliation breakdowns
+
+**Comparative Analysis (GUI 20-25):**
+- Republican vs Democratic state comparisons
+- Opt-in vs opt-out registration systems
+- Early voting method comparisons
+- Drop box distribution analysis
+- Equipment quality vs rejection correlations
+
+**Preclearance Analysis (GUI 26-30):**
+- Gingles three-prong test visualization
+- Ecological inference equipment curves
+- Ballot rejection rate analysis by demographics
+- Statistical disparity detection
+
+**Technology Stack:**
 - Material-UI (MUI) design system
 - Leaflet for interactive mapping
 - Recharts for data visualization
+- TypeScript for type safety
 
 ### Mock vs Real Data
 
@@ -377,13 +487,20 @@ mongosh
 > show collections
 ```
 
-**Expected Collections:**
-- `boundaryData` - Geographic boundaries
-- `eavsData` - EAVS survey records
-- `votingEquipmentData` - Equipment data
-- `electionResults` - Election results
-- `demographicData` - CVAP demographics
-- `felonyVotingData` - State policies
+**Expected Collections (11 total):**
+- `eavsData` - EAVS survey records (19,388 docs)
+- `census_block_voters` - Geocoded voters (4,510 docs)
+- `equipment_history` - Equipment trends (1,120 docs)
+- `votingEquipmentData` - Equipment specs (1,008 docs)
+- `ei_precinct_analysis` - EI precinct data (154 docs)
+- `boundaryData` - Geographic boundaries (152 docs)
+- `electionResults` - Election results (138 docs)
+- `demographicData` - CVAP demographics (104 docs)
+- `felonyVotingData` - State policies (50 docs)
+- `ei_equipment_analysis` - EI equipment curves (6 docs)
+- `ei_rejection_analysis` - EI rejection curves (6 docs)
+
+**Total:** 26,636+ documents
 
 **Cloud Deployment (Production):**
 
@@ -398,6 +515,10 @@ Use [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) free tier (512 MB):
 ```bash
 cd preprocessing
 python validate_preprocessing.py
+
+# Or use the comprehensive database validator
+python validate_database.py --dry-run       # Check for issues
+python validate_database.py --auto-fix      # Apply repairs
 ```
 
 ---
@@ -406,22 +527,52 @@ python validate_preprocessing.py
 
 ### API Reference
 
-**Swagger UI:** http://localhost:8080/swagger-ui.html (when backend running)
+**Base URL:** `http://localhost:8080/api`
 
 **Example API calls:**
 ```bash
-# Get EAVS data for Maryland
-curl http://localhost:8080/api/eavs/states/MD
+# EAVS Data
+curl http://localhost:8080/api/eavs/MARYLAND/active-voters?year=2020
+curl http://localhost:8080/api/eavs/MARYLAND/provisional-ballots?year=2024
 
-# Get equipment quality scores
-curl http://localhost:8080/api/equipment/quality?minScore=0.7
+# Equipment Data
+curl http://localhost:8080/api/equipment/Maryland/types
+curl http://localhost:8080/api/equipment/history/Maryland
+
+# Registration Data
+curl http://localhost:8080/api/registration/trends/Maryland
+curl http://localhost:8080/api/registration/blocks/Maryland
+
+# Preclearance Analysis
+curl http://localhost:8080/api/preclearance/gingles/Maryland
+curl http://localhost:8080/api/preclearance/ei-equipment/Maryland
+```
+
+### Response Format
+
+All endpoints return JSON. Example response structure:
+
+```json
+{
+  "state": "MARYLAND",
+  "year": 2020,
+  "data": [
+    {
+      "geographicUnit": "Baltimore County",
+      "activeVoters": 567890,
+      "totalVoters": 612345,
+      "activePercentage": 92.7
+    }
+  ]
+}
 ```
 
 ### Project Documentation
 
 - **[preprocessing/README.md](preprocessing/README.md)** - Complete data pipeline guide
-- **API Endpoints** - Swagger UI at http://localhost:8080/swagger-ui.html
-- **Component Docs** - See inline JSDoc comments in `src/` files
+- **Integration Tests** - Run `python test_integration.py` for API validation
+- **Database Validator** - Run `python validate_database.py --dry-run` for schema checks
+- **Component Docs** - See inline JSDoc/TSDoc comments in `src/` files
 
 ---
 
@@ -440,24 +591,91 @@ git commit -m "Description of changes"
 git push origin feature/your-feature-name
 ```
 
-### Important
+### Development Best Practices
+
+**Before Committing:**
+1. Run integration tests: `python test_integration.py`
+2. Validate database: `python validate_database.py --dry-run`
+3. Build frontend: `npm run build`
+4. Test backend: `cd raptors-backend && ./mvnw test`
 
 **Never commit:**
 - `.venv/` - Python virtual environment
 - `__pycache__/` - Python bytecode
 - `.env` - Environment variables
 - `node_modules/` - Node dependencies
+- `target/` - Maven build output
+- `dist/` - Vite build output
+- `logs/` - Log files
+- `preprocessing/cache/*` - Except committed CSV files
 
 **Always included:**
 - Source code changes
-- Cached data files (already committed)
+- Test updates
+- Cached data files (election results, equipment CSVs)
 - Documentation updates
 
 ---
 
 ---
 
-## � License
+## 🔧 Development Tools
+
+### Integration Test Suite (`test_integration.py`)
+
+Comprehensive automated testing covering the entire application stack.
+
+```bash
+python test_integration.py
+```
+
+**Test Categories:**
+1. Backend health check
+2. Database collections validation (11 collections)
+3. Equipment API endpoints (4 tests)
+4. Voter registration endpoints (3 tests)
+5. EAVS data endpoints (4 tests)
+6. Preclearance endpoints (4 tests)
+7. Data integrity checks (4 tests)
+8. Performance tests (3 tests)
+9. Error handling validation (3 tests)
+10. GUI data generation validation (4 tests)
+
+**Features:**
+- Color-coded output (✓ green = pass, ✗ red = fail)
+- Performance validation (<100ms target)
+- Automatic endpoint discovery
+- Summary statistics with pass rate
+- Exit codes: 0 (≥90% pass), 1 (70-89%), 2 (<70%)
+
+**Current Status:** 100% pass rate (37/37 tests)
+
+### Database Validation Tool (`validate_database.py`)
+
+Automated database schema validation and repair tool.
+
+```bash
+python validate_database.py --dry-run    # Safe mode - check only
+python validate_database.py --auto-fix   # Apply repairs automatically
+```
+
+**Validation Checks:**
+- **Indexes:** Performance optimization checks
+- **Data Types:** String vs numeric consistency
+- **Required Fields:** Critical field existence
+- **Data Consistency:** Curve lengths, duplicates
+- **Collection Sizes:** Expected document ranges
+
+**Features:**
+- Dry-run mode for safe inspection
+- Auto-fix mode for automatic repairs
+- Color-coded issue reporting
+- Detailed error messages
+- Collection health summaries
+
+---
+
+## 📄 License
 
 Educational project for CSE 416 - Software Engineering at Stony Brook University.
 
@@ -469,49 +687,110 @@ Not for commercial distribution.
 ```bash
 sudo systemctl status mongod  # Check if running
 sudo systemctl start mongod   # Start service
+mongosh                       # Test connection
 ```
 
 **Backend won't start:**
 ```bash
 cd raptors-backend
-./mvnw clean install  # Rebuild
+pkill -9 java                 # Kill any existing instances
+./mvnw clean install          # Rebuild
+./mvnw spring-boot:run        # Start fresh
+```
+
+**Backend port already in use:**
+```bash
+lsof -i :8080                 # Find process using port
+kill -9 <PID>                 # Kill the process
 ```
 
 **Frontend issues:**
 ```bash
 rm -rf node_modules package-lock.json
 npm install  # Reinstall dependencies
+npm run dev  # Restart dev server
 ```
 
 **Data validation:**
 ```bash
 cd preprocessing
 python validate_preprocessing.py
+
+# Or comprehensive validation
+python validate_database.py --dry-run
+```
+
+**Integration tests failing:**
+```bash
+# Ensure backend is running
+curl http://localhost:8080/api/equipment/health
+
+# Run tests
+python test_integration.py
+
+# Check specific endpoint
+curl http://localhost:8080/api/eavs/MARYLAND/active-voters?year=2020
 ```
 
 ---
 
 ## 🎯 Project Status
 
-- ✅ **Frontend:** React UI with maps, charts, and interactive visualizations
-- ✅ **Backend:** Spring Boot REST API with MongoDB integration
-- ✅ **Database:** 20,840+ records across 6 collections
-- ✅ **Data Pipeline:** Fully automated preprocessing (13 scripts)
-- 🚧 **Testing:** In progress
+- ✅ **Frontend:** 30 GUI components with maps, charts, and visualizations
+- ✅ **Backend:** 30+ REST API endpoints with Spring Boot
+- ✅ **Database:** 26,636+ records across 11 collections
+- ✅ **Data Pipeline:** Fully automated preprocessing (16 scripts)
+- ✅ **Testing:** 100% pass rate (37/37 integration tests)
+- ✅ **Quality Assurance:** Automated database validation tools
 - 🚧 **Deployment:** Planning phase
+
+### Testing & Validation
+
+**Integration Test Suite:**
+```bash
+python test_integration.py
+```
+
+Features:
+- 37 comprehensive tests covering all API endpoints
+- Database collection validation
+- Performance testing (<100ms target)
+- Error handling validation
+- Data integrity checks
+- Color-coded output with pass/fail tracking
+
+**Database Validation:**
+```bash
+python validate_database.py --dry-run    # Check only
+python validate_database.py --auto-fix   # Apply fixes
+```
+
+Features:
+- Index performance checks
+- Data type consistency validation
+- Required field verification
+- Collection size validation
+- Automatic repair capabilities
 
 ---
 
-## � Notes
+## 📝 Notes
 
 **Data limitations:**
 - Voter registration files not publicly available for AR/RI (state law)
 - EAVS data has gaps due to state reporting inconsistencies
 - Historical data limited to 2016-2024 (biennial survey)
+- Ecological inference uses simulated data based on real demographic distributions
 
 **API keys:**
-- Free tier Census and USPS APIs included in `config.json`
+- Free tier Census API included in `config.json`
 - Private educational repository only - not for public distribution
+
+**Performance:**
+- All API endpoints optimized for <100ms response time
+- MongoDB indexes configured for query performance
+- Frontend components use efficient data structures
+- Caching enabled for frequently accessed data
 
 ---
 
@@ -521,7 +800,7 @@ python validate_preprocessing.py
 A: No - all data files are committed to the repository. Just clone and run the preprocessing script.
 
 **Q: How long does preprocessing take?**  
-A: ~21 seconds. All data files are cached for instant loading.
+A: ~30 seconds total. All data files are cached for instant loading.
 
 **Q: Can I use different states?**  
 A: Yes - edit `preprocessing/config.json` and modify state lists in the frontend code.
@@ -531,6 +810,18 @@ A: Yes - MongoDB provides native GeoJSON support needed for map visualizations.
 
 **Q: What Python version do I need?**  
 A: Python 3.10+ (tested with 3.12)
+
+**Q: How do I run the tests?**  
+A: Run `python test_integration.py` in the root directory. Requires backend to be running.
+
+**Q: What's the difference between mock and real data?**  
+A: Mock data allows frontend development without backend/database. Set `USE_MOCKS = false` in `src/data/api.ts` for real data.
+
+**Q: How many API endpoints are there?**  
+A: 30+ endpoints across 6 controllers (EAVS, Equipment, Registration, Preclearance, Comparison, Data).
+
+**Q: What's ecological inference?**  
+A: Statistical method to analyze voting patterns by demographic groups. Our implementation models equipment quality and rejection rates across six demographic categories.
 
 ---
 

@@ -3,18 +3,37 @@
 // GUI-21: Opt-in vs Opt-out
 export const getOptInOutComparisonData = () => [
   {
-    state: "Rhode Island (Opt-out + Same-Day)",
+    state: "Rhode Island",
+    registrationType: "Opt-out",
+    sameDayRegistration: false,
+    registeredVoters: 800000,
     registrationRate: 85,
+    votesCast: 600000,
     turnoutRate: 75,
     registrationAbsolute: 800000,
     turnoutAbsolute: 600000,
   },
   {
-    state: "Arkansas (Opt-in)",
-    registrationRate: 62,
-    turnoutRate: 55,
-    registrationAbsolute: 1000000,
-    turnoutAbsolute: 550000,
+    state: "Maryland",
+    registrationType: "Opt-out",
+    sameDayRegistration: true,
+    registeredVoters: 4200000,
+    registrationRate: 88,
+    votesCast: 3100000,
+    turnoutRate: 74,
+    registrationAbsolute: 4200000,
+    turnoutAbsolute: 3100000,
+  },
+  {
+    state: "Arkansas",
+    registrationType: "Opt-in",
+    sameDayRegistration: false,
+    registeredVoters: 1800000,
+    registrationRate: 76,
+    votesCast: 1100000,
+    turnoutRate: 61,
+    registrationAbsolute: 1800000,
+    turnoutAbsolute: 1100000,
   },
 ];
 
@@ -36,21 +55,33 @@ export const getPartyComparisonData = () => [
   },
 ];
 
-// GUI-23: Early Voting
+// GUI-23: Early Voting Comparison
 export const getEarlyVotingComparisonData = () => [
   {
     state: "Rhode Island (Democratic)",
     total: 350000,
-    totalPct: 40,
+    totalPct: 58,
     mail: 200000,
+    mailPct: 33,
     inPerson: 150000,
+    inPersonPct: 25,
+    // Early voting categories from EAVS
+    absenteeByMail: 180000,
+    earlyInPerson: 150000,
+    dropBox: 20000,
   },
   {
     state: "Arkansas (Republican)",
-    total: 300000,
-    totalPct: 30,
-    mail: 120000,
-    inPerson: 180000,
+    total: 480000,
+    totalPct: 44,
+    mail: 150000,
+    mailPct: 14,
+    inPerson: 330000,
+    inPersonPct: 30,
+    // Early voting categories from EAVS
+    absenteeByMail: 130000,
+    earlyInPerson: 330000,
+    dropBox: 20000,
   },
 ];
 

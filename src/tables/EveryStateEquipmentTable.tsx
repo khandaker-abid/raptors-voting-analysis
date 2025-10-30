@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
 	Box,
-	Chip,
 	Paper,
 	Table,
 	TableBody,
@@ -20,8 +19,7 @@ import { Link as RouterLink } from "react-router-dom";
 
 import type { EveryStateEquipmentData } from "../data/everyStateEquipmentData";
 
-import axios from "axios";
-import { API_URL } from "../data/api";
+import { fetchEquipmentAllStates } from "../data/api";
 
 const EveryStateEquipmentTable: React.FC = () => {
 	const [data, setData] = useState<EveryStateEquipmentData[]>([]);
@@ -32,8 +30,17 @@ const EveryStateEquipmentTable: React.FC = () => {
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				const response = await axios.get<EveryStateEquipmentData[]>(`${API_URL}/every-state-equipment`);
-				setData(response.data);
+				const response = await fetchEquipmentAllStates();
+				// Map backend response to frontend format
+				const mappedData: EveryStateEquipmentData[] = response.map((item: any, index: number) => ({
+					id: index + 1,
+					stateName: item.state,
+					dreNoVvpatNum: item.dre_no_vvpat || 0,
+					dreWithVvpatNum: item.dre_with_vvpat || 0,
+					ballotMarkingDeviceNum: item.ballot_marking || 0,
+					scannerNum: item.scanner || 0,
+				}));
+				setData(mappedData);
 			} catch (err) {
 				console.log(err)
 				console.error(err);

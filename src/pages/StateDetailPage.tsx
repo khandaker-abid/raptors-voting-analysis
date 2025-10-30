@@ -11,6 +11,7 @@ import {
 	AccordionSummary,
 	AccordionDetails,
 	Button,
+	CircularProgress,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
@@ -47,7 +48,9 @@ import {
 	fetchMailRejections,
 	fetchRegistrationTrends,
 	fetchBlockBubbles,
+	fetchEquipmentVsRejected,
 } from "../data/api";
+import { calculatePowerRegression } from "../utils/regression";
 import PollbookDeletionsBarChart from "../charts/PollbookDeletionsBarChart";
 import PollbookDeletionsTable from "../tables/PollbookDeletionsTable";
 import MailRejectionsBarChart from "../charts/MailRejectionsBarChart";
@@ -58,6 +61,13 @@ import VoterRegistrationBubbleOverlay from "../components/VoterRegistrationBubbl
 // New imports for GUI-25 to GUI-27
 import EquipmentRejectedBubbleChart from "../charts/EquipmentRejectedBubbleChart";
 import ResetButton from "../components/ResetButton";
+
+// New component imports for integration (GUI-10, GUI-19, GUI-27, GUI-28, GUI-29)
+import RegisteredVotersList from "../components/RegisteredVotersList";
+import VotingEquipmentTypeChoropleth from "../components/VotingEquipmentTypeChoropleth";
+import GinglesChart from "../charts/GinglesChart";
+import EIEquipmentChart from "../charts/EIEquipmentChart";
+import EIRejectedBallotsChart from "../charts/EIRejectedBallotsChart";
 // Types
 import type {
 	PollbookDeletionRow,
@@ -112,6 +122,11 @@ const StateDetailPage: React.FC = () => {
 		return isDetailState(decodedStateName);
 	}, [decodedStateName]);
 
+	// Check if this is a preclearance state (for VRA analysis)
+	const isPreclearance = useMemo(() => {
+		return decodedStateName === "Maryland";
+	}, [decodedStateName]);
+
 	// Get provisional ballot data
 	const provisionalData = useMemo(() => {
 		return getProvisionalBallotData(decodedStateName);
@@ -152,6 +167,13 @@ const StateDetailPage: React.FC = () => {
 		React.useState<BlockBubblePayload | null>(null);
 	const [showBubbles, setShowBubbles] = React.useState(false);
 
+	// State for RegisteredVotersList dialog (GUI-19)
+	const [selectedRegion, setSelectedRegion] = React.useState<string | null>(null);
+
+	// State for GUI-25: Equipment vs Rejected Ballots
+	const [equipVsRejectedData, setEquipVsRejectedData] = React.useState<any[]>([]);
+	const [equipVsRejectedLoading, setEquipVsRejectedLoading] = React.useState(false);
+
 	React.useEffect(() => {
 		if (!decodedStateName) return;
 
@@ -163,6 +185,8 @@ const StateDetailPage: React.FC = () => {
 		setRegTrends(null);
 		setBlockBubbles(null);
 		setShowBubbles(false);
+		setEquipVsRejectedData([]);
+		setEquipVsRejectedLoading(true);
 
 		let alive = true;
 		(async () => {
@@ -199,6 +223,20 @@ const StateDetailPage: React.FC = () => {
 			} catch {
 				if (alive) setBlockBubbles(null);
 			}
+
+			// GUI-25: Fetch equipment vs rejected ballots
+			try {
+				const equipData = await fetchEquipmentVsRejected(decodedStateName);
+				if (alive) {
+					setEquipVsRejectedData(equipData);
+					setEquipVsRejectedLoading(false);
+				}
+			} catch (e) {
+				if (alive) {
+					setEquipVsRejectedData([]);
+					setEquipVsRejectedLoading(false);
+				}
+			}
 		})();
 
 		return () => {
@@ -221,10 +259,14 @@ const StateDetailPage: React.FC = () => {
 	const IDX_OVERVIEW = idx++;
 	const IDX_PROVISIONAL = isDetail ? idx++ : -1;
 	const IDX_ACTIVE = isDetail ? idx++ : -1;
-	const IDX_POLLBOOK = isDetail ? idx++ : -1; // new
-	const IDX_MAIL = isDetail ? idx++ : -1;     // new
+	const IDX_POLLBOOK = isDetail ? idx++ : -1;
+	const IDX_MAIL = isDetail ? idx++ : -1;
 	const IDX_EQUIPMENT = idx++;
+	const IDX_EQUIPMENT_TYPES = isDetail ? idx++ : -1; // NEW - GUI-10
 	const IDX_REG = isDetail ? idx++ : -1;
+	const IDX_GINGLES = isPreclearance ? idx++ : -1; // NEW - GUI-27
+	const IDX_EI_EQUIPMENT = isPreclearance ? idx++ : -1; // NEW - GUI-28
+	const IDX_EI_REJECTED = isPreclearance ? idx++ : -1; // NEW - GUI-29
 
 	return (
 		<Box sx={{ py: 0, px: 0, width: "100%", margin: 0 }}>
@@ -241,7 +283,11 @@ const StateDetailPage: React.FC = () => {
 						{isDetail && <Tab label="Pollbook Deletions" />}
 						{isDetail && <Tab label="Mail Rejections" />}
 						<Tab label="Voting Equipment" />
+						{isDetail && <Tab label="Equipment Types" />}
 						{isDetail && <Tab label="Voter Registration" />}
+						{isPreclearance && <Tab label="Gingles Analysis" />}
+						{isPreclearance && <Tab label="EI Equipment" />}
+						{isPreclearance && <Tab label="EI Rejected" />}
 					</Tabs>
 				</Box>
 
@@ -305,16 +351,71 @@ const StateDetailPage: React.FC = () => {
 					</Box>
 				</TabPanel>
 				<TabPanel value={tabValue} index={4}>
-					<EquipmentRejectedBubbleChart
-						data={[
-							{ county: "Travis", equipmentQuality: 85, rejectedPct: 2, party: "D" },
-							{ county: "Orange", equipmentQuality: 70, rejectedPct: 5, party: "R" },
-						]}
-						regressionLines={[
-							{ party: "D", coefficients: { a: 0.5, b: 1.2 } },
-							{ party: "R", coefficients: { a: 0.7, b: 1.0 } },
-						]}
-					/>
+					{(() => {
+						// Calculate regression lines for equipment vs rejected
+						const equipRegressionLines = React.useMemo(() => {
+							if (equipVsRejectedData.length === 0) return [];
+
+							// Separate data by party
+							const demData = equipVsRejectedData.filter((d: any) => d.party === "D");
+							const repData = equipVsRejectedData.filter((d: any) => d.party === "R");
+
+							const lines = [];
+
+							// Calculate regression for Democrats
+							if (demData.length >= 3) {
+								const demPoints = demData.map((d: any) => ({
+									x: d.equipmentQuality,
+									y: d.rejectedPct,
+								}));
+								const demRegression = calculatePowerRegression(demPoints);
+								if (demRegression) {
+									lines.push({
+										party: "D" as const,
+										coefficients: { a: demRegression.a, b: demRegression.b },
+									});
+								}
+							}
+
+							// Calculate regression for Republicans
+							if (repData.length >= 3) {
+								const repPoints = repData.map((d: any) => ({
+									x: d.equipmentQuality,
+									y: d.rejectedPct,
+								}));
+								const repRegression = calculatePowerRegression(repPoints);
+								if (repRegression) {
+									lines.push({
+										party: "R" as const,
+										coefficients: { a: repRegression.a, b: repRegression.b },
+									});
+								}
+							}
+
+							return lines;
+						}, [equipVsRejectedData]);
+
+						return (
+							<>
+								{equipVsRejectedLoading && (
+									<Box display="flex" justifyContent="center" p={4}>
+										<CircularProgress />
+									</Box>
+								)}
+								{!equipVsRejectedLoading && equipVsRejectedData.length === 0 && (
+									<Alert severity="info">
+										No equipment vs rejected ballot data available for this state.
+									</Alert>
+								)}
+								{!equipVsRejectedLoading && equipVsRejectedData.length > 0 && (
+									<EquipmentRejectedBubbleChart
+										data={equipVsRejectedData}
+										regressionLines={equipRegressionLines}
+									/>
+								)}
+							</>
+						);
+					})()}
 				</TabPanel>
 				{/* Provisional Ballots Tab */}
 				{isDetail && (
@@ -547,27 +648,147 @@ const StateDetailPage: React.FC = () => {
 								</Box>
 							)}
 
-							{/* Bubble overlay toggle (only if payload present) */}
-							{blockBubbles && (
-								<Box sx={{ my: 2 }}>
+							{/* Action buttons for Registration tab */}
+							<Box sx={{ my: 2, display: "flex", gap: 2, flexWrap: "wrap" }}>
+								{/* View Registered Voters button (GUI-19) */}
+								<Button
+									variant="contained"
+									color="primary"
+									onClick={() => setSelectedRegion(decodedStateName)}
+								>
+									View Registered Voters
+								</Button>
+
+								{/* Bubble overlay toggle (only if payload present) */}
+								{blockBubbles && (
 									<Button
 										variant="outlined"
 										onClick={() => setShowBubbles((s) => !s)}
 									>
 										{showBubbles ? "Hide" : "Show"} Party Bubble Overlay
 									</Button>
-									{showBubbles && (
-										<Box sx={{ mt: 2 }}>
-											<VoterRegistrationBubbleOverlay
-												stateName={decodedStateName}
-												payload={blockBubbles}
-											/>
-										</Box>
-									)}
+								)}
+							</Box>
+
+							{/* Bubble overlay map (only if toggled on) */}
+							{showBubbles && blockBubbles && (
+								<Box sx={{ mt: 2 }}>
+									<VoterRegistrationBubbleOverlay
+										stateName={decodedStateName}
+										payload={blockBubbles}
+									/>
 								</Box>
 							)}
 						</Box>
 					</TabPanel>
+				)}
+
+				{/* NEW: Equipment Types Tab - GUI-10 */}
+				{isDetail && IDX_EQUIPMENT_TYPES >= 0 && (
+					<TabPanel value={tabValue} index={IDX_EQUIPMENT_TYPES}>
+						<Box sx={{ p: 3 }}>
+							<Alert severity="info" sx={{ mb: 3 }}>
+								This map shows voting equipment types by county. Different colors
+								represent different equipment types used for voting.
+							</Alert>
+							<VotingEquipmentTypeChoropleth
+								stateName={decodedStateName}
+								data={[]}
+							/>
+							{/* Color Legend */}
+							<Box sx={{ mt: 2, p: 2, bgcolor: "background.paper" }}>
+								<Typography variant="subtitle2" gutterBottom>
+									Equipment Type Legend:
+								</Typography>
+								<Box display="flex" gap={2} flexWrap="wrap">
+									<Box display="flex" alignItems="center" gap={1}>
+										<Box sx={{ width: 20, height: 20, bgcolor: "#1976d2" }} />
+										<Typography variant="body2">Optical Scan</Typography>
+									</Box>
+									<Box display="flex" alignItems="center" gap={1}>
+										<Box sx={{ width: 20, height: 20, bgcolor: "#dc004e" }} />
+										<Typography variant="body2">DRE</Typography>
+									</Box>
+									<Box display="flex" alignItems="center" gap={1}>
+										<Box sx={{ width: 20, height: 20, bgcolor: "#ff9800" }} />
+										<Typography variant="body2">BMD</Typography>
+									</Box>
+									<Box display="flex" alignItems="center" gap={1}>
+										<Box sx={{ width: 20, height: 20, bgcolor: "#4caf50" }} />
+										<Typography variant="body2">Paper Ballot</Typography>
+									</Box>
+									<Box display="flex" alignItems="center" gap={1}>
+										<Box sx={{ width: 20, height: 20, bgcolor: "#9c27b0" }} />
+										<Typography variant="body2">Mixed</Typography>
+									</Box>
+								</Box>
+							</Box>
+						</Box>
+					</TabPanel>
+				)}
+
+				{/* NEW: Gingles Analysis Tab - GUI-27 (Maryland only) */}
+				{isPreclearance && IDX_GINGLES >= 0 && (
+					<TabPanel value={tabValue} index={IDX_GINGLES}>
+						<Box sx={{ p: 3 }}>
+							<Alert severity="info" sx={{ mb: 3 }}>
+								<strong>Gingles Analysis</strong> - This chart shows the three
+								preconditions for vote dilution under the Voting Rights Act:
+								<br />
+								1. Minority group is sufficiently large and geographically compact
+								<br />
+								2. Minority group is politically cohesive
+								<br />
+								3. Majority votes as a bloc to usually defeat minority-preferred
+								candidates
+							</Alert>
+							<GinglesChart
+								stateName={decodedStateName}
+								data={[]}
+							/>
+						</Box>
+					</TabPanel>
+				)}
+
+				{/* NEW: EI Equipment Tab - GUI-28 (Maryland only) */}
+				{isPreclearance && IDX_EI_EQUIPMENT >= 0 && (
+					<TabPanel value={tabValue} index={IDX_EI_EQUIPMENT}>
+						<Box sx={{ p: 3 }}>
+							<Alert severity="info" sx={{ mb: 3 }}>
+								<strong>Ecological Inference - Equipment Quality</strong> - This
+								analysis examines whether different demographic groups have equal
+								access to high-quality voting equipment. The probability curves
+								show the distribution of equipment quality scores across
+								demographics.
+							</Alert>
+							<EIEquipmentChart stateName={decodedStateName} />
+						</Box>
+					</TabPanel>
+				)}
+
+				{/* NEW: EI Rejected Ballots Tab - GUI-29 (Maryland only) */}
+				{isPreclearance && IDX_EI_REJECTED >= 0 && (
+					<TabPanel value={tabValue} index={IDX_EI_REJECTED}>
+						<Box sx={{ p: 3 }}>
+							<Alert severity="warning" sx={{ mb: 3 }}>
+								<strong>Ecological Inference - Ballot Rejections</strong> - This
+								analysis examines whether ballot rejection rates differ across
+								demographic groups. Higher rejection rates for certain groups may
+								indicate barriers to voting.
+							</Alert>
+							<EIRejectedBallotsChart stateName={decodedStateName} />
+						</Box>
+					</TabPanel>
+				)}
+
+				{/* RegisteredVotersList Dialog - GUI-19 */}
+				{selectedRegion && (
+					<RegisteredVotersList
+						open={!!selectedRegion}
+						stateName={decodedStateName}
+						geographicUnit={selectedRegion}
+						onClose={() => setSelectedRegion(null)}
+					/>
 				)}
 			</Paper>
 			<ResetButton />
