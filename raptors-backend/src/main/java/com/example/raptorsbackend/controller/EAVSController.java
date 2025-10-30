@@ -32,7 +32,8 @@ public class EAVSController {
         Query query = new Query();
         query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
 
-        List<Map> results = mongoTemplate.find(query, Map.class, "eavsData");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> results = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "eavsData");
 
         return results.stream().map(doc -> {
             Map<String, Object> row = new HashMap<>();
@@ -68,7 +69,8 @@ public class EAVSController {
         Query query = new Query();
         query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
 
-        List<Map> results = mongoTemplate.find(query, Map.class, "eavsData");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> results = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "eavsData");
 
         return results.stream().map(doc -> {
             Map<String, Object> row = new HashMap<>();
@@ -102,7 +104,8 @@ public class EAVSController {
         Query query = new Query();
         query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
 
-        List<Map> results = mongoTemplate.find(query, Map.class, "eavsData");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> results = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "eavsData");
 
         return results.stream().map(doc -> {
             Map<String, Object> row = new HashMap<>();
@@ -152,7 +155,8 @@ public class EAVSController {
         Query query = new Query();
         query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
 
-        List<Map> results = mongoTemplate.find(query, Map.class, "eavsData");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> results = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "eavsData");
 
         return results.stream().map(doc -> {
             Map<String, Object> row = new HashMap<>();

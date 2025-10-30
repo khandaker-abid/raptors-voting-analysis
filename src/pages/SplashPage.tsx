@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from "react";
 import USMap from "../components/USMap";
 import EquipmentAgeChoropleth from "../components/EquipmentAgeChoropleth";
-import { Box, Button, ButtonGroup } from "@mui/material";
+import { Box, Button, ButtonGroup, Typography } from "@mui/material";
 
 const SplashPage: React.FC = () => {
 	const [viewMode, setViewMode] = useState<"states" | "equipment-age">("states");

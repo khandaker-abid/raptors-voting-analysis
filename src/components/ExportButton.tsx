@@ -44,7 +44,9 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
     const handleExportCSV = () => {
         if (tableData && tableColumns && tableName) {
             try {
-                exportTableToCSV(tableData, tableColumns, tableName);
+                // Extract accessor names from column definitions
+                const columnAccessors = tableColumns.map(col => col.accessor);
+                exportTableToCSV(tableData, columnAccessors, tableName);
             } catch (error) {
                 console.error('Failed to export table as CSV:', error);
                 alert('Failed to export data. Please try again.');
