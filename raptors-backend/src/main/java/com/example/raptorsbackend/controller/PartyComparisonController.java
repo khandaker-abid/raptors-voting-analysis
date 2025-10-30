@@ -35,12 +35,10 @@ public class PartyComparisonController {
         Map<String, String> statePartyControl = getStatePartyControl();
 
         // Get all EAVS data
-        List<Map<String, Object>> eavsData = (List<Map<String, Object>>) (List<?>) mongoTemplate.findAll(Map.class,
-                "eavsData");
+        List<Map<String, Object>> eavsData = (List<Map<String, Object>>) (List<?>) mongoTemplate.findAll(Map.class, "eavsData");
 
         // Get felony voting policies
-        List<Map<String, Object>> felonyData = (List<Map<String, Object>>) (List<?>) mongoTemplate.findAll(Map.class,
-                "felonyVotingData");
+        List<Map<String, Object>> felonyData = (List<Map<String, Object>>) (List<?>) mongoTemplate.findAll(Map.class, "felonyVotingData");
         Map<String, Map<String, Object>> felonyByAbbr = felonyData.stream()
                 .collect(Collectors.toMap(
                         f -> (String) f.get("stateAbbr"),
