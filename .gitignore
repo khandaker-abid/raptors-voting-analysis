@@ -30,6 +30,7 @@ dist-ssr
 .vscode/*
 !.vscode/extensions.json
 .idea
+.vim/
 .DS_Store
 *.suo
 *.ntvs*
