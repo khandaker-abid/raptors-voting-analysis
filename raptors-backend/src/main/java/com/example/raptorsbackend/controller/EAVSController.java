@@ -15,6 +15,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/eavs")
 @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:5173" })
+@SuppressWarnings("unchecked")
 public class EAVSController {
 
     @Autowired
@@ -32,7 +33,6 @@ public class EAVSController {
         Query query = new Query();
         query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
 
-        @SuppressWarnings("unchecked")
         List<Map<String, Object>> results = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
                 "eavsData");
 
@@ -70,7 +70,6 @@ public class EAVSController {
         Query query = new Query();
         query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
 
-        @SuppressWarnings("unchecked")
         List<Map<String, Object>> results = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
                 "eavsData");
 
@@ -106,7 +105,6 @@ public class EAVSController {
         Query query = new Query();
         query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
 
-        @SuppressWarnings("unchecked")
         List<Map<String, Object>> results = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
                 "eavsData");
 
@@ -158,7 +156,6 @@ public class EAVSController {
         Query query = new Query();
         query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
 
-        @SuppressWarnings("unchecked")
         List<Map<String, Object>> results = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
                 "eavsData");
 
@@ -214,7 +211,6 @@ public class EAVSController {
         // Get EAVS data
         Query eavsQuery = new Query();
         eavsQuery.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
-        @SuppressWarnings("unchecked")
         List<Map<String, Object>> eavsResults = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(eavsQuery,
                 Map.class, "eavsData");
 
@@ -223,7 +219,6 @@ public class EAVSController {
         String stateAbbr = getStateAbbreviation(state);
         Query electionQuery = new Query();
         electionQuery.addCriteria(Criteria.where("stateAbbr").is(stateAbbr).and("electionYear").is(year));
-        @SuppressWarnings("unchecked")
         List<Map<String, Object>> electionResults = (List<Map<String, Object>>) (List<?>) mongoTemplate
                 .find(electionQuery, Map.class, "electionResults");
 
@@ -271,16 +266,13 @@ public class EAVSController {
             Map<String, Object> electionData = electionByCounty.get(jurisdiction.toUpperCase());
             if (electionData != null) {
                 // Election results are stored in nested "results" object
-                @SuppressWarnings("unchecked")
                 Map<String, Object> results = (Map<String, Object>) electionData.get("results");
 
                 long repVotes = 0;
                 long demVotes = 0;
 
                 if (results != null) {
-                    @SuppressWarnings("unchecked")
                     Map<String, Object> repData = (Map<String, Object>) results.get("Republican");
-                    @SuppressWarnings("unchecked")
                     Map<String, Object> demData = (Map<String, Object>) results.get("Democratic");
 
                     if (repData != null) {

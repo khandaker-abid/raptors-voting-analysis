@@ -30,7 +30,6 @@ public class PreclearanceController {
         Query query = new Query();
         query.addCriteria(Criteria.where("state").is(state));
 
-        @SuppressWarnings("unchecked")
         List<Map<String, Object>> precincts = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "precinct_demographics");
 
         List<Map<String, Object>> data = precincts.stream().map(precinct -> {
@@ -73,7 +72,6 @@ public class PreclearanceController {
             query.addCriteria(Criteria.where("demographic").is(demographic));
         }
 
-        @SuppressWarnings("unchecked")
         List<Map<String, Object>> results = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "ei_equipment_analysis");
 
         Map<String, Object> result = new HashMap<>();
@@ -113,7 +111,6 @@ public class PreclearanceController {
             query.addCriteria(Criteria.where("demographic").is(demographic));
         }
 
-        @SuppressWarnings("unchecked")
         List<Map<String, Object>> results = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "ei_rejection_analysis");
 
         Map<String, Object> result = new HashMap<>();
@@ -160,7 +157,6 @@ public class PreclearanceController {
                 .and("analysis_type").is("equipment_quality"));
         long fullQueryCount = mongoTemplate.count(fullQuery, "ei_equipment_analysis");
 
-        @SuppressWarnings("unchecked")
         List<Map<String, Object>> sample = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(new Query().limit(1), Map.class, "ei_equipment_analysis");
 
         return Map.of(

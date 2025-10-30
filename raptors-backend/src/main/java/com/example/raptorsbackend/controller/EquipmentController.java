@@ -33,7 +33,6 @@ public class EquipmentController {
         Query query = new Query();
         query.addCriteria(Criteria.where("state").is(state));
 
-        @SuppressWarnings("unchecked")
         List<Map<String, Object>> results = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "votingEquipmentData");
 
         return results.stream().map(doc -> {
@@ -41,7 +40,6 @@ public class EquipmentController {
             row.put("geographicUnit", doc.get("county"));
 
             // Count equipment types
-            @SuppressWarnings("unchecked")
             List<Map<String, Object>> equipments = (List<Map<String, Object>>) doc.getOrDefault("equipments", new ArrayList<>());
             Map<String, Integer> typeCounts = new HashMap<>();
 
@@ -82,14 +80,12 @@ public class EquipmentController {
      */
     @GetMapping("/age/all-states")
     public List<Map<String, Object>> getAllStatesEquipmentAge() {
-        @SuppressWarnings("unchecked")
         List<Map<String, Object>> allEquipment = (List<Map<String, Object>>)(List<?>) mongoTemplate.findAll(Map.class, "votingEquipmentData");
 
         Map<String, List<Integer>> stateAges = new HashMap<>();
 
         for (Map<String, Object> doc : allEquipment) {
             String state = (String) doc.get("state");
-            @SuppressWarnings("unchecked")
             List<Map<String, Object>> equipments = (List<Map<String, Object>>) doc.getOrDefault("equipments", new ArrayList<>());
 
             for (Map<String, Object> equip : equipments) {
@@ -353,7 +349,6 @@ public class EquipmentController {
         Map<String, Double> equipQualityByJurisdiction = new HashMap<>();
 
         if (stateEquipData != null && stateEquipData.containsKey("jurisdictions")) {
-            @SuppressWarnings("unchecked")
             List<Map<String, Object>> jurisdictions = (List<Map<String, Object>>) stateEquipData.get("jurisdictions");
 
             for (Map<String, Object> jurisdiction : jurisdictions) {
@@ -362,7 +357,6 @@ public class EquipmentController {
                     continue;
 
                 // Calculate equipment quality score from equipment flags
-                @SuppressWarnings("unchecked")
                 Map<String, Object> equipment = (Map<String, Object>) jurisdiction.get("equipment");
                 double qualityScore = calculateEquipmentQualityScoreFromFlags(equipment);
                 equipQualityByJurisdiction.put(jurisdictionName.toUpperCase(), qualityScore);
