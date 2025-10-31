@@ -24,15 +24,15 @@ interface StateVotingEquipmentTableProps {
 }
 
 const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
-    stateName
-}) => { 
-    const [data, setData] = useState<EveryStateAllModelsData[]>([]);
-    const [page, setPage] = useState(0);
+	stateName
+}) => {
+	const [data, setData] = useState<EveryStateAllModelsData[]>([]);
+	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [searchTerm, setSearchTerm] = useState("");
 
-    useEffect(() => {
-        const fetchData = async () => {
+	useEffect(() => {
+		const fetchData = async () => {
 			try {
 				const response = await axios.get<EveryStateAllModelsData[]>(`${API_URL}/per-state-equipment/${stateName}`);
 				setData(response.data);
@@ -42,7 +42,7 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 			}
 		};
 		fetchData();
-    }, []);
+	}, [stateName]);
 
 	const filteredData = useMemo(() => {
 		if (!data) return [];
@@ -54,7 +54,7 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 	}, [data, searchTerm]);
 
 	const sortedData = useMemo(() => {
-		return [...filteredData].sort((a,b) => a.make.localeCompare(b.make));
+		return [...filteredData].sort((a, b) => a.make.localeCompare(b.make));
 	}, [filteredData]);
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
@@ -114,7 +114,7 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 							<TableCell
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									position: "sticky",
 									left: 0,
@@ -126,7 +126,7 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Quantity
@@ -135,7 +135,7 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 								align="left"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Equipment Type
@@ -144,7 +144,7 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 								align="left"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Description
@@ -153,7 +153,7 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Age (years)
@@ -162,43 +162,43 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 								align="left"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								OS
 							</TableCell>
-                            <TableCell
+							<TableCell
 								align="left"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Certification
 							</TableCell>
-                            <TableCell
+							<TableCell
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Scan Rate
 							</TableCell>
-                            <TableCell
+							<TableCell
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Error Rate
 							</TableCell>
-                            <TableCell
+							<TableCell
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Reliability
@@ -208,92 +208,97 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 					<TableBody>
 						{sortedData
 							.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-							.map((row) => (
-								<TableRow
-									key={row.id}
-									hover
-									sx={{ "&:nth-of-type(even)": { backgroundColor: "#fafafa" } }}>
-									<TableCell
-										component="th"
-										scope="row"
-										sx={{
-											fontWeight: 500,
-											position: "sticky",
-											left: 0,
-											backgroundColor: row.isAvailable === true ? "white" : "#FF746C",
-											zIndex: 1,
-										}}>
-										{row.make}
-									</TableCell>
+							.map((row, index) => {
+								const globalIndex = page * rowsPerPage + index;
+								const isUnavailable = row.isAvailable === false;
+								const rowBg = isUnavailable ? "#FF746C" : (globalIndex % 2 === 0 ? "white" : "#fafafa");
+								return (
+									<TableRow
+										key={row.id}
+										hover
+										sx={{ "&:nth-of-type(even)": { backgroundColor: "#fafafa" } }}>
+										<TableCell
+											component="th"
+											scope="row"
+											sx={{
+												fontWeight: 500,
+												position: "sticky",
+												left: 0,
+												backgroundColor: rowBg,
+												zIndex: 1,
+											}}>
+											{row.make}
+										</TableCell>
 
-									<TableCell
-										align="right"
-										sx={{
-											fontWeight: "bold",
-										}}>
-										{row.quantity.toLocaleString()}
-									</TableCell>
+										<TableCell
+											align="right"
+											sx={{
+												fontWeight: "bold",
+											}}>
+											{row.quantity.toLocaleString()}
+										</TableCell>
 
-									<TableCell align="left">
-										<Typography
-											variant="body2">
-											{row.equipmentType}
-										</Typography>
-									</TableCell>
+										<TableCell align="left">
+											<Typography
+												variant="body2">
+												{row.equipmentType}
+											</Typography>
+										</TableCell>
 
-									<TableCell align="left">
-										<Typography
-											variant="body2">
-											{row.description}
-										</Typography>
-									</TableCell>
+										<TableCell align="left">
+											<Typography
+												variant="body2">
+												{row.description}
+											</Typography>
+										</TableCell>
 
-                                    <TableCell
-										align="right"
-										sx={{
-										}}>
-										{row.age.toLocaleString()}
-									</TableCell>
+										<TableCell
+											align="right"
+											sx={{
+											}}>
+											{row.age.toLocaleString()}
+										</TableCell>
 
-									<TableCell align="left">
-										<Typography
-											variant="body2">
-											{row.os}
-										</Typography>
-									</TableCell>
+										<TableCell align="left">
+											<Typography
+												variant="body2">
+												{row.os}
+											</Typography>
+										</TableCell>
 
-									<TableCell align="left">
-										<Typography
-											variant="body2">
-											{row.certification}
-										</Typography>
-									</TableCell>
+										<TableCell align="left">
+											<Typography
+												variant="body2">
+												{row.certification}
+											</Typography>
+										</TableCell>
 
-                                    <TableCell
-										align="right"
-										sx={{}}>
-										{row.scanRate.toLocaleString()}
-									</TableCell>
+										<TableCell
+											align="right"
+											sx={{}}>
+											{row.scanRate.toLocaleString()}
+										</TableCell>
 
-                        			<TableCell
-                                        align="right"						 
-                                        sx={{
-											fontWeight: "bold",
-											color: "#880808"
-									    }}>
+										<TableCell
+											align="right"
+											sx={{
+												fontWeight: "bold",
+												color: "#880808"
+											}}>
 											{row.errorRate}
-									</TableCell>
+										</TableCell>
 
-                        			<TableCell 
-										align="right"  
-										sx={{
-											fontWeight: "bold",
-											color: "primary.main"
-										}}>
+										<TableCell
+											align="right"
+											sx={{
+												fontWeight: "bold",
+												color: "primary.main"
+											}}>
 											{row.reliability}
-									</TableCell>
-								</TableRow>
-							))}
+										</TableCell>
+									</TableRow>
+								);
+							})}
 					</TableBody>
 				</Table>
 			</TableContainer>

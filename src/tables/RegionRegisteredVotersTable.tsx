@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
 	Box,
-	Chip,
 	Paper,
 	Table,
 	TableBody,
@@ -14,21 +13,30 @@ import {
 	InputLabel,
 	MenuItem,
 	FormControl,
-	Select
+	Select,
+	CircularProgress
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material/Select";
-import type { RegionRegisteredVotersData } from "../data/regionRegisteredVotersData";
-import axios from "axios";
-import { API_URL } from "../data/api";
+import { fetchRegisteredVoters } from "../data/api";
+
+interface RegionRegisteredVotersData {
+	id: string;
+	firstName: string;
+	lastName: string;
+	party: string;
+}
 
 interface RegionRegisteredVotersTableProps {
+	stateName: string;
 	geographicUnitName: string;
 }
 
 const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = ({
+	stateName,
 	geographicUnitName,
 }) => {
 	const [data, setData] = useState<RegionRegisteredVotersData[]>([]);
+	const [loading, setLoading] = useState(true);
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [party, setParty] = useState("all");
@@ -36,15 +44,35 @@ const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = 
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				const response = await axios.get<RegionRegisteredVotersData[]>(`${API_URL}/region-registered-voters/${geographicUnitName}`);
-				setData(response.data);
+				setLoading(true);
+				// Fetch from real backend API for the specific state and county/region
+				const response = await fetchRegisteredVoters(
+					stateName,
+					geographicUnitName,
+					party === "all" ? undefined : party.charAt(0).toUpperCase() + party.slice(1),
+					0,
+					10000 // Fetch large batch for client-side filtering/sorting
+				);
+
+				if (response && response.voters) {
+					// Map backend response to frontend format
+					const voters: RegionRegisteredVotersData[] = response.voters.map((v: any) => ({
+						id: v.id || `${v.firstName}-${v.lastName}`,
+						firstName: v.firstName,
+						lastName: v.lastName,
+						party: v.party
+					}));
+					setData(voters);
+				}
 			} catch (err) {
-				console.log(err)
-				console.error(err);
+				console.error("Error fetching voter data:", err);
+				setData([]);
+			} finally {
+				setLoading(false);
 			}
 		};
 		fetchData();
-	}, []);
+	}, [stateName, geographicUnitName, party]);
 
 	const filteredData = useMemo(() => {
 		if (!data) return [];
@@ -74,11 +102,22 @@ const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = 
 		setParty(event.target.value);
 	}
 
+	if (loading) {
+		return (
+			<Paper sx={{ p: 3, textAlign: "center" }}>
+				<CircularProgress />
+				<Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+					Loading voter data...
+				</Typography>
+			</Paper>
+		);
+	}
+
 	if (!data || data.length === 0) {
 		return (
 			<Paper sx={{ p: 3, textAlign: "center" }}>
 				<Typography variant="body1" color="text.secondary">
-					Sorry! Having trouble getting registered voter names. Try again later.
+					No voter data found for {geographicUnitName} County.
 				</Typography>
 			</Paper>
 		);

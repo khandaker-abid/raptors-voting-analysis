@@ -3,11 +3,12 @@
 // Categories: DRE no VVPAT, DRE with VVPAT, Ballot marking device, Scanner
 // Mixed equipment shows stripe pattern or blended color
 
-import React, { useMemo } from "react";
+import React, { useMemo, useRef, useEffect } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { Box, Paper, Typography } from "@mui/material";
 import L from "leaflet";
-import type { Feature, Geometry } from "geojson";
+import type { Feature } from "geojson";
+import { bindResponsiveTooltip } from "../utils/leafletTooltipHelper";
 
 interface EquipmentTypeData {
     geographicUnit: string;
@@ -28,11 +29,11 @@ interface Props {
 }
 
 const EQUIPMENT_COLORS: Record<string, string> = {
-    DRE_NO_VVPAT: "#d32f2f", // Red - older technology
-    DRE_WITH_VVPAT: "#f57c00", // Orange - improved DRE
-    BALLOT_MARKING: "#1976d2", // Blue - modern
-    SCANNER: "#388e3c", // Green - reliable
-    MIXED: "#9c27b0", // Purple - mixed equipment
+    DRE_NO_VVPAT: "#424242", // Dark gray - older technology
+    DRE_WITH_VVPAT: "#757575", // Medium gray - improved DRE
+    BALLOT_MARKING: "#9e9e9e", // Light gray - modern
+    SCANNER: "#616161", // Gray - reliable
+    MIXED: "#bdbdbd", // Lighter gray - mixed equipment
 };
 
 const EQUIPMENT_LABELS: Record<string, string> = {
@@ -48,6 +49,25 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
     data,
     geoJsonData,
 }) => {
+    // Track map + GeoJSON + hovered layer for proper highlight clearing
+    const mapRef = useRef<L.Map | null>(null);
+    const geoRef = useRef<L.GeoJSON | null>(null);
+    const hoveredRef = useRef<L.Path | null>(null);
+
+    const clearHover = () => {
+        if (hoveredRef.current) {
+            try {
+                geoRef.current?.resetStyle(hoveredRef.current as any);
+                if ((hoveredRef.current as any).closeTooltip) {
+                    (hoveredRef.current as any).closeTooltip();
+                }
+            } catch {
+                // ignore if layer is detached
+            }
+            hoveredRef.current = null;
+        }
+    };
+
     // Create lookup map for equipment type by geographic unit
     const equipmentLookup = useMemo(() => {
         const lookup = new Map<string, EquipmentTypeData>();
@@ -114,35 +134,59 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
         const equipmentData = equipmentLookup.get(unitName);
 
         const tooltipContent = equipmentData
-            ? `<strong>${feature.properties.name || feature.properties.NAME}</strong><br/>
-         Equipment: ${EQUIPMENT_LABELS[equipmentData.primaryEquipmentType]}`
-            : `<strong>${feature.properties.name || feature.properties.NAME}</strong><br/>
-         No equipment data available`;
+            ? `<div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${feature.properties.name || feature.properties.NAME}</div>
+         <div style="font-size: 13px;">Equipment: <strong>${EQUIPMENT_LABELS[equipmentData.primaryEquipmentType]}</strong></div>`
+            : `<div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${feature.properties.name || feature.properties.NAME}</div>
+         <div style="font-size: 13px; color: #ff9800;">No equipment data available</div>`;
 
-        layer.bindTooltip(tooltipContent, {
-            permanent: false,
-            direction: "auto",
-            sticky: true,
-        });
+        // Use responsive tooltip helper to avoid cutoff
+        bindResponsiveTooltip(layer, tooltipContent, mapRef.current);
 
         layer.on({
             mouseover: (e) => {
-                const targetLayer = e.target;
+                const targetLayer = e.target as L.Path;
+                hoveredRef.current = targetLayer;
                 targetLayer.setStyle({
                     weight: 3,
                     fillOpacity: 0.9,
                 });
-                targetLayer.bringToFront();
+                if ((targetLayer as any).bringToFront) {
+                    (targetLayer as any).bringToFront();
+                }
+
+                // Open tooltip
+                if (!(targetLayer as any).isTooltipOpen()) {
+                    (targetLayer as any).openTooltip();
+                }
             },
             mouseout: (e) => {
-                const targetLayer = e.target;
-                targetLayer.setStyle({
-                    weight: 2,
-                    fillOpacity: 0.7,
-                });
+                geoRef.current?.resetStyle(e.target as any);
+                if (hoveredRef.current === e.target) hoveredRef.current = null;
+
+                // Close tooltip
+                try {
+                    (e.target as L.Path).closeTooltip();
+                } catch {
+                    /* ignore */
+                }
             },
         });
     };
+
+    // Clear hover when cursor leaves the map container
+    useEffect(() => {
+        const map = mapRef.current;
+        if (!map) return;
+
+        const node = map.getContainer();
+        const handleLeave = () => clearHover();
+
+        node.addEventListener("mouseleave", handleLeave);
+
+        return () => {
+            node.removeEventListener("mouseleave", handleLeave);
+        };
+    }, [geoJsonData]);
 
     if (!geoJsonData) {
         return (
@@ -180,6 +224,7 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
             {/* Map */}
             <Box sx={{ height: 500, border: "1px solid #ccc", borderRadius: 1 }}>
                 <MapContainer
+                    ref={(m) => { mapRef.current = m; }}
                     center={[39.5, -96.0]}
                     zoom={6}
                     style={{ height: "100%", width: "100%", borderRadius: "4px" }}
@@ -190,6 +235,7 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
                     />
                     <GeoJSON
+                        ref={geoRef as any}
                         data={geoJsonData}
                         style={getFeatureStyle}
                         onEachFeature={onEachFeature}

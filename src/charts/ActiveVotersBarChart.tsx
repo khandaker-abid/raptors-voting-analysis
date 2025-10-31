@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Paper, Typography, Box, Chip } from "@mui/material";
+import { Paper, Typography, Box } from "@mui/material";
 import {
 	BarChart,
 	Bar,
@@ -10,18 +10,43 @@ import {
 	ResponsiveContainer,
 	Cell,
 } from "recharts";
-import type { ActiveVotersData } from "../data/activeVotersData";
-import { getActiveVotersChartData } from "../data/activeVotersData";
+import type { ActiveVotersRow } from "../data/types";
 import theme from "../theme";
 
 interface ActiveVotersBarChartProps {
-	data: ActiveVotersData[];
-	stateName: string;
+	data: ActiveVotersRow[];
+	stateName?: string;
+}
+
+// Helper function to transform API data to chart data
+function getActiveVotersChartData(data: ActiveVotersRow[]) {
+	const totalActive = data.reduce((sum, d) => sum + (d.activeVoters || 0), 0);
+	const totalInactive = data.reduce((sum, d) => sum + (d.inactiveVoters || 0), 0);
+	const total = data.reduce((sum, d) => sum + (d.totalVoters || 0), 0);
+
+	const pct = (n: number, d: number) => (d ? Math.round((n / d) * 1000) / 10 : 0);
+
+	return [
+		{
+			category: "Active",
+			count: totalActive,
+			percentage: pct(totalActive, total),
+		},
+		{
+			category: "Inactive",
+			count: totalInactive,
+			percentage: pct(totalInactive, total),
+		},
+		{
+			category: "Total",
+			count: total,
+			percentage: 100,
+		},
+	];
 }
 
 const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 	data,
-	stateName,
 }) => {
 	// Base chart data from your helper
 	const chartData = useMemo(() => getActiveVotersChartData(data), [data]);
@@ -31,9 +56,9 @@ const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 
 	const orderedChartData = useMemo(() => {
 		const byCat = new Map(chartData.map((d) => [d.category.toLowerCase(), d]));
-		const fallbackColors = [theme.palette.primary.main, 
-								theme.palette.primary.main, 
-								theme.palette.primary.main]; // Active, Inactive, Total
+		const fallbackColors = [theme.palette.primary.main,
+		theme.palette.primary.main,
+		theme.palette.primary.main]; // Active, Inactive, Total
 		return ORDER.map((label, i) => {
 			const found = byCat.get(label.toLowerCase());
 			return (
@@ -90,44 +115,50 @@ const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 		);
 	}
 
-	// [PATCH]: read the chip from the “Total” bar
-	const totalVoters =
-		orderedChartData.find((d) => d.category.toLowerCase() === "total")
-			?.count ?? 0;
-
 	return (
-		<Paper sx={{ p: 3 }}>
-			<Box mb={3}>
+		<Paper sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
+			<Box mb={1}>
 				<Typography variant="h6" gutterBottom fontWeight={600}>
-					2024 EAVS Active vs Inactive Voters - {stateName}
+					Active Voter Categories Analysis
+				</Typography>
+				<Typography variant="caption" color="text.secondary" display="block" fontSize="0.7rem">
+					Active, Inactive, and Total registered voters. Hover over bars for detailed information.
 				</Typography>
 			</Box>
 
-			<ResponsiveContainer width="100%" height={400}>
-				<BarChart
-					data={orderedChartData}
-					margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-				>
-					<CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-					<XAxis dataKey="category" tick={{ fontSize: 12 }} />
-					<YAxis
-						tick={{ fontSize: 12 }}
-						tickFormatter={(v: number) => v.toLocaleString()}
-						label={{
-							value: "Number of Voters",
-							angle: -90,
-							position: "insideLeft",
-							style: { fontSize: 12 },
-						}}
-					/>
-					<RechartsTooltip content={<CustomTooltip />} />
-					<Bar dataKey="count" radius={[8, 8, 0, 0]} barSize={120}>
-						{orderedChartData.map((entry, index) => (
-							<Cell key={`cell-${index}`} fill={theme.palette.primary.main} />
-						))}
-					</Bar>
-				</BarChart>
-			</ResponsiveContainer>
+			<Box sx={{ flex: 1, minHeight: 0 }}>
+				<ResponsiveContainer width="100%" height="100%">
+					<BarChart
+						data={orderedChartData}
+						margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+					>
+						<CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+						<XAxis
+							dataKey="category"
+							angle={-45}
+							textAnchor="end"
+							height={80}
+							tick={{ fontSize: 11 }}
+						/>
+						<YAxis
+							tick={{ fontSize: 11 }}
+							tickFormatter={(v: number) => v.toLocaleString()}
+							label={{
+								value: "Number of Voters",
+								angle: -90,
+								position: "insideLeft",
+								style: { fontSize: 11 },
+							}}
+						/>
+						<RechartsTooltip content={<CustomTooltip />} />
+						<Bar dataKey="count" radius={[8, 8, 0, 0]}>
+							{orderedChartData.map((_entry, index) => (
+								<Cell key={`cell-${index}`} fill={theme.palette.primary.main} />
+							))}
+						</Bar>
+					</BarChart>
+				</ResponsiveContainer>
+			</Box>
 		</Paper>
 	);
 };

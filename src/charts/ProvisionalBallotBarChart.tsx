@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Paper, Typography, Box, Chip } from "@mui/material";
+import { Paper, Typography, Box } from "@mui/material";
 import {
 	BarChart,
 	Bar,
@@ -10,7 +10,6 @@ import {
 	ResponsiveContainer,
 	Cell,
 } from "recharts";
-import theme from "../theme";
 
 interface TooltipData {
 	label: string;
@@ -35,17 +34,8 @@ interface ProvisionalBallotBarChartProps {
 	categories: Array<{ key: string; label: string; description: string }>;
 }
 
-const COLORS = [
-	"#8884d8",
-	"#82ca9d",
-	"#ffc658",
-	"#ff7c7c",
-	"#8dd1e1",
-	"#d084d0",
-	"#ffb347",
-	"#67b7dc",
-	"#a4de6c",
-];
+// Single consistent black color for all bars (matching Active Voters & Pollbook Deletions charts)
+const CATEGORY_COLOR = "#424242"; // Dark gray/black for consistency
 
 const ProvisionalBallotBarChart: React.FC<ProvisionalBallotBarChartProps> = ({
 	data,
@@ -62,16 +52,14 @@ const ProvisionalBallotBarChart: React.FC<ProvisionalBallotBarChartProps> = ({
 			return acc;
 		}, {} as Record<string, number>);
 
-		return categories.map((cat, index) => ({
+		return categories.map((cat) => ({
 			category: cat.key,
 			label: cat.label,
 			value: totals[cat.key] || 0,
 			description: cat.description,
-			color: theme.palette.primary.main,
+			color: CATEGORY_COLOR,
 		}));
-	}, [data, categories]);
-
-	const CustomTooltip = ({
+	}, [data, categories]); const CustomTooltip = ({
 		active,
 		payload,
 	}: {
@@ -97,10 +85,6 @@ const ProvisionalBallotBarChart: React.FC<ProvisionalBallotBarChartProps> = ({
 		return null;
 	};
 
-	const totalBallots = useMemo(() => {
-		return aggregatedData.reduce((sum, item) => sum + item.value, 0);
-	}, [aggregatedData]);
-
 	if (!data || data.length === 0) {
 		return (
 			<Paper sx={{ p: 3, textAlign: "center" }}>
@@ -112,42 +96,47 @@ const ProvisionalBallotBarChart: React.FC<ProvisionalBallotBarChartProps> = ({
 	}
 
 	return (
-		<Paper sx={{ p: 3 }}>
-			<Box mb={3}>
+		<Paper sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
+			<Box mb={1}>
 				<Typography variant="h6" gutterBottom fontWeight={600}>
 					Provisional Ballot Categories Analysis
 				</Typography>
+				<Typography variant="caption" color="text.secondary" display="block" fontSize="0.7rem">
+					Each bar represents a different provisional ballot category. Hover over bars for detailed descriptions.
+				</Typography>
 			</Box>
 
-			<ResponsiveContainer width="100%" height={400}>
-				<BarChart
-					data={aggregatedData}
-					margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
-					<CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-					<XAxis
-						dataKey="label"
-						angle={-45}
-						textAnchor="end"
-						height={100}
-						tick={{ fontSize: 12 }}
-					/>
-					<YAxis
-						tick={{ fontSize: 12 }}
-						label={{
-							value: "Number of Ballots",
-							angle: -90,
-							position: "insideLeft",
-							style: { fontSize: 12 },
-						}}
-					/>
-					<RechartsTooltip content={<CustomTooltip />} />
-					<Bar dataKey="value" radius={[8, 8, 0, 0]}>
-						{aggregatedData.map((entry, index) => (
-							<Cell key={`cell-${index}`} fill={entry.color} />
-						))}
-					</Bar>
-				</BarChart>
-			</ResponsiveContainer>
+			<Box sx={{ flex: 1, minHeight: 0 }}>
+				<ResponsiveContainer width="100%" height="100%">
+					<BarChart
+						data={aggregatedData}
+						margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+						<CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+						<XAxis
+							dataKey="label"
+							angle={-45}
+							textAnchor="end"
+							height={80}
+							tick={{ fontSize: 11 }}
+						/>
+						<YAxis
+							tick={{ fontSize: 11 }}
+							label={{
+								value: "Number of Ballots",
+								angle: -90,
+								position: "insideLeft",
+								style: { fontSize: 11 },
+							}}
+						/>
+						<RechartsTooltip content={<CustomTooltip />} />
+						<Bar dataKey="value" radius={[8, 8, 0, 0]}>
+							{aggregatedData.map((entry, index) => (
+								<Cell key={`cell-${index}`} fill={entry.color} />
+							))}
+						</Bar>
+					</BarChart>
+				</ResponsiveContainer>
+			</Box>
 		</Paper>
 	);
 };

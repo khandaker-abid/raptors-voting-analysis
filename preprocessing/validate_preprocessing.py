@@ -60,11 +60,11 @@ def validate_preprocessing():
             'required_fields': ['fipsCode', 'state'],
             'optional': True
         },
-        'voterRegistration': {
+        'voter_registration': {
             'min_count': 1,
-            'description': 'Voter registration data (Prepro-7)',
-            'required_fields': ['voterId', 'state'],
-            'optional': True
+            'description': 'Individual voter records (Prepro-17)',
+            'required_fields': ['state', 'county', 'firstName', 'lastName', 'party'],
+            'optional': False
         },
         'electionResults': {
             'min_count': 1,

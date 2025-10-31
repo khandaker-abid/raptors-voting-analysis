@@ -69,19 +69,28 @@ const DropBoxBubbleChart: React.FC<Props> = ({ data, regressionLines = [] }) => 
         height: "100%",
         display: "flex",
         flexDirection: "column",
+        overflow: "hidden",
       }}
     >
       <Typography
-        variant="h6"
+        variant="subtitle1"
         align="center"
         gutterBottom
-        fontWeight={700}
-        sx={{ mb: 1 }}
+        fontWeight={600}
+        sx={{ mb: 0.5 }}
       >
         Drop Box Voting Bubble Chart
       </Typography>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        align="center"
+        sx={{ mb: 1, display: "block" }}
+      >
+        Drop Box % vs. Republican Vote % by County (Arkansas 2020, Maryland & Rhode Island 2024)
+      </Typography>
 
-      <Box sx={{ flexGrow: 1 }}>
+      <Box sx={{ flex: 1, minHeight: 0 }}>
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 8, right: 16, left: 8, bottom: 16 }}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -96,7 +105,7 @@ const DropBoxBubbleChart: React.FC<Props> = ({ data, regressionLines = [] }) => 
               type="number"
               dataKey="dropBoxPct"
               name="Drop Box Voting %"
-              domain={[0, 100]}
+              domain={[0, 10]}
               tickFormatter={(v) => `${v}%`}
             />
             <ZAxis
@@ -128,7 +137,8 @@ const DropBoxBubbleChart: React.FC<Props> = ({ data, regressionLines = [] }) => 
                 dataKey="dropBoxPct"
                 dot={false}
                 stroke="#1976d2"
-                strokeWidth={2}
+                strokeWidth={3}
+                strokeDasharray="5 5"
               />
             )}
             {rLine.length > 0 && (
@@ -139,7 +149,8 @@ const DropBoxBubbleChart: React.FC<Props> = ({ data, regressionLines = [] }) => 
                 dataKey="dropBoxPct"
                 dot={false}
                 stroke="#d32f2f"
-                strokeWidth={2}
+                strokeWidth={3}
+                strokeDasharray="5 5"
               />
             )}
           </ScatterChart>

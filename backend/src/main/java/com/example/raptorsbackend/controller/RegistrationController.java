@@ -175,6 +175,7 @@ public class RegistrationController {
         String[] states = { "RHODE ISLAND", "MARYLAND", "ARKANSAS" };
         String[] stateDisplay = { "Rhode Island", "Maryland", "Arkansas" };
         String[] registrationTypes = { "Opt-out", "Opt-out", "Opt-in" };
+        boolean[] sameDayReg = { true, true, false };
 
         List<Map<String, Object>> result = new ArrayList<>();
 
@@ -182,42 +183,44 @@ public class RegistrationController {
             String state = states[i];
             String regType = registrationTypes[i];
 
-            // Query EAVS data for the state (2024)
+            // Query EAVS data for the state (2024) - aggregate all counties
             Query query = new Query();
             query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(2024));
             List<Map> eavsData = mongoTemplate.find(query, Map.class, "eavsData");
 
-            // Calculate totals
-            int totalRegistered = 0;
-            int totalParticipated = 0;
-            int onlineRegistrations = 0;
-            int sameDay = 0;
+            // Calculate totals by aggregating all counties
+            long totalRegistered = 0;
+            long totalCVAP = 0;
+            long totalVotesCast = 0;
 
             for (Map doc : eavsData) {
-                totalRegistered += getIntValue(doc, "A1a"); // Total registered
-                // Calculate total participated from voting methods
-                totalParticipated += getIntValue(doc, "F1a"); // In-person election day
-                totalParticipated += getIntValue(doc, "F1b"); // Physical polling place
-                totalParticipated += getIntValue(doc, "F1d"); // Mail votes
-                totalParticipated += getIntValue(doc, "F1f"); // In-person early voting
-                // Note: Online registrations and same-day registration fields don't exist in
-                // EAVS 2024
-                // Keeping as 0 for now
+                totalRegistered += getLongValue(doc, "A1a"); // Total registered voters
+                totalCVAP += getLongValue(doc, "A1b"); // Citizen Voting Age Population
+                // Total votes cast = sum of all voting methods
+                totalVotesCast += getLongValue(doc, "F1a"); // Election day
+                totalVotesCast += getLongValue(doc, "F1b"); // Polling place
+                totalVotesCast += getLongValue(doc, "F1d"); // Mail
+                totalVotesCast += getLongValue(doc, "F1f"); // Early in-person
             }
 
             Map<String, Object> row = new HashMap<>();
             row.put("state", stateDisplay[i]);
             row.put("registrationType", regType);
-            row.put("totalRegistered", totalRegistered);
-            row.put("totalParticipated", totalParticipated);
-            row.put("onlineRegistrations", onlineRegistrations);
-            row.put("sameDayRegistration", sameDay);
+            row.put("sameDayRegistration", sameDayReg[i]);
+            row.put("registeredVoters", totalRegistered);
+            row.put("votesCast", totalVotesCast);
 
-            // Calculate participation rate
-            double participationRate = totalRegistered > 0
-                    ? (double) totalParticipated / totalRegistered * 100
+            // Calculate registration rate (registered / CVAP * 100)
+            double registrationRate = totalCVAP > 0
+                    ? (double) totalRegistered / totalCVAP * 100
                     : 0.0;
-            row.put("participationRate", Math.round(participationRate * 10) / 10.0);
+            row.put("registrationRate", Math.round(registrationRate * 10) / 10.0);
+
+            // Calculate turnout rate (votes cast / registered * 100)
+            double turnoutRate = totalRegistered > 0
+                    ? (double) totalVotesCast / totalRegistered * 100
+                    : 0.0;
+            row.put("turnoutRate", Math.round(turnoutRate * 10) / 10.0);
 
             result.add(row);
         }
@@ -227,7 +230,7 @@ public class RegistrationController {
 
     /**
      * GUI-23: Get early voting comparison
-     * GET /api/early-voting/comparison
+     * GET /api/registration/early-voting/comparison
      */
     @GetMapping("/early-voting/comparison")
     public List<Map<String, Object>> getEarlyVotingComparison() {
@@ -237,37 +240,45 @@ public class RegistrationController {
 
         for (int i = 0; i < states.length; i++) {
             String state = states[i];
-            // Query EAVS data for the state (2024)
+            // Query EAVS data for the state (2024) - aggregate all counties
             Query query = new Query();
             query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(2024));
             List<Map> eavsData = mongoTemplate.find(query, Map.class, "eavsData");
 
-            // Calculate totals
-            int totalRegistered = 0;
-            int inPersonEarlyVoting = 0;
-            int absenteeMailBallots = 0;
-            int totalEarlyVoting = 0;
+            // Calculate totals by aggregating all counties
+            long totalVotesCast = 0;
+            long mailBallots = 0;
+            long earlyInPerson = 0;
+            long dropBox = 0;
 
             for (Map doc : eavsData) {
-                totalRegistered += getIntValue(doc, "A1a"); // Total registered
-                inPersonEarlyVoting += getIntValue(doc, "E1a"); // In-person early voting
-                absenteeMailBallots += getIntValue(doc, "E2a"); // Absentee/mail ballots
+                // Total votes cast = sum of all voting methods (F1 fields)
+                long f1a = getLongValue(doc, "F1a"); // Election day
+                long f1b = getLongValue(doc, "F1b"); // Polling place
+                long f1d = getLongValue(doc, "F1d"); // Mail
+                long f1f = getLongValue(doc, "F1f"); // Early in-person
+                totalVotesCast += f1a + f1b + f1d + f1f;
+
+                // Early voting methods
+                mailBallots += f1d; // Mail ballots (F1d is the actual count)
+                earlyInPerson += f1f; // Early in-person (F1f is the actual count)
+                dropBox += getLongValue(doc, "C3a"); // Drop box
             }
 
-            totalEarlyVoting = inPersonEarlyVoting + absenteeMailBallots;
+            long totalEarly = mailBallots + earlyInPerson + dropBox;
 
             Map<String, Object> row = new HashMap<>();
             row.put("state", stateDisplay[i]);
-            row.put("totalRegistered", totalRegistered);
-            row.put("inPersonEarlyVoting", inPersonEarlyVoting);
-            row.put("absenteeMailBallots", absenteeMailBallots);
-            row.put("totalEarlyVoting", totalEarlyVoting);
-
-            // Calculate early voting rate
-            double earlyVotingRate = totalRegistered > 0
-                    ? (double) totalEarlyVoting / totalRegistered * 100
-                    : 0.0;
-            row.put("earlyVotingRate", Math.round(earlyVotingRate * 10) / 10.0);
+            row.put("total", totalEarly);
+            row.put("totalPct",
+                    Math.round((totalVotesCast > 0 ? (double) totalEarly / totalVotesCast * 100 : 0.0) * 10) / 10.0);
+            row.put("mail", mailBallots);
+            row.put("mailPct",
+                    Math.round((totalVotesCast > 0 ? (double) mailBallots / totalVotesCast * 100 : 0.0) * 10) / 10.0);
+            row.put("inPerson", earlyInPerson);
+            row.put("inPersonPct",
+                    Math.round((totalVotesCast > 0 ? (double) earlyInPerson / totalVotesCast * 100 : 0.0) * 10) / 10.0);
+            row.put("dropBox", dropBox);
 
             result.add(row);
         }
@@ -289,6 +300,23 @@ public class RegistrationController {
             return Integer.parseInt(value.toString());
         } catch (NumberFormatException e) {
             return 0;
+        }
+    }
+
+    /**
+     * Helper: Safely get long value from document
+     */
+    private long getLongValue(Map doc, String key) {
+        Object value = doc.get(key);
+        if (value == null)
+            return 0L;
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+        try {
+            return Long.parseLong(value.toString());
+        } catch (NumberFormatException e) {
+            return 0L;
         }
     }
 

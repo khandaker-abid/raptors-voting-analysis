@@ -1,14 +1,16 @@
 // GUI - 9
 
-import React, { useMemo } from "react";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
-import { Box, Typography } from "@mui/material";
+import { useMemo } from "react";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from "recharts";
+import { Box, Typography, Paper } from "@mui/material";
 import type { MailRejectionRow } from "../data/types";
+import theme from "../theme";
 
 type Props = { stateName: string; data: MailRejectionRow[] };
 
 const LABELS: Record<keyof MailRejectionRow, string> = {
     geographicUnit: "Region",
+    dataYear: "Year",
     C9b_NoSignature: "C9b No Signature",
     C9c_SigMismatch: "C9c Signature Mismatch",
     C9d_ReceivedLate: "C9d Received Late",
@@ -19,8 +21,6 @@ const LABELS: Record<keyof MailRejectionRow, string> = {
     total: "Total",
     rejectionPercentage: "Rejection %",
 };
-
-const fmt = new Intl.NumberFormat();
 
 export default function MailRejectionsBarChart({ stateName, data }: Props) {
     const chartData = useMemo(() => {
@@ -38,30 +38,93 @@ export default function MailRejectionsBarChart({ stateName, data }: Props) {
         ];
     }, [data]);
 
+    const CustomTooltip = ({
+        active,
+        payload,
+    }: {
+        active?: boolean;
+        payload?: Array<{
+            payload: {
+                label: string;
+                value: number;
+            };
+        }>;
+    }) => {
+        if (active && payload && payload[0]) {
+            const data = payload[0].payload;
+            return (
+                <Paper sx={{ p: 2, maxWidth: 300 }}>
+                    <Typography variant="subtitle2" fontWeight="bold">
+                        {data.label}
+                    </Typography>
+                    <Typography variant="h6" sx={{ mt: 1, color: theme.palette.primary.main }}>
+                        {data.value.toLocaleString()} rejections
+                    </Typography>
+                </Paper>
+            );
+        }
+        return null;
+    };
+
+    if (!data || data.length === 0) {
+        return (
+            <Paper sx={{ p: 3, textAlign: "center" }}>
+                <Typography variant="body1" color="text.secondary">
+                    No mail rejections data available for this state.
+                </Typography>
+            </Paper>
+        );
+    }
+
     return (
-        <Box>
-            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 700 }}>
-                Mail Ballot Rejections by Category — {stateName}
-            </Typography>
-            <ResponsiveContainer width="100%" height={270}>
-                <BarChart data={chartData} margin={{ top: 8, right: 12, left: 8, bottom: 40 }}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                    <XAxis
-                        dataKey="label"
-                        interval={0}
-                        angle={-20}
-                        height={60}
-                        tick={{ fontSize: 12 }}
-                        dy={8}
-                    />
-                    <YAxis tickFormatter={(v) => fmt.format(v as number)} />
-                    <Tooltip
-                        formatter={(v: number) => fmt.format(v)}
-                        labelFormatter={(l) => l as string}
-                    />
-                    <Bar dataKey="value" fill="#1976d2" radius={[6, 6, 0, 0]} maxBarSize={48} />
-                </BarChart>
-            </ResponsiveContainer>
-        </Box>
+        <Paper sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
+            <Box mb={1}>
+                <Typography variant="h6" gutterBottom fontWeight={600}>
+                    Mail Ballot Rejections by Category — {stateName}
+                </Typography>
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                    fontSize="0.7rem"
+                >
+                    Mail ballot rejections across different categories. Hover over bars for detailed information.
+                </Typography>
+            </Box>
+
+            <Box sx={{ flex: 1, minHeight: 0 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                        data={chartData}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                    >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis
+                            dataKey="label"
+                            angle={-45}
+                            textAnchor="end"
+                            height={80}
+                            tick={{ fontSize: 11 }}
+                        />
+                        <YAxis
+                            tick={{ fontSize: 11 }}
+                            tickFormatter={(v: number) => v.toLocaleString()}
+                            label={{
+                                value: "Number of Rejections",
+                                angle: -90,
+                                position: "insideLeft",
+                                style: { fontSize: 11 },
+                            }}
+                        />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                            {chartData.map((_entry, index) => (
+                                <Cell key={`cell-${index}`} fill={theme.palette.primary.main} />
+                            ))}
+                        </Bar>
+                    </BarChart>
+                </ResponsiveContainer>
+            </Box>
+        </Paper>
     );
 }

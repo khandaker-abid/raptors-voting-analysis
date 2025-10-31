@@ -3,11 +3,12 @@
 // Bins: 1-10 years + "older than 10 years"
 // Monochromatic colors with increasing saturation for older devices
 
-import React, { useMemo } from "react";
+import React, { useMemo, useRef, useEffect } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { Box, Paper, Typography, Button } from "@mui/material";
 import L from "leaflet";
-import type { Feature, Geometry } from "geojson";
+import type { Feature } from "geojson";
+import { bindResponsiveTooltip } from "../utils/leafletTooltipHelper";
 
 interface StateEquipmentAge {
     state: string;
@@ -22,17 +23,17 @@ interface Props {
 
 // Age bins and corresponding colors (monochromatic blue with increasing saturation)
 const AGE_BINS = [
-    { max: 1, label: "0-1 years", color: "#e3f2fd" },
-    { max: 2, label: "1-2 years", color: "#bbdefb" },
-    { max: 3, label: "2-3 years", color: "#90caf9" },
-    { max: 4, label: "3-4 years", color: "#64b5f6" },
-    { max: 5, label: "4-5 years", color: "#42a5f5" },
-    { max: 6, label: "5-6 years", color: "#2196f3" },
-    { max: 7, label: "6-7 years", color: "#1e88e5" },
-    { max: 8, label: "7-8 years", color: "#1976d2" },
-    { max: 9, label: "8-9 years", color: "#1565c0" },
-    { max: 10, label: "9-10 years", color: "#0d47a1" },
-    { max: Infinity, label: "Older than 10 years", color: "#01579b" },
+    { max: 1, label: "0-1 years", color: "#f5f5f5" },
+    { max: 2, label: "1-2 years", color: "#e0e0e0" },
+    { max: 3, label: "2-3 years", color: "#bdbdbd" },
+    { max: 4, label: "3-4 years", color: "#9e9e9e" },
+    { max: 5, label: "4-5 years", color: "#757575" },
+    { max: 6, label: "5-6 years", color: "#616161" },
+    { max: 7, label: "6-7 years", color: "#424242" },
+    { max: 8, label: "7-8 years", color: "#424242" },
+    { max: 9, label: "8-9 years", color: "#212121" },
+    { max: 10, label: "9-10 years", color: "#212121" },
+    { max: Infinity, label: "Older than 10 years", color: "#000000" },
 ];
 
 const getColorForAge = (age: number): string => {
@@ -58,6 +59,25 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
     geoJsonData,
     onClose,
 }) => {
+    // Track map + GeoJSON + hovered layer for proper highlight clearing
+    const mapRef = useRef<L.Map | null>(null);
+    const geoRef = useRef<L.GeoJSON | null>(null);
+    const hoveredRef = useRef<L.Path | null>(null);
+
+    const clearHover = () => {
+        if (hoveredRef.current) {
+            try {
+                geoRef.current?.resetStyle(hoveredRef.current as any);
+                if ((hoveredRef.current as any).closeTooltip) {
+                    (hoveredRef.current as any).closeTooltip();
+                }
+            } catch {
+                // ignore if layer is detached
+            }
+            hoveredRef.current = null;
+        }
+    };
+
     // Create lookup map for equipment age by state
     const ageLookup = useMemo(() => {
         const lookup = new Map<string, number>();
@@ -120,36 +140,61 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
 
         const tooltipContent =
             age !== undefined
-                ? `<strong>${feature.properties.name || feature.properties.NAME}</strong><br/>
-         Average Equipment Age: ${age.toFixed(1)} years<br/>
-         Category: ${getBinLabel(age)}`
-                : `<strong>${feature.properties.name || feature.properties.NAME}</strong><br/>
-         No equipment age data available`;
+                ? `<div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${feature.properties.name || feature.properties.NAME}</div>
+         <div style="font-size: 13px;">Average Equipment Age: <strong>${age.toFixed(1)} years</strong></div>
+         <div style="font-size: 13px;">Category: <strong>${getBinLabel(age)}</strong></div>`
+                : `<div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${feature.properties.name || feature.properties.NAME}</div>
+         <div style="font-size: 13px; color: #ff9800;">No equipment age data available</div>`;
 
-        layer.bindTooltip(tooltipContent, {
-            permanent: false,
-            direction: "auto",
-            sticky: true,
-        });
+        // Use responsive tooltip helper to avoid cutoff
+        bindResponsiveTooltip(layer, tooltipContent, mapRef.current);
 
         layer.on({
             mouseover: (e) => {
-                const targetLayer = e.target;
+                const targetLayer = e.target as L.Path;
+                hoveredRef.current = targetLayer;
                 targetLayer.setStyle({
                     weight: 3,
+                    color: '#1976d2',
                     fillOpacity: 1.0,
                 });
-                targetLayer.bringToFront();
+                if ((targetLayer as any).bringToFront) {
+                    (targetLayer as any).bringToFront();
+                }
+
+                // Open tooltip
+                if (!(targetLayer as any).isTooltipOpen()) {
+                    (targetLayer as any).openTooltip();
+                }
             },
             mouseout: (e) => {
-                const targetLayer = e.target;
-                targetLayer.setStyle({
-                    weight: 2,
-                    fillOpacity: 0.8,
-                });
+                geoRef.current?.resetStyle(e.target as any);
+                if (hoveredRef.current === e.target) hoveredRef.current = null;
+
+                // Close tooltip
+                try {
+                    (e.target as L.Path).closeTooltip();
+                } catch {
+                    /* ignore */
+                }
             },
         });
     };
+
+    // Clear hover when cursor leaves the map container
+    useEffect(() => {
+        const map = mapRef.current;
+        if (!map) return;
+
+        const node = map.getContainer();
+        const handleLeave = () => clearHover();
+
+        node.addEventListener("mouseleave", handleLeave);
+
+        return () => {
+            node.removeEventListener("mouseleave", handleLeave);
+        };
+    }, [geoJsonData]);
 
     if (!geoJsonData) {
         return (
@@ -179,11 +224,11 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
                 </Button>
             )}
 
-            {/* Legend */}
+            {/* Legend - repositioned to bottom-left to avoid zoom controls */}
             <Paper
                 sx={{
                     position: "absolute",
-                    top: 16,
+                    bottom: 16,
                     left: 16,
                     zIndex: 1000,
                     p: 2,
@@ -213,6 +258,7 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
 
             {/* Map */}
             <MapContainer
+                ref={(m) => { mapRef.current = m; }}
                 center={[39.5, -96.0]}
                 zoom={4.8}
                 zoomSnap={0.25}
@@ -231,6 +277,7 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
                     url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
                 />
                 <GeoJSON
+                    ref={geoRef as any}
                     data={geoJsonData}
                     style={getFeatureStyle}
                     onEachFeature={onEachFeature}

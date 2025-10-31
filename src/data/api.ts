@@ -1,4 +1,8 @@
-// Centralized typed fetch helpers for the Java backend (or local mocks).
+// Centralized fetcc// Vite proxy should forward /api -> http://localhost:8080
+
+// State name -> USPS abbreviation (used by URL fallbacks)= "/api";
+
+// State name -> USPS abbreviation (used by URL fallbacks) for the Java backend (or local mocks).
 
 import type {
     ActiveVotersRow,
@@ -9,15 +13,20 @@ import type {
     BlockBubblePayload,
 } from "./types";
 
-// Dev toggles
-// Turn ON to always use mocks (frontend-only development).
+// -------------------------------------------------------------------
+// Mock Data Toggle
+// -------------------------------------------------------------------
+// Set to true ONLY for frontend development without backend
+// When false (default), API errors will be shown to user - NO FALLBACK
 const USE_MOCKS = false;
-// When true, if all real URL attempts fail (500/404/etc.), we’ll
-// gracefully fall back to mock data so the UI keeps working.
-const AUTO_FALLBACK_TO_MOCK_ON_ERROR = true;
 
 // Vite proxy should forward /api -> http://localhost:8080
 const base = "/api";
+// Turn ON to always use mocks (frontend-only development).
+// When true, if all real URL attempts fail (500/404/etc.), we’ll
+// gracefully fall back to mock data so the UI keeps working.
+
+// Vite proxy should forward /api -> http://localhost:8080
 
 // State name -> USPS abbreviation (used by URL fallbacks)
 const STATE_TO_ABBR: Record<string, string> = {
@@ -75,105 +84,6 @@ const STATE_TO_ABBR: Record<string, string> = {
 };
 
 // -------------------------------------------------------------------
-// Small, realistic mock payloads
-// -------------------------------------------------------------------
-const M_ACTIVE: ActiveVotersRow[] = [
-    {
-        geographicUnit: "Sample County A",
-        activeVoters: 70000,
-        inactiveVoters: 12000,
-        totalVoters: 82000,
-        activePercentage: 85,
-    },
-    {
-        geographicUnit: "Sample County B",
-        activeVoters: 150000,
-        inactiveVoters: 20000,
-        totalVoters: 170000,
-        activePercentage: 88,
-    },
-];
-
-const M_POLL: PollbookDeletionRow[] = [
-    {
-        geographicUnit: "Sample County A",
-        A12b_Death: 120,
-        A12c_Moved: 900,
-        A12d_Felon: 20,
-        A12e_MentalIncap: 5,
-        A12f_Requested: 60,
-        A12g_FailedToVote: 300,
-        A12h_Other: 40,
-        total: 1445,
-        deletionPercentage: 100 * (1445 / (1445 + 2000)),
-    },
-    {
-        geographicUnit: "Sample County B",
-        A12b_Death: 180,
-        A12c_Moved: 1100,
-        A12d_Felon: 25,
-        A12e_MentalIncap: 7,
-        A12f_Requested: 90,
-        A12g_FailedToVote: 400,
-        A12h_Other: 60,
-        total: 1862,
-        deletionPercentage: 100 * (1862 / (1862 + 2500)),
-    },
-];
-
-const M_MAIL: MailRejectionRow[] = [
-    {
-        geographicUnit: "Sample County A",
-        C9b_NoSignature: 40,
-        C9c_SigMismatch: 25,
-        C9d_ReceivedLate: 60,
-        C9e_MissingInfo: 15,
-        C9f_NotRegistered: 5,
-        C9g_WrongEnvelope: 10,
-        C9h_Other: 8,
-        total: 163,
-        rejectionPercentage: 100 * (163 / 2000),
-    },
-    {
-        geographicUnit: "Sample County B",
-        C9b_NoSignature: 55,
-        C9c_SigMismatch: 40,
-        C9d_ReceivedLate: 80,
-        C9e_MissingInfo: 20,
-        C9f_NotRegistered: 8,
-        C9g_WrongEnvelope: 12,
-        C9h_Other: 10,
-        total: 225,
-        rejectionPercentage: 100 * (225 / 2500),
-    },
-];
-
-const M_EHIST: EquipmentHistorySeries[] = [
-    { category: "DRE no VVPAT", byYear: { 2016: 500, 2018: 300, 2020: 100, 2022: 50, 2024: 10 } },
-    { category: "DRE with VVPAT", byYear: { 2016: 200, 2018: 220, 2020: 240, 2022: 260, 2024: 280 } },
-    { category: "Ballot Marking Device", byYear: { 2016: 150, 2018: 180, 2020: 220, 2022: 250, 2024: 290 } },
-    { category: "Scanner", byYear: { 2016: 800, 2018: 820, 2020: 850, 2022: 880, 2024: 900 } },
-];
-
-const M_TRENDS: RegistrationTrendPayload = {
-    state: "Mock",
-    geographicUnitOrder2024: ["Sample County A", "Sample County B"],
-    byYear: {
-        2016: [60000, 120000],
-        2020: [65000, 140000],
-        2024: [82000, 170000],
-    },
-};
-
-const M_BUBBLES: BlockBubblePayload = {
-    state: "Mock",
-    points: [
-        { lat: 34.7465, lng: -92.2896, dominantParty: "D" },
-        { lat: 36.1867, lng: -94.1288, dominantParty: "R" },
-    ],
-};
-
-// -------------------------------------------------------------------
 // Core helpers
 // -------------------------------------------------------------------
 async function fetchJson<T>(url: string): Promise<T> {
@@ -187,15 +97,17 @@ async function fetchJson<T>(url: string): Promise<T> {
 
 /**
  * Try a list of URL shapes. Return on first success.
- * If all fail and we're in dev (Vite) or AUTO_FALLBACK_TO_MOCK_ON_ERROR/USE_MOCKS is on,
- * return the provided mock instead of throwing — keeps the UI working.
+ * If all fail and USE_MOCKS is false: throw error (NO FALLBACK)
+ * If all fail and USE_MOCKS is true: return mock data for development
  */
-async function tryUrls<T>(urls: string[], mock: T, label: string): Promise<T> {
-    if (USE_MOCKS) {
-        console.info(`[api] Using mocks for ${label}`);
-        return mock;
+async function tryUrls<T>(urls: string[], label: string, mockData?: T): Promise<T> {
+    // If USE_MOCKS is enabled and mock data is provided, return it immediately
+    if (USE_MOCKS && mockData !== undefined) {
+        console.log(`[api] Using mock data for ${label}`);
+        return mockData;
     }
 
+    // Try real API endpoints
     let lastErr: unknown = null;
     for (const u of urls) {
         try {
@@ -206,12 +118,10 @@ async function tryUrls<T>(urls: string[], mock: T, label: string): Promise<T> {
         }
     }
 
-    if (import.meta.env.DEV || AUTO_FALLBACK_TO_MOCK_ON_ERROR) {
-        console.warn(`[api] All endpoints failed for ${label}; using mock data.`);
-        return mock;
-    }
-
-    throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
+    // All APIs failed - throw error (no fallback to mock data)
+    throw lastErr instanceof Error
+        ? lastErr
+        : new Error(`All API endpoints failed for ${label}. Backend may be offline.`);
 }
 
 // -------------------------------------------------------------------
@@ -219,7 +129,7 @@ async function tryUrls<T>(urls: string[], mock: T, label: string): Promise<T> {
 // -------------------------------------------------------------------
 
 export async function fetchActiveVoters(state: string): Promise<ActiveVotersRow[]> {
-    const s = encodeURIComponent(state);
+    const s = encodeURIComponent(state.toUpperCase());
     const abbr = STATE_TO_ABBR[state] || state.slice(0, 2).toUpperCase();
 
     const urls = [
@@ -228,11 +138,24 @@ export async function fetchActiveVoters(state: string): Promise<ActiveVotersRow[
         `${base}/eavs/active-voters?state=${s}&year=2024`,
     ];
 
-    return tryUrls(urls, M_ACTIVE, `active-voters (${state})`);
+    return tryUrls(urls, `active-voters (${state})`);
+}
+
+export async function fetchProvisionalBallots(state: string): Promise<any[]> {
+    const s = encodeURIComponent(state.toUpperCase());
+    const abbr = STATE_TO_ABBR[state] || state.slice(0, 2).toUpperCase();
+
+    const urls = [
+        `${base}/eavs/${s}/provisional-ballots?year=2024`,
+        `${base}/eavs/${abbr}/provisional-ballots?year=2024`,
+        `${base}/eavs/provisional-ballots?state=${s}&year=2024`,
+    ];
+
+    return tryUrls(urls, `provisional-ballots (${state})`);
 }
 
 export async function fetchPollbookDeletions(state: string): Promise<PollbookDeletionRow[]> {
-    const s = encodeURIComponent(state);
+    const s = encodeURIComponent(state.toUpperCase());
     const abbr = STATE_TO_ABBR[state] || state.slice(0, 2).toUpperCase();
 
     const urls = [
@@ -242,11 +165,11 @@ export async function fetchPollbookDeletions(state: string): Promise<PollbookDel
         `${base}/pollbook-deletions?state=${s}&year=2024`, // legacy/alt
     ];
 
-    return tryUrls(urls, M_POLL, `pollbook-deletions (${state})`);
+    return tryUrls(urls, `pollbook-deletions (${state})`);
 }
 
 export async function fetchMailRejections(state: string): Promise<MailRejectionRow[]> {
-    const s = encodeURIComponent(state);
+    const s = encodeURIComponent(state.toUpperCase());
     const abbr = STATE_TO_ABBR[state] || state.slice(0, 2).toUpperCase();
 
     const urls = [
@@ -256,7 +179,7 @@ export async function fetchMailRejections(state: string): Promise<MailRejectionR
         `${base}/mail-rejections?state=${s}&year=2024`, // legacy/alt
     ];
 
-    return tryUrls(urls, M_MAIL, `mail-rejections (${state})`);
+    return tryUrls(urls, `mail-rejections (${state})`);
 }
 
 export async function fetchEquipmentHistory(state: string): Promise<EquipmentHistorySeries[]> {
@@ -270,7 +193,7 @@ export async function fetchEquipmentHistory(state: string): Promise<EquipmentHis
         `${base}/equipment/history?state=${abbr}`,
     ];
 
-    return tryUrls(urls, M_EHIST, `equipment-history (${state})`);
+    return tryUrls(urls, `equipment-history (${state})`);
 }
 
 export async function fetchRegistrationTrends(state: string): Promise<RegistrationTrendPayload> {
@@ -283,7 +206,7 @@ export async function fetchRegistrationTrends(state: string): Promise<Registrati
         `${base}/registration/trends?state=${s}&years=2016,2020,2024`,
     ];
 
-    return tryUrls(urls, M_TRENDS, `registration-trends (${state})`);
+    return tryUrls(urls, `registration-trends (${state})`);
 }
 
 export async function fetchBlockBubbles(state: string): Promise<BlockBubblePayload> {
@@ -296,7 +219,7 @@ export async function fetchBlockBubbles(state: string): Promise<BlockBubblePaylo
         `${base}/registration/blocks?state=${s}`,
     ];
 
-    return tryUrls(urls, M_BUBBLES, `registration-block-bubbles (${state})`);
+    return tryUrls(urls, `registration-block-bubbles (${state})`);
 }
 
 /**
@@ -308,15 +231,7 @@ export async function fetchPartyComparison(): Promise<any> {
         `${base}/comparison/party-states`,
     ];
 
-    // Mock data fallback
-    const mockData = {
-        republican: { count: 0, avgRegistrationRate: 0, avgTurnout: 0 },
-        democratic: { count: 0, avgRegistrationRate: 0, avgTurnout: 0 },
-        split: { count: 0, avgRegistrationRate: 0, avgTurnout: 0 },
-        stateDetails: { Republican: [], Democratic: [], Split: [] }
-    };
-
-    return tryUrls(urls, mockData, `party-comparison`);
+    return tryUrls(urls, `party-comparison`);
 }
 
 /**
@@ -327,10 +242,7 @@ export async function fetchEquipmentAllStates(): Promise<any[]> {
         `${base}/equipment/all-states`,
     ];
 
-    // Mock data fallback
-    const mockData = [] as any[];
-
-    return tryUrls(urls, mockData, `equipment-all-states`);
+    return tryUrls(urls, `equipment-all-states`);
 }
 
 /**
@@ -341,10 +253,8 @@ export async function fetchEquipmentSummary(): Promise<any[]> {
         `${base}/equipment/summary`,
     ];
 
-    // Mock data fallback
-    const mockData = [] as any[];
 
-    return tryUrls(urls, mockData, `equipment-summary`);
+    return tryUrls(urls, `equipment-summary`);
 }
 
 /**
@@ -355,10 +265,8 @@ export async function fetchEquipmentVsRejected(state: string): Promise<any[]> {
         `${base}/equipment/vs-rejected/${state}`,
     ];
 
-    // Mock data fallback
-    const mockData = [] as any[];
 
-    return tryUrls(urls, mockData, `equipment-vs-rejected (${state})`);
+    return tryUrls(urls, `equipment-vs-rejected (${state})`);
 }
 
 /**
@@ -369,10 +277,8 @@ export async function fetchOptInOutComparison(): Promise<any[]> {
         `${base}/registration/opt-in-out-comparison`,
     ];
 
-    // Mock data fallback
-    const mockData = [] as any[];
 
-    return tryUrls(urls, mockData, `opt-in-out-comparison`);
+    return tryUrls(urls, `opt-in-out-comparison`);
 }
 
 /**
@@ -383,10 +289,8 @@ export async function fetchEarlyVotingComparison(): Promise<any[]> {
         `${base}/registration/early-voting/comparison`,
     ];
 
-    // Mock data fallback
-    const mockData = [] as any[];
 
-    return tryUrls(urls, mockData, `early-voting-comparison`);
+    return tryUrls(urls, `early-voting-comparison`);
 }
 
 /**
@@ -407,10 +311,30 @@ export async function fetchDropboxBubbles(state: string, year?: number): Promise
         `${base}/eavs/dropbox-bubbles/${abbr}?year=${queryYear}`,
     ];
 
-    // Mock data fallback
-    const mockData = [] as any[];
 
-    return tryUrls(urls, mockData, `dropbox-bubbles (${state})`);
+    return tryUrls(urls, `dropbox-bubbles (${state})`);
+}
+
+/**
+ * GUI-19: Fetch registered voters by county/region
+ * Returns paginated list of voters with party affiliation
+ */
+export async function fetchRegisteredVoters(
+    state: string,
+    county: string,
+    party?: string,
+    page: number = 0,
+    size: number = 1000
+): Promise<any> {
+    const s = encodeURIComponent(state);
+    const c = encodeURIComponent(county);
+    const partyParam = party && party !== "all" ? `&party=${encodeURIComponent(party)}` : "";
+
+    const urls = [
+        `${base}/registration/voters/${s}/${c}?page=${page}&size=${size}${partyParam}`,
+    ];
+
+    return tryUrls(urls, `registered-voters (${state}, ${county})`);
 }
 
 export const API_URL = 'http://localhost:8080/api/data';

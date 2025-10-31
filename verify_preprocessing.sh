@@ -167,7 +167,7 @@ if [ $ERRORS -eq 0 ] && [ $WARNINGS -eq 0 ]; then
     echo -e "${GREEN}✓ All checks passed!${NC}"
     echo ""
     echo "You're ready to start the backend server:"
-    echo "  cd raptors-backend && ./mvnw spring-boot:run"
+    echo "  cd backend && ./mvnw spring-boot:run"
     exit 0
 elif [ $ERRORS -eq 0 ]; then
     echo -e "${YELLOW}⚠ ${WARNINGS} warnings found${NC}"

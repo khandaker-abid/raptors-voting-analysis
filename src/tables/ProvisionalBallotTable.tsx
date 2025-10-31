@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from "react";
 import {
 	Box,
-	Chip,
 	Paper,
 	Table,
 	TableBody,
@@ -37,7 +36,7 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 	data,
 }) => {
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(10);
+	const rowsPerPage = 5; // Fixed at 5 rows per page (no scrolling, just pagination)
 	const [searchTerm, setSearchTerm] = useState("");
 
 	// Get category mappings
@@ -61,13 +60,6 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
 		setPage(newPage);
-	};
-
-	const handleChangeRowsPerPage = (
-		event: React.ChangeEvent<HTMLInputElement>,
-	) => {
-		setRowsPerPage(parseInt(event.target.value, 10));
-		setPage(0);
 	};
 
 
@@ -107,31 +99,29 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 	}
 
 	return (
-		<Paper sx={{ p: 3 }}>
-			<Box mb={3}>
-				<Typography variant="h6" gutterBottom fontWeight={600}>
+		<Paper sx={{ p: 2, display: "flex", flexDirection: "column", width: "100%" }}>
+			<Box mb={1.5} display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
+				<Typography variant="h6" fontWeight={600}>
 					Provisional Ballots by County/Town
 				</Typography>
-				<Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
-					<TextField
-						size="small"
-						placeholder="Search county/town..."
-						value={searchTerm}
-						onChange={(e) => setSearchTerm(e.target.value)}
-						InputProps={{
-							startAdornment: (
-								<InputAdornment position="start">
-									<SearchIcon fontSize="small" />
-								</InputAdornment>
-							),
-						}}
-						sx={{ minWidth: 250 }}
-					/>
-				</Box>
+				<TextField
+					size="small"
+					placeholder="Search county/town..."
+					value={searchTerm}
+					onChange={(e) => setSearchTerm(e.target.value)}
+					InputProps={{
+						startAdornment: (
+							<InputAdornment position="start">
+								<SearchIcon fontSize="small" />
+							</InputAdornment>
+						),
+					}}
+					sx={{ minWidth: 200 }}
+				/>
 			</Box>
 
-			<TableContainer sx={{ maxHeight: 600, position: "relative" }}>
-				<Table stickyHeader size="small">
+			<TableContainer sx={{ position: "relative", overflow: "visible" }}>
+				<Table size="small">
 					<TableHead>
 						<TableRow>
 							<TableCell
@@ -139,9 +129,7 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 									fontWeight: "bold",
 									backgroundColor: "primary.main",
 									color: "white",
-									position: "sticky",
-									left: 0,
-									zIndex: 3,
+									py: 1.5,
 								}}>
 								County/Town
 							</TableCell>
@@ -151,6 +139,7 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 									fontWeight: "bold",
 									backgroundColor: "primary.main",
 									color: "white",
+									py: 1.5,
 								}}>
 								Total
 							</TableCell>
@@ -172,6 +161,7 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 										fontWeight: "bold",
 										backgroundColor: "primary.main",
 										color: "white",
+										py: 1.5,
 									}}>
 									{categoryMap[cat] || cat}
 								</TableCell>
@@ -191,10 +181,7 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 											scope="row"
 											sx={{
 												fontWeight: 500,
-												position: "sticky",
-												left: 0,
 												backgroundColor: rowBg,
-												zIndex: 1,
 											}}>
 											{row.county}
 										</TableCell>
@@ -226,7 +213,7 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 													row[cat as keyof typeof row] as number
 												).toLocaleString()}
 											</TableCell>
-											))}
+										))}
 									</TableRow>
 								);
 							})}
@@ -235,10 +222,7 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 							<TableCell
 								sx={{
 									fontWeight: "bold",
-									position: "sticky",
-									left: 0,
 									backgroundColor: "#f5f5f5",
-									zIndex: 1,
 								}}>
 								TOTAL
 							</TableCell>
@@ -263,15 +247,18 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 				</Table>
 			</TableContainer>
 
-			<TablePagination
-				component="div"
-				count={filteredData.length}
-				page={page}
-				onPageChange={handleChangePage}
-				rowsPerPage={rowsPerPage}
-				onRowsPerPageChange={handleChangeRowsPerPage}
-				rowsPerPageOptions={[5, 10, 25, 50]}
-			/>
+			<Box sx={{ flexShrink: 0, borderTop: "1px solid #e0e0e0", backgroundColor: "white" }}>
+				<TablePagination
+					component="div"
+					count={filteredData.length}
+					page={page}
+					onPageChange={handleChangePage}
+					rowsPerPage={rowsPerPage}
+					rowsPerPageOptions={[]} // Hide rows per page selector
+					labelDisplayedRows={({ from, to, count }) => `${from}–${to} of ${count}`}
+					sx={{ minHeight: 52 }}
+				/>
+			</Box>
 		</Paper>
 	);
 };

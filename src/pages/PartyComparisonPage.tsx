@@ -13,9 +13,7 @@ import {
 	Alert,
 	Card,
 	CardContent,
-	Divider,
 	Container,
-	Stack,
 } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { fetchPartyComparison } from '../data/api';
@@ -144,138 +142,143 @@ const PartyComparisonPage: React.FC = () => {
 	};
 
 	return (
-		<Container sx={{ py: 4 }}>
-			<Typography variant="h4" gutterBottom fontWeight="bold">
+		<Container sx={{ py: 1.5, height: 'calc(100vh - 90px)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+			<Typography variant="h5" fontWeight="bold" sx={{ mb: 0.5 }}>
 				Party Comparison Analysis
 			</Typography>
-			<Typography variant="body1" color="text.secondary" paragraph>
+			<Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
 				Compare voting metrics between Republican-controlled, Democratic-controlled, and Split states
 			</Typography>
 
-			<Divider sx={{ my: 3 }} />
-
 			{/* Summary Cards */}
-			<Box sx={{ display: 'flex', gap: 3, mb: 4, flexWrap: 'wrap' }}>
-				<Box sx={{ flex: '1 1 300px' }}>
+			<Box sx={{ display: 'flex', gap: 2, mb: 1.5 }}>
+				<Box sx={{ flex: 1 }}>
 					<Card sx={{ bgcolor: 'error.light', color: 'white' }}>
-						<CardContent>
-							<Typography variant="h6">Republican States</Typography>
-							<Typography variant="h3">{data.republican.count}</Typography>
-							<Typography variant="body2">jurisdictions</Typography>
+						<CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
+							<Typography variant="subtitle1" fontWeight="bold">Republican States</Typography>
+							<Typography variant="h4" fontWeight="bold">{data.republican.count}</Typography>
+							<Typography variant="caption">jurisdictions</Typography>
 						</CardContent>
 					</Card>
 				</Box>
-				<Box sx={{ flex: '1 1 300px' }}>
-					<Card sx={{ bgcolor: 'primary.main', color: 'white' }}>
-						<CardContent>
-							<Typography variant="h6">Democratic States</Typography>
-							<Typography variant="h3">{data.democratic.count}</Typography>
-							<Typography variant="body2">jurisdictions</Typography>
+				<Box sx={{ flex: 1 }}>
+					<Card sx={{ bgcolor: '#1976d2', color: 'white' }}>
+						<CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
+							<Typography variant="subtitle1" fontWeight="bold">Democratic States</Typography>
+							<Typography variant="h4" fontWeight="bold">{data.democratic.count}</Typography>
+							<Typography variant="caption">jurisdictions</Typography>
 						</CardContent>
 					</Card>
 				</Box>
-				<Box sx={{ flex: '1 1 300px' }}>
+				<Box sx={{ flex: 1 }}>
 					<Card sx={{ bgcolor: 'grey.600', color: 'white' }}>
-						<CardContent>
-							<Typography variant="h6">Split Control</Typography>
-							<Typography variant="h3">{data.split.count}</Typography>
-							<Typography variant="body2">jurisdictions</Typography>
+						<CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
+							<Typography variant="subtitle1" fontWeight="bold">Split Control</Typography>
+							<Typography variant="h4" fontWeight="bold">{data.split.count}</Typography>
+							<Typography variant="caption">jurisdictions</Typography>
 						</CardContent>
 					</Card>
 				</Box>
 			</Box>
 
-			{/* Voting Metrics Chart */}
-			<Paper sx={{ p: 3, mb: 4 }}>
-				<Typography variant="h6" gutterBottom>
-					Voting Metrics Comparison
-				</Typography>
-				<ResponsiveContainer width="100%" height={400}>
-					<BarChart data={chartData}>
-						<CartesianGrid strokeDasharray="3 3" />
-						<XAxis dataKey="metric" />
-						<YAxis />
-						<Tooltip />
-						<Legend />
-						<Bar dataKey="Republican" fill={COLORS.Republican} />
-						<Bar dataKey="Democratic" fill={COLORS.Democratic} />
-						<Bar dataKey="Split" fill={COLORS.Split} />
-					</BarChart>
-				</ResponsiveContainer>
-			</Paper>
+			{/* Charts in two columns */}
+			<Box sx={{ display: 'flex', gap: 2, mb: 1.5, flex: '1 1 auto', minHeight: 0 }}>
+				{/* Voting Metrics Chart */}
+				<Paper sx={{ p: 2, flex: 1, display: 'flex', flexDirection: 'column' }}>
+					<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+						Voting Metrics Comparison
+					</Typography>
+					<Box sx={{ flex: 1, minHeight: 0 }}>
+						<ResponsiveContainer width="100%" height="100%">
+							<BarChart data={chartData}>
+								<CartesianGrid strokeDasharray="3 3" />
+								<XAxis dataKey="metric" tick={{ fontSize: 12 }} />
+								<YAxis tick={{ fontSize: 12 }} />
+								<Tooltip />
+								<Legend wrapperStyle={{ fontSize: '12px' }} />
+								<Bar dataKey="Republican" fill={COLORS.Republican} />
+								<Bar dataKey="Democratic" fill={COLORS.Democratic} />
+								<Bar dataKey="Split" fill={COLORS.Split} />
+							</BarChart>
+						</ResponsiveContainer>
+					</Box>
+				</Paper>
 
-			{/* Felony Voting Policies Chart */}
-			<Paper sx={{ p: 3, mb: 4 }}>
-				<Typography variant="h6" gutterBottom>
-					Felony Voting Policies
-				</Typography>
-				<ResponsiveContainer width="100%" height={300}>
-					<BarChart data={felonyChartData}>
-						<CartesianGrid strokeDasharray="3 3" />
-						<XAxis dataKey="category" />
-						<YAxis />
-						<Tooltip />
-						<Legend />
-						<Bar dataKey="Republican" fill={COLORS.Republican} />
-						<Bar dataKey="Democratic" fill={COLORS.Democratic} />
-						<Bar dataKey="Split" fill={COLORS.Split} />
-					</BarChart>
-				</ResponsiveContainer>
-			</Paper>
+				{/* Felony Voting Policies Chart */}
+				<Paper sx={{ p: 2, flex: 1, display: 'flex', flexDirection: 'column' }}>
+					<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+						Felony Voting Policies
+					</Typography>
+					<Box sx={{ flex: 1, minHeight: 0 }}>
+						<ResponsiveContainer width="100%" height="100%">
+							<BarChart data={felonyChartData}>
+								<CartesianGrid strokeDasharray="3 3" />
+								<XAxis dataKey="category" tick={{ fontSize: 12 }} />
+								<YAxis tick={{ fontSize: 12 }} />
+								<Tooltip />
+								<Legend wrapperStyle={{ fontSize: '12px' }} />
+								<Bar dataKey="Republican" fill={COLORS.Republican} />
+								<Bar dataKey="Democratic" fill={COLORS.Democratic} />
+								<Bar dataKey="Split" fill={COLORS.Split} />
+							</BarChart>
+						</ResponsiveContainer>
+					</Box>
+				</Paper>
+			</Box>
 
 			{/* Summary Table */}
-			<Paper sx={{ p: 3 }}>
-				<Typography variant="h6" gutterBottom>
+			<Paper sx={{ p: 2 }}>
+				<Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
 					Summary Statistics
 				</Typography>
 				<TableContainer>
-					<Table>
+					<Table size="small">
 						<TableHead>
 							<TableRow>
-								<TableCell><strong>Metric</strong></TableCell>
-								<TableCell align="right"><strong>Republican</strong></TableCell>
-								<TableCell align="right"><strong>Democratic</strong></TableCell>
-								<TableCell align="right"><strong>Split</strong></TableCell>
+								<TableCell sx={{ fontWeight: "bold", backgroundColor: "#616161", color: "white" }}>Metric</TableCell>
+								<TableCell align="right" sx={{ fontWeight: "bold", backgroundColor: "#616161", color: "white" }}>Republican</TableCell>
+								<TableCell align="right" sx={{ fontWeight: "bold", backgroundColor: "#616161", color: "white" }}>Democratic</TableCell>
+								<TableCell align="right" sx={{ fontWeight: "bold", backgroundColor: "#616161", color: "white" }}>Split</TableCell>
 							</TableRow>
 						</TableHead>
 						<TableBody>
-							<TableRow>
+							<TableRow hover sx={{ "&:nth-of-type(even)": { backgroundColor: "#fafafa" } }}>
 								<TableCell>Jurisdictions</TableCell>
 								<TableCell align="right">{data.republican.count}</TableCell>
 								<TableCell align="right">{data.democratic.count}</TableCell>
 								<TableCell align="right">{data.split.count}</TableCell>
 							</TableRow>
-							<TableRow>
+							<TableRow hover sx={{ "&:nth-of-type(even)": { backgroundColor: "#fafafa" } }}>
 								<TableCell>Avg Registration Rate (%)</TableCell>
 								<TableCell align="right">{data.republican.avgRegistrationRate.toFixed(1)}</TableCell>
 								<TableCell align="right">{data.democratic.avgRegistrationRate.toFixed(1)}</TableCell>
 								<TableCell align="right">{data.split.avgRegistrationRate.toFixed(1)}</TableCell>
 							</TableRow>
-							<TableRow>
+							<TableRow hover sx={{ "&:nth-of-type(even)": { backgroundColor: "#fafafa" } }}>
 								<TableCell>Avg Turnout (%)</TableCell>
 								<TableCell align="right">{data.republican.avgTurnout.toFixed(1)}</TableCell>
 								<TableCell align="right">{data.democratic.avgTurnout.toFixed(1)}</TableCell>
 								<TableCell align="right">{data.split.avgTurnout.toFixed(1)}</TableCell>
 							</TableRow>
-							<TableRow>
+							<TableRow hover sx={{ "&:nth-of-type(even)": { backgroundColor: "#fafafa" } }}>
 								<TableCell>Avg Mail Ballot Rate (%)</TableCell>
 								<TableCell align="right">{data.republican.avgMailBallotRate.toFixed(1)}</TableCell>
 								<TableCell align="right">{data.democratic.avgMailBallotRate.toFixed(1)}</TableCell>
 								<TableCell align="right">{data.split.avgMailBallotRate.toFixed(1)}</TableCell>
 							</TableRow>
-							<TableRow>
+							<TableRow hover sx={{ "&:nth-of-type(even)": { backgroundColor: "#fafafa" } }}>
 								<TableCell>Avg Drop Box Rate (%)</TableCell>
 								<TableCell align="right">{data.republican.avgDropBoxRate.toFixed(1)}</TableCell>
 								<TableCell align="right">{data.democratic.avgDropBoxRate.toFixed(1)}</TableCell>
 								<TableCell align="right">{data.split.avgDropBoxRate.toFixed(1)}</TableCell>
 							</TableRow>
-							<TableRow>
+							<TableRow hover sx={{ "&:nth-of-type(even)": { backgroundColor: "#fafafa" } }}>
 								<TableCell>Restrictive Felony Policies</TableCell>
 								<TableCell align="right">{data.republican.felonyRestrictiveCount}</TableCell>
 								<TableCell align="right">{data.democratic.felonyRestrictiveCount}</TableCell>
 								<TableCell align="right">{data.split.felonyRestrictiveCount}</TableCell>
 							</TableRow>
-							<TableRow>
+							<TableRow hover sx={{ "&:nth-of-type(even)": { backgroundColor: "#fafafa" } }}>
 								<TableCell>Permissive Felony Policies</TableCell>
 								<TableCell align="right">{data.republican.felonyPermissiveCount}</TableCell>
 								<TableCell align="right">{data.democratic.felonyPermissiveCount}</TableCell>

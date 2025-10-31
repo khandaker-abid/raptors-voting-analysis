@@ -12,8 +12,10 @@ import {
 	Typography,
 	TextField,
 	InputAdornment,
+	Tooltip,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import type { VotingEquipmentSummaryData } from "../data/votingEquipmentSummaryData.ts";
 import { fetchEquipmentSummary } from "../data/api.ts";
 
@@ -102,7 +104,7 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 							<TableCell
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									position: "sticky",
 									left: 0,
@@ -114,7 +116,7 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 							<TableCell
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									minWidth: 320
 								}}>
@@ -124,7 +126,7 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Quantity
@@ -133,65 +135,74 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Age (years)
 							</TableCell>
 							<TableCell
-								align="center"
+								align="left"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									minWidth: 220
 								}}>
 								OS
 							</TableCell>
 							<TableCell
-								align="center"
+								align="left"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
+									minWidth: 180
 								}}>
 								Certification
 							</TableCell>
 							<TableCell
-								align="center"
+								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Scan Rate
 							</TableCell>
 							<TableCell
-								align="center"
+								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Error Rate
 							</TableCell>
 							<TableCell
-								align="center"
+								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Reliability
 							</TableCell>
 							<TableCell
-								align="center"
+								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
-								Quality Measure
+								<Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.5 }}>
+									Quality Measure
+									<Tooltip
+										title="Equipment quality score on a 0-1 scale, with 1 being the highest quality. Calculated based on age, reliability, and certification level."
+										arrow
+										placement="top">
+										<InfoOutlinedIcon sx={{ fontSize: 16, cursor: "help" }} />
+									</Tooltip>
+								</Box>
 							</TableCell>
 						</TableRow>
 					</TableHead>
@@ -272,24 +283,21 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 									</TableCell>
 
 									<TableCell align="right">
-										<Typography variant="body2">
-											{row.scanRate}
-										</Typography>
+										{row.scanRate > 0 ? row.scanRate : 'N/A'}
 									</TableCell>
 
-									<TableCell
-										align="right"  >
-										{row.errorRate}
+									<TableCell align="right">
+										{row.errorRate > 0 ? `${row.errorRate}%` : '0%'}
 									</TableCell>
 
-									<TableCell
-										align="right"  >
-										{row.reliability} {/* had toFixed before */}
+									<TableCell align="right">
+										{row.reliability > 0 ? `${row.reliability}%` : '0%'}
 									</TableCell>
 
-									<TableCell
-										align="right"  >
-										{row.qualityMeasure} {/* had toFixed before */}
+									<TableCell align="right">
+										{typeof row.qualityMeasure === 'number'
+											? row.qualityMeasure.toFixed(2)
+											: row.qualityMeasure}
 									</TableCell>
 
 								</TableRow>

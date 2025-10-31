@@ -7,20 +7,15 @@ import {
 	Tabs,
 	Tab,
 	Alert,
-	Accordion,
-	AccordionSummary,
-	AccordionDetails,
 	Button,
 	CircularProgress,
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 // Core state helpers
 import {
 	stateData,
 	getStateCenter,
 	isDetailState,
-	getDetailStateDescription,
 } from "../data/stateData";
 import { getCountyCount } from "../data/stateShapes";
 
@@ -30,7 +25,6 @@ import {
 	getProvisionalBallotCategories,
 	getChoroplethData,
 } from "../data/provisionalBallotData";
-import { getActiveVotersData } from "../data/activeVotersData";
 import StateMap from "../components/StateMap";
 import ProvisionalBallotBarChart from "../charts/ProvisionalBallotBarChart";
 import ProvisionalBallotTable from "../tables/ProvisionalBallotTable";
@@ -44,14 +38,13 @@ import VoterRegistrationChloroplethMap from "../components/VoterRegistrationChlo
 
 // NEW (GUI-8/9/16/18)
 import {
+	fetchActiveVoters,
 	fetchPollbookDeletions,
 	fetchMailRejections,
 	fetchRegistrationTrends,
 	fetchBlockBubbles,
-	fetchEquipmentVsRejected,
 	fetchDropboxBubbles,
 } from "../data/api";
-import { calculatePowerRegression } from "../utils/regression";
 import PollbookDeletionsBarChart from "../charts/PollbookDeletionsBarChart";
 import PollbookDeletionsTable from "../tables/PollbookDeletionsTable";
 import MailRejectionsBarChart from "../charts/MailRejectionsBarChart";
@@ -59,8 +52,6 @@ import MailRejectionsTable from "../tables/MailRejectionsTable";
 import PercentChoropleth from "../components/PercentChoropleth";
 import VoterRegistrationTrendChart from "../charts/VoterRegistrationTrendChart";
 import VoterRegistrationBubbleOverlay from "../components/VoterRegistrationBubbleOverlay";
-// New imports for GUI-25 to GUI-27
-import EquipmentRejectedBubbleChart from "../charts/EquipmentRejectedBubbleChart";
 import ResetButton from "../components/ResetButton";
 
 // New component imports for integration (GUI-10, GUI-19, GUI-24, GUI-27, GUI-28, GUI-29)
@@ -72,6 +63,7 @@ import EIEquipmentChart from "../charts/EIEquipmentChart";
 import EIRejectedBallotsChart from "../charts/EIRejectedBallotsChart";
 // Types
 import type {
+	ActiveVotersRow,
 	PollbookDeletionRow,
 	MailRejectionRow,
 	RegistrationTrendPayload,
@@ -144,10 +136,11 @@ const StateDetailPage: React.FC = () => {
 		return getChoroplethData(decodedStateName);
 	}, [decodedStateName]);
 
-	// Get active voters data for detail states
-	const activeVotersData = useMemo(() => {
-		return isDetail ? getActiveVotersData(decodedStateName) : null;
-	}, [decodedStateName, isDetail]);
+	// State for active voters data - will be fetched from API
+	const [activeVotersData, setActiveVotersData] = React.useState<
+		ActiveVotersRow[] | undefined
+	>(undefined);
+	const [activeVotersErr, setActiveVotersErr] = React.useState<string | null>(null);
 
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
 		setTabValue(newValue);
@@ -177,10 +170,6 @@ const StateDetailPage: React.FC = () => {
 	// State for RegisteredVotersList dialog (GUI-19)
 	const [selectedRegion, setSelectedRegion] = React.useState<string | null>(null);
 
-	// State for GUI-25: Equipment vs Rejected Ballots
-	const [equipVsRejectedData, setEquipVsRejectedData] = React.useState<any[]>([]);
-	const [equipVsRejectedLoading, setEquipVsRejectedLoading] = React.useState(false);
-
 	// State for GUI-24: Dropbox Bubble Chart
 	const [dropboxBubbleData, setDropboxBubbleData] = React.useState<any[]>([]);
 	const [dropboxBubbleLoading, setDropboxBubbleLoading] = React.useState(false);
@@ -189,6 +178,8 @@ const StateDetailPage: React.FC = () => {
 		if (!decodedStateName) return;
 
 		// reset to loading on state change
+		setActiveVotersData(undefined);
+		setActiveVotersErr(null);
 		setPollbookRows(undefined);
 		setMailRows(undefined);
 		setPollbookErr(null);
@@ -196,13 +187,24 @@ const StateDetailPage: React.FC = () => {
 		setRegTrends(null);
 		setBlockBubbles(null);
 		setShowBubbles(false);
-		setEquipVsRejectedData([]);
-		setEquipVsRejectedLoading(true);
 		setDropboxBubbleData([]);
 		setDropboxBubbleLoading(true);
 
 		let alive = true;
 		(async () => {
+			// Fetch active voters data for detail states
+			if (isDetail) {
+				try {
+					const rows = await fetchActiveVoters(decodedStateName);
+					if (alive) setActiveVotersData(rows);
+				} catch (e: any) {
+					if (alive) {
+						setActiveVotersErr(e?.message || "Failed to fetch active voters.");
+						setActiveVotersData([]); // stop infinite loading
+					}
+				}
+			}
+
 			try {
 				const rows = await fetchPollbookDeletions(decodedStateName);
 				if (alive) setPollbookRows(rows);
@@ -237,20 +239,6 @@ const StateDetailPage: React.FC = () => {
 				if (alive) setBlockBubbles(null);
 			}
 
-			// GUI-25: Fetch equipment vs rejected ballots
-			try {
-				const equipData = await fetchEquipmentVsRejected(decodedStateName);
-				if (alive) {
-					setEquipVsRejectedData(equipData);
-					setEquipVsRejectedLoading(false);
-				}
-			} catch (e) {
-				if (alive) {
-					setEquipVsRejectedData([]);
-					setEquipVsRejectedLoading(false);
-				}
-			}
-
 			// GUI-24: Fetch dropbox bubble data (for Arkansas & Maryland)
 			if (decodedStateName === "Arkansas" || decodedStateName === "Maryland") {
 				try {
@@ -273,7 +261,7 @@ const StateDetailPage: React.FC = () => {
 		return () => {
 			alive = false;
 		};
-	}, [decodedStateName]);
+	}, [decodedStateName, isDetail]);
 
 	if (!stateInfo) {
 		return (
@@ -301,9 +289,9 @@ const StateDetailPage: React.FC = () => {
 	const IDX_EI_REJECTED = isPreclearance ? idx++ : -1; // NEW - GUI-29
 
 	return (
-		<Box sx={{ py: 0, px: 0, width: "100%", margin: 0 }}>
+		<Box sx={{ py: 0, px: 0, width: "100%", margin: 0, height: "100%" }}>
 			{/* Organized Content with Category Groups */}
-			<Paper sx={{ width: "100%", mb: 0 }}>
+			<Paper sx={{ width: "100%", mb: 0, height: "100%" }}>
 				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
 					<Tabs
 						value={tabValue}
@@ -326,11 +314,68 @@ const StateDetailPage: React.FC = () => {
 
 				{/* Overview Tab */}
 				<TabPanel value={tabValue} index={IDX_OVERVIEW}>
-					<Box sx={{ p: 0 }}>
-						{/* Map and State Info Side by Side */}
-						<Box display="flex" gap={3} alignItems="flex-start" flexWrap="wrap">
-							{/* Map Section */}
-							<Box sx={{ flex: 1, minWidth: 400 }}>
+					<Box sx={{ p: 0, height: "calc(100vh - 180px)", display: "flex", flexDirection: "column" }}>
+						{/* Top Section: State Info Cards - Inline and Ultra Compact */}
+						<Box sx={{ display: "flex", gap: 1, flexWrap: "nowrap", flexShrink: 0, mb: 0, px: 0.5, py: 0.5, bgcolor: "background.paper" }}>
+							<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+								<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem", fontWeight: 500 }}>
+									State Type:
+								</Typography>
+								<Typography variant="body2" fontWeight={600} sx={{ fontSize: "0.8rem" }}>
+									{isDetail ? "Detailed Analysis" : "EAVS State"}
+								</Typography>
+							</Box>
+							{stateInfo.cvapPercentage && (
+								<>
+									<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem" }}>|</Typography>
+									<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+										<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem", fontWeight: 500 }}>
+											CVAP:
+										</Typography>
+										<Typography variant="body2" fontWeight={600} sx={{ fontSize: "0.8rem" }}>
+											{stateInfo.cvapPercentage}%
+										</Typography>
+									</Box>
+								</>
+							)}
+							{isDetail && (
+								<>
+									<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem" }}>|</Typography>
+									<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+										<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem", fontWeight: 500 }}>
+											Counties/Towns:
+										</Typography>
+										<Typography variant="body2" fontWeight={600} sx={{ fontSize: "0.8rem" }}>
+											{getCountyCount(decodedStateName)}
+										</Typography>
+									</Box>
+								</>
+							)}
+						</Box>
+
+						{/* Main Layout: Map + Data Visualization */}
+						<Box
+							sx={{
+								display: "flex",
+								gap: 0.5,
+								flexDirection: { xs: "column", lg: "row" },
+								alignItems: "stretch",
+								flex: 1,
+								minHeight: 0,
+								height: "100%",
+								overflow: "hidden",
+								px: 0.5,
+								pb: 0.5,
+							}}
+						>
+							{/* Left Side: Map - Give it MUCH more space */}
+							<Box sx={{
+								flex: 7,
+								minWidth: { xs: "100%", lg: "70%" },
+								display: "flex",
+								minHeight: 0,
+								height: "100%",
+							}}>
 								<StateMap
 									stateName={decodedStateName}
 									center={stateCenter}
@@ -338,130 +383,120 @@ const StateDetailPage: React.FC = () => {
 								/>
 							</Box>
 
-							{/* State Overview Cards */}
-							<Box sx={{ flex: 0, minWidth: 300, maxWidth: 400 }}>
-								<Box display="flex" flexDirection="column" gap={2}>
-									<Paper sx={{ p: 2 }}>
-										<Typography variant="subtitle2" color="text.secondary">
-											State Type
+							{/* Right Side: EAVS Data Visualization - Smaller sidebar */}
+							<Box sx={{ flex: 3, minWidth: { xs: "100%", lg: "28%" }, display: "flex", minHeight: 0 }}>
+								{isDetail ? (
+									<Paper elevation={2} sx={{ p: 2, height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+										<Typography variant="h5" sx={{ mb: 1, fontSize: "1.15rem", fontWeight: 600 }}>
+											EAVS Data Summary
 										</Typography>
-										<Typography variant="h6">
-											{isDetail ? "Detailed Analysis Available" : "Basic View"}
+										<Typography variant="body2" color="text.secondary" sx={{ mb: 1.25, fontSize: "0.9rem", lineHeight: 1.45 }}>
+											Comprehensive EAVS data available
 										</Typography>
-										{isDetail && (
-											<Typography
-												variant="body2"
-												color="text.secondary"
-												sx={{ mt: 1 }}
-											>
-												{getDetailStateDescription(decodedStateName)}
-											</Typography>
-										)}
+
+										{/* Quick Stats */}
+										<Box sx={{ display: "flex", flexDirection: "column", gap: 1.25, overflow: "auto" }}>
+											{provisionalData && provisionalData.length > 0 && (
+												<Paper variant="outlined" sx={{ p: 1.25, bgcolor: "rgba(25, 118, 210, 0.08)" }}>
+													<Typography variant="subtitle2" color="primary" fontWeight={600} sx={{ fontSize: "0.85rem" }}>
+														Provisional Ballots (2024)
+													</Typography>
+													<Typography variant="h4" sx={{ my: 0.75, fontSize: "1.75rem", fontWeight: 700 }}>
+														{provisionalData.reduce((sum, d) => sum + (d.E1a || 0), 0).toLocaleString()}
+													</Typography>
+													<Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
+														Total across all units
+													</Typography>
+												</Paper>
+											)}
+											{activeVotersData && activeVotersData.length > 0 && !activeVotersErr && (
+												<Paper variant="outlined" sx={{ p: 1.25, bgcolor: "rgba(46, 125, 50, 0.08)" }}>
+													<Typography variant="subtitle2" color="success.dark" fontWeight={600} sx={{ fontSize: "0.85rem" }}>
+														Active Registered Voters
+													</Typography>
+													<Typography variant="h4" sx={{ my: 0.75, fontSize: "1.75rem", fontWeight: 700 }}>
+														{activeVotersData.reduce((sum, d) => sum + (d.activeVoters || 0), 0).toLocaleString()}
+													</Typography>
+													<Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem" }}>
+														Currently active
+													</Typography>
+												</Paper>
+											)}
+
+											<Alert severity="info" icon={false} sx={{ py: 1, px: 1.25 }}>
+												<Typography variant="subtitle2" fontWeight={600} sx={{ fontSize: "0.85rem", display: "block", mb: 0.75 }}>
+													Available Data:
+												</Typography>
+												<Typography variant="body2" component="div" sx={{ fontSize: "0.8rem", lineHeight: 1.6 }}>
+													• Provisional Ballots<br />
+													• Active/Inactive Voters<br />
+													• Pollbook Deletions<br />
+													• Mail Ballot Rejections<br />
+													• Voting Equipment<br />
+													• Equipment Types<br />
+													{isDetail && "• Voter Registration"}
+													{isPartyState && <><br />• Drop Box Analysis</>}
+													{isPreclearance && <><br />• VRA/Gingles Analysis<br />• Ecological Inference</>}
+												</Typography>
+											</Alert>
+										</Box>
 									</Paper>
-									{stateInfo.cvapPercentage && (
-										<Paper sx={{ p: 2 }}>
-											<Typography variant="subtitle2" color="text.secondary">
-												CVAP %
+								) : (
+									<Paper elevation={2} sx={{ p: 2, height: "100%", width: "100%", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+										<Typography variant="h5" gutterBottom textAlign="center" sx={{ fontSize: "1.15rem", mb: 1.25 }}>
+											EAVS State Data
+										</Typography>
+										<Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mb: 1.75, fontSize: "0.95rem" }}>
+											Basic EAVS data available
+										</Typography>
+
+										<Alert severity="info" sx={{ mb: 1.5, py: 1, px: 1.5 }}>
+											<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.75, fontSize: "0.9rem" }}>
+												Available:
 											</Typography>
-											<Typography variant="h6">
-												{stateInfo.cvapPercentage}%
+											<Typography variant="body2" sx={{ fontSize: "0.85rem", lineHeight: 1.5 }}>
+												• State voting equipment<br />
+												• Basic EAVS statistics<br />
+												• Equipment history
 											</Typography>
-										</Paper>
-									)}
-									{isDetail && (
-										<Paper sx={{ p: 2 }}>
-											<Typography variant="subtitle2" color="text.secondary">
-												Counties/Towns
+										</Alert>
+
+										<Alert severity="warning" sx={{ py: 1, px: 1.5 }}>
+											<Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.75, fontSize: "0.9rem" }}>
+												Enhanced for RI, MD, AR:
 											</Typography>
-											<Typography variant="h6">
-												{getCountyCount(decodedStateName)}
+											<Typography variant="body2" sx={{ fontSize: "0.85rem", lineHeight: 1.5 }}>
+												• County boundaries<br />
+												• Full voter registration<br />
+												• Demographics
 											</Typography>
-										</Paper>
-									)}
-								</Box>
+										</Alert>
+									</Paper>
+								)}
 							</Box>
 						</Box>
 					</Box>
 				</TabPanel>
-				<TabPanel value={tabValue} index={4}>
-					{(() => {
-						// Calculate regression lines for equipment vs rejected
-						const equipRegressionLines = React.useMemo(() => {
-							if (equipVsRejectedData.length === 0) return [];
 
-							// Separate data by party
-							const demData = equipVsRejectedData.filter((d: any) => d.party === "D");
-							const repData = equipVsRejectedData.filter((d: any) => d.party === "R");
-
-							const lines = [];
-
-							// Calculate regression for Democrats
-							if (demData.length >= 3) {
-								const demPoints = demData.map((d: any) => ({
-									x: d.equipmentQuality,
-									y: d.rejectedPct,
-								}));
-								const demRegression = calculatePowerRegression(demPoints);
-								if (demRegression) {
-									lines.push({
-										party: "D" as const,
-										coefficients: { a: demRegression.a, b: demRegression.b },
-									});
-								}
-							}
-
-							// Calculate regression for Republicans
-							if (repData.length >= 3) {
-								const repPoints = repData.map((d: any) => ({
-									x: d.equipmentQuality,
-									y: d.rejectedPct,
-								}));
-								const repRegression = calculatePowerRegression(repPoints);
-								if (repRegression) {
-									lines.push({
-										party: "R" as const,
-										coefficients: { a: repRegression.a, b: repRegression.b },
-									});
-								}
-							}
-
-							return lines;
-						}, [equipVsRejectedData]);
-
-						return (
-							<>
-								{equipVsRejectedLoading && (
-									<Box display="flex" justifyContent="center" p={4}>
-										<CircularProgress />
-									</Box>
-								)}
-								{!equipVsRejectedLoading && equipVsRejectedData.length === 0 && (
-									<Alert severity="info">
-										No equipment vs rejected ballot data available for this state.
-									</Alert>
-								)}
-								{!equipVsRejectedLoading && equipVsRejectedData.length > 0 && (
-									<EquipmentRejectedBubbleChart
-										data={equipVsRejectedData}
-										regressionLines={equipRegressionLines}
-									/>
-								)}
-							</>
-						);
-					})()}
-				</TabPanel>
 				{/* Provisional Ballots Tab */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_PROVISIONAL}>
-						<Box sx={{ p: 0 }}>
+						<Box sx={{
+							p: 0,
+							display: "flex",
+							flexDirection: "column",
+							gap: 1.5,
+							minHeight: "calc(100vh - 280px)",
+						}}>
 							<Box
 								sx={{
 									display: "flex",
-									gap: 2,
+									gap: 1.5,
 									flexDirection: { xs: "column", md: "row" },
 									alignItems: "stretch",
 									justifyContent: "space-between",
-									mb: 4,
+									height: { xs: "auto", md: "420px" },
+									flexShrink: 0,
 								}}
 							>
 								<Box
@@ -469,6 +504,7 @@ const StateDetailPage: React.FC = () => {
 										flex: 1,
 										minWidth: { xs: "100%", md: "calc(50% - 8px)" },
 										maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
+										height: "100%",
 									}}
 								>
 									<ProvisionalBallotBarChart
@@ -481,6 +517,7 @@ const StateDetailPage: React.FC = () => {
 										flex: 1,
 										minWidth: { xs: "100%", md: "calc(50% - 8px)" },
 										maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
+										height: "100%",
 									}}
 								>
 									<ProvisionalBallotChoroplethMap
@@ -490,72 +527,69 @@ const StateDetailPage: React.FC = () => {
 								</Box>
 							</Box>
 
-							<ProvisionalBallotTable data={provisionalData || []} />
+							<Box sx={{ flex: 1, display: "flex" }}>
+								<ProvisionalBallotTable data={provisionalData || []} />
+							</Box>
 						</Box>
 					</TabPanel>
 				)}
-				{/* Active Voters Tab (keeps your teammate's layout; no scrolling) */}
+				{/* Active Voters Tab - Matching Provisional Ballot layout */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_ACTIVE}>
-						<Box sx={{ p: 0 }}>
-							<Accordion defaultExpanded>
-								<AccordionSummary expandIcon={<ExpandMoreIcon />}>
-									<Typography variant="h6">Charts & Maps</Typography>
-								</AccordionSummary>
-								<AccordionDetails>
-									<Box
-										sx={{
-											display: "flex",
-											gap: 2,
-											flexDirection: { xs: "column", md: "row" },
-											alignItems: "stretch",
-											justifyContent: "space-between",
-										}}
-									>
-										<Box
-											sx={{
-												flex: 1,
-												minWidth: { xs: "100%", md: "calc(50% - 8px)" },
-												maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
-											}}
-										>
-											<ActiveVotersBarChart
-												data={activeVotersData || []}
-												stateName={decodedStateName}
-											/>
-										</Box>
-										<Box
-											sx={{
-												flex: 1,
-												minWidth: { xs: "100%", md: "calc(50% - 8px)" },
-												maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
-											}}
-										>
-											<ActiveVotersChoroplethMap
-												stateName={decodedStateName}
-												data={activeVotersData || []}
-											/>
-										</Box>
-									</Box>
-								</AccordionDetails>
-							</Accordion>
-
-							<Accordion>
-								<AccordionSummary expandIcon={<ExpandMoreIcon />}>
-									<Typography variant="h6">Data Table</Typography>
-								</AccordionSummary>
-								<AccordionDetails>
-									<ActiveVotersTable
+						<Box sx={{
+							p: 0,
+							display: "flex",
+							flexDirection: "column",
+							gap: 1.5,
+							minHeight: "calc(100vh - 280px)",
+						}}>
+							<Box
+								sx={{
+									display: "flex",
+									gap: 1.5,
+									flexDirection: { xs: "column", md: "row" },
+									alignItems: "stretch",
+									justifyContent: "space-between",
+									height: { xs: "auto", md: "420px" },
+									flexShrink: 0,
+								}}
+							>
+								<Box
+									sx={{
+										flex: 1,
+										minWidth: { xs: "100%", md: "calc(50% - 8px)" },
+										maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
+										height: "100%",
+									}}
+								>
+									<ActiveVotersBarChart
 										data={activeVotersData || []}
 										stateName={decodedStateName}
 									/>
-								</AccordionDetails>
-							</Accordion>
+								</Box>
+								<Box
+									sx={{
+										flex: 1,
+										minWidth: { xs: "100%", md: "calc(50% - 8px)" },
+										maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
+										height: "100%",
+									}}
+								>
+									<ActiveVotersChoroplethMap
+										stateName={decodedStateName}
+										data={activeVotersData || []}
+									/>
+								</Box>
+							</Box>
+
+							<Box sx={{ flex: 1, display: "flex" }}>
+								<ActiveVotersTable data={activeVotersData || []} stateName={decodedStateName} />
+							</Box>
 						</Box>
 					</TabPanel>
 				)}
 
-				{/* Pollbook Deletions Tab (GUI-8) */}
+				{/* Pollbook Deletions Tab (GUI-8) - Matching Active Voters layout */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_POLLBOOK}>
 						{pollbookRows === undefined ? (
@@ -563,35 +597,75 @@ const StateDetailPage: React.FC = () => {
 						) : pollbookErr ? (
 							<Alert severity="warning">{pollbookErr}</Alert>
 						) : pollbookRows.length === 0 ? (
-							<Alert severity="warning">No pollbook deletions found for 2024.</Alert>
+							<Alert severity="warning">
+								No pollbook deletions data available. Please ensure the preprocessing scripts have been run to populate the EAVS database.
+							</Alert>
 						) : (
-							<>
-								<Box display="flex" gap={2} flexDirection={{ xs: "column", md: "row" }}>
-									<Box sx={{ flex: 1 }}>
+							<Box
+								sx={{
+									p: 0,
+									display: "flex",
+									flexDirection: "column",
+									gap: 1.5,
+									minHeight: "calc(100vh - 280px)",
+								}}
+							>
+								{pollbookRows[0]?.dataYear && pollbookRows[0].dataYear !== 2024 && (
+									<Alert severity="info">
+										Note: Displaying {pollbookRows[0].dataYear} data (2024 data not available)
+									</Alert>
+								)}
+								<Box
+									sx={{
+										display: "flex",
+										gap: 1.5,
+										flexDirection: { xs: "column", md: "row" },
+										alignItems: "stretch",
+										justifyContent: "space-between",
+										height: { xs: "auto", md: "420px" },
+										flexShrink: 0,
+									}}
+								>
+									<Box
+										sx={{
+											flex: 1,
+											minWidth: { xs: "100%", md: "calc(50% - 8px)" },
+											maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
+											height: "100%",
+										}}
+									>
 										<PollbookDeletionsBarChart
 											stateName={decodedStateName}
 											data={pollbookRows}
 										/>
 									</Box>
-									<Box sx={{ flex: 1 }}>
+									<Box
+										sx={{
+											flex: 1,
+											minWidth: { xs: "100%", md: "calc(50% - 8px)" },
+											maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
+											height: "100%",
+										}}
+									>
 										<PercentChoropleth
 											stateName={decodedStateName}
 											data={pollbookRows.map((r) => ({
 												geographicUnit: r.geographicUnit,
-												percentOfTotal: r.deletionPercentage,
+												percentOfTotal: r.deletionPercentage ?? 0,
 											}))}
 										/>
 									</Box>
 								</Box>
-								<Box sx={{ mt: 2 }}>
+
+								<Box sx={{ flex: 1, display: "flex" }}>
 									<PollbookDeletionsTable data={pollbookRows} />
 								</Box>
-							</>
+							</Box>
 						)}
 					</TabPanel>
 				)}
 
-				{/* Mail Rejections Tab (GUI-9) */}
+				{/* Mail Rejections Tab (GUI-9) - Matching Active Voters layout */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_MAIL}>
 						{mailRows === undefined ? (
@@ -599,30 +673,70 @@ const StateDetailPage: React.FC = () => {
 						) : mailErr ? (
 							<Alert severity="warning">{mailErr}</Alert>
 						) : mailRows.length === 0 ? (
-							<Alert severity="warning">No mail ballot rejections found for 2024.</Alert>
+							<Alert severity="warning">
+								No mail ballot rejections data available. Please ensure the preprocessing scripts have been run to populate the EAVS database.
+							</Alert>
 						) : (
-							<>
-								<Box display="flex" gap={2} flexDirection={{ xs: "column", md: "row" }}>
-									<Box sx={{ flex: 1 }}>
+							<Box sx={{
+								p: 0,
+								display: "flex",
+								flexDirection: "column",
+								gap: 1.5,
+								minHeight: "calc(100vh - 280px)",
+							}}>
+								{mailRows[0]?.dataYear && mailRows[0].dataYear !== 2024 && (
+									<Alert severity="info">
+										Note: Displaying {mailRows[0].dataYear} data (2024 data not available)
+									</Alert>
+								)}
+								<Box
+									sx={{
+										display: "flex",
+										gap: 1.5,
+										flexDirection: { xs: "column", md: "row" },
+										alignItems: "stretch",
+										justifyContent: "space-between",
+										height: { xs: "auto", md: "420px" },
+										flexShrink: 0,
+									}}
+								>
+									<Box
+										sx={{
+											flex: 1,
+											minWidth: { xs: "100%", md: "calc(50% - 8px)" },
+											maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
+											height: "100%",
+										}}
+									>
 										<MailRejectionsBarChart
 											stateName={decodedStateName}
 											data={mailRows}
 										/>
 									</Box>
-									<Box sx={{ flex: 1 }}>
+									<Box
+										sx={{
+											flex: 1,
+											minWidth: { xs: "100%", md: "calc(50% - 8px)" },
+											maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
+											height: "100%",
+										}}
+									>
 										<PercentChoropleth
 											stateName={decodedStateName}
 											data={mailRows.map((r) => ({
 												geographicUnit: r.geographicUnit,
 												percentOfTotal: r.rejectionPercentage,
 											}))}
+											title="Mail Ballot Rejections Distribution"
+											description="Interactive choropleth map showing mail ballot rejection distribution across counties. Hover over counties for detailed information."
 										/>
 									</Box>
 								</Box>
-								<Box sx={{ mt: 2 }}>
+
+								<Box sx={{ flex: 1, display: "flex" }}>
 									<MailRejectionsTable data={mailRows} />
 								</Box>
-							</>
+							</Box>
 						)}
 					</TabPanel>
 				)}
@@ -727,6 +841,7 @@ const StateDetailPage: React.FC = () => {
 							<VotingEquipmentTypeChoropleth
 								stateName={decodedStateName}
 								data={[]}
+								geoJsonData={undefined}
 							/>
 							{/* Color Legend */}
 							<Box sx={{ mt: 2, p: 2, bgcolor: "background.paper" }}>
@@ -777,7 +892,7 @@ const StateDetailPage: React.FC = () => {
 							) : (
 								<DropboxBubbleChart
 									data={dropboxBubbleData}
-									stateName={decodedStateName}
+									regressionLines={[]}
 								/>
 							)}
 						</Box>
@@ -802,6 +917,8 @@ const StateDetailPage: React.FC = () => {
 							<GinglesChart
 								stateName={decodedStateName}
 								data={[]}
+								democraticRegression={undefined}
+								republicanRegression={undefined}
 							/>
 						</Box>
 					</TabPanel>

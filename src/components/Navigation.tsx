@@ -6,7 +6,6 @@ import {
 	Box,
 	Container,
 } from "@mui/material";
-import logo from "../assets/raptors+compass.png";
 import { Link, useLocation } from "react-router-dom";
 import theme from "../theme";
 
@@ -32,7 +31,8 @@ const Navigation: React.FC = () => {
 				<Toolbar sx={{ px: 0, minHeight: { xs: 90, sm: 90 }, height: "auto" }}>
 					<Typography
 						variant="h5"
-						component="div"
+						component={Link}
+						to="/"
 						sx={{
 							flexGrow: 1,
 							fontWeight: 700,
@@ -40,14 +40,22 @@ const Navigation: React.FC = () => {
 							display: "flex",
 							alignItems: "center",
 							whiteSpace: "nowrap",
+							mr: 4,
+							textDecoration: "none",
+							color: "inherit",
+							cursor: "pointer",
+							transition: "opacity 0.2s ease",
+							"&:hover": {
+								opacity: 0.85,
+							},
 						}}>
 						<Box
 							component="img"
-							src={logo}
-							alt="Raptors Compass"
-							sx={{ height: 70, width: 70, mr: 1.5, display: "inline-block", verticalAlign: "middle", borderRadius: 1, objectFit: 'cover', flexShrink: 0 }}
+							src="/toronto-raptors-logo.png"
+							alt="Toronto Raptors Logo"
+							sx={{ height: 60, width: 60, mr: 1.5, display: "inline-block", verticalAlign: "middle", borderRadius: "50%", objectFit: 'cover', flexShrink: 0 }}
 						/>
-						Raptors Voter's Compass
+						Raptors Electoral Insight Hub
 					</Typography>
 					<Box sx={{ display: "flex", gap: 1, alignItems: "center", flexShrink: 0 }}>
 						<Button
@@ -75,30 +83,6 @@ const Navigation: React.FC = () => {
 							Home
 						</Button>
 
-						<Button
-							color="inherit"
-							component={Link}
-							to="/per-state-voting-equipment"
-							variant={location.pathname === "/per-state-voting-equipment" ? "outlined" : "text"}
-							sx={{
-								"textDecoration": "none",
-								"borderRadius": 2,
-								"px": 3,
-								"fontWeight": 600,
-								"backgroundColor":
-									location.pathname === "/per-state-voting-equipment"
-										? "rgba(255,255,255,0.15)"
-										: "transparent",
-								"&:hover": {
-									backgroundColor: "rgba(255,255,255,0.1)",
-								},
-								"border":
-									location.pathname === "/per-state-voting-equipment"
-										? "1px solid rgba(255,255,255,0.3)"
-										: "1px solid transparent",
-							}}>
-							State Voting Equipment
-						</Button>
 						<Button
 							color="inherit"
 							component={Link}

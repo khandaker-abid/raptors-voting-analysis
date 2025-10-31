@@ -399,7 +399,7 @@ def main():
     
     if not backend_healthy:
         print(f"\n{RED}Backend is not running. Please start the backend first:{RESET}")
-        print(f"  cd raptors-backend && ./mvnw spring-boot:run")
+        print(f"  cd backend && ./mvnw spring-boot:run")
         return 1
     
     test_database_collections()

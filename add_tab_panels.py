@@ -180,7 +180,7 @@ export default StateDetailPage;'''
     print("\n✅ All components fully integrated!")
     print("\nNext steps:")
     print("1. Test compilation: npm run build")
-    print("2. Start backend: cd raptors-backend && ./mvnw spring-boot:run")
+    print("2. Start backend: cd backend && ./mvnw spring-boot:run")
     print("3. Start frontend: npm run dev")
     print("4. Navigate to Maryland to see preclearance tabs")
 

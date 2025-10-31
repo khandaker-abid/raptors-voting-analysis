@@ -20,6 +20,7 @@ export interface ActiveVotersRow {
 
 export interface PollbookDeletionRow {
     geographicUnit: string;
+    dataYear?: number; // Actual year of the data (may differ from requested year)
     // A12b–A12h; keys map to server fields exactly
     A12b_Death: number;
     A12c_Moved: number;
@@ -35,6 +36,7 @@ export interface PollbookDeletionRow {
 
 export interface MailRejectionRow {
     geographicUnit: string;
+    dataYear?: number; // Actual year of the data (may differ from requested year)
     // C9b–C9q (subset shown; server sends full set)
     C9b_NoSignature: number;
     C9c_SigMismatch: number;

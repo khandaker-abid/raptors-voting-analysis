@@ -80,31 +80,18 @@ const RegisteredVotersList: React.FC<Props> = ({
                     }));
                     setVoters(mappedVoters);
                 } else {
-                    // Fallback to mock data if no voters found
-                    console.warn("No voters found, using mock data");
-                    setVoters(generateMockVoters());
+                    // No voters found
+                    console.warn("No voters found for this location");
+                    setVoters([]);
                 }
                 setLoading(false);
             })
             .catch(err => {
                 console.error("Error fetching voters:", err);
-                // Fallback to mock data on error
-                setVoters(generateMockVoters());
+                setVoters([]);
                 setLoading(false);
             });
     }, [open, stateName, geographicUnit]);
-
-    // Helper function to generate mock voters (fallback)
-    const generateMockVoters = (): RegisteredVoter[] => {
-        return Array.from({ length: 1000 }, (_, i) => ({
-            id: `voter-${i}`,
-            firstName: `FirstName${i}`,
-            lastName: `LastName${i}`,
-            party: ["Republican", "Democratic", "Unaffiliated", "Other"][i % 4] as any,
-            registrationDate: `2020-0${(i % 9) + 1}-15`,
-            address: `${100 + i} Main St, ${geographicUnit}, ${stateName}`,
-        }));
-    };
 
     // Filter voters by party
     useEffect(() => {

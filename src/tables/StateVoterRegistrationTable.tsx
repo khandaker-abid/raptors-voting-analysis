@@ -25,9 +25,9 @@ interface StateVoterRegistrationTableProps {
 
 const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = ({
 	stateName,
-}) => { 
+}) => {
 	const [data, setData] = useState<StateVoterRegistrationData[]>([]);
-    const [page, setPage] = useState(0);
+	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [searchTerm, setSearchTerm] = useState("");
 
@@ -116,7 +116,7 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 							<TableCell
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									position: "sticky",
 									left: 0,
@@ -128,7 +128,7 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Registered Voter Count
@@ -137,7 +137,7 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Republican Count
@@ -146,7 +146,7 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Democratic Count
@@ -155,7 +155,7 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Unaffiliated Party Count
@@ -191,7 +191,7 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 										{row.registeredVoterCount.toLocaleString()}
 									</TableCell>
 
-                                    <TableCell
+									<TableCell
 										align="right"
 										sx={{
 											fontWeight: "bold",
@@ -209,7 +209,7 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 										{row.democraticCount.toLocaleString()}
 									</TableCell>
 
-                                    <TableCell
+									<TableCell
 										align="right"
 										sx={{
 											fontWeight: "bold",

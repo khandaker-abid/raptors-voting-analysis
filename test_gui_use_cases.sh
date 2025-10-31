@@ -29,7 +29,7 @@ if curl -s http://localhost:8080/api/eavs/health > /dev/null 2>&1; then
     BACKEND_RUNNING=true
 else
     echo -e "${YELLOW}⚠${NC} Backend server not detected on port 8080"
-    echo "   Some tests will be skipped. Start with: cd raptors-backend && ./mvnw spring-boot:run"
+    echo "   Some tests will be skipped. Start with: cd backend && ./mvnw spring-boot:run"
     BACKEND_RUNNING=false
 fi
 

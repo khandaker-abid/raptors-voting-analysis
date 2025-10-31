@@ -153,7 +153,7 @@ pip install -r requirements.txt
 cd ..
 
 # Terminal 2 - Start backend
-cd raptors-backend
+cd backend
 ./mvnw clean install
 ./mvnw spring-boot:run  # Runs on http://localhost:8080
 
@@ -213,7 +213,7 @@ raptors-voting-analysis/
 │   ├── run_all_preprocessing.sh # Master automation script
 │   └── validate_preprocessing.py # Data validation
 │
-├── raptors-backend/             # Spring Boot backend
+├── backend/                     # Spring Boot backend
 │   ├── src/main/java/          # Java source code
 │   │   └── com/example/raptorsbackend/
 │   │       ├── controller/     # REST controllers (6 files)
@@ -339,7 +339,7 @@ After running the pipeline, MongoDB contains 26,636+ records across 11 collectio
 
 ### Start Server
 ```bash
-cd raptors-backend
+cd backend
 ./mvnw clean install
 ./mvnw spring-boot:run
 ```
@@ -401,7 +401,7 @@ spring.data.mongodb.database=voting_analysis
 ### Production Build
 ```bash
 ./mvnw clean package
-java -jar target/raptors-backend-0.0.1-SNAPSHOT.jar
+java -jar target/backend-0.0.1-SNAPSHOT.jar
 ```
 
 ---
@@ -606,7 +606,7 @@ git push origin feature/your-feature-name
 1. Run integration tests: `python test_integration.py`
 2. Validate database: `python validate_database.py --dry-run`
 3. Build frontend: `npm run build`
-4. Test backend: `cd raptors-backend && ./mvnw test`
+4. Test backend: `cd backend && ./mvnw test`
 
 **Never commit:**
 - `.venv/` - Python virtual environment
@@ -701,7 +701,7 @@ mongosh                       # Test connection
 
 **Backend won't start:**
 ```bash
-cd raptors-backend
+cd backend
 pkill -9 java                 # Kill any existing instances
 ./mvnw clean install          # Rebuild
 ./mvnw spring-boot:run        # Start fresh

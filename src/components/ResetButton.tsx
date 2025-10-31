@@ -37,13 +37,13 @@ const ResetButton: React.FC = () => {
   return (
     <Tooltip
       title={location.pathname === "/" ? "Already at starting page" : "Reset page to default state"}
-      placement="left"
+      placement="top"
     >
       <Box
         sx={{
           position: "fixed",
           bottom: 20,
-          right: 20,
+          right: 180,
           zIndex: 1300, // stay on top
         }}
       >

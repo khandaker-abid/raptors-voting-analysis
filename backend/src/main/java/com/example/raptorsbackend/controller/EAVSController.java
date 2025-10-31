@@ -31,7 +31,8 @@ public class EAVSController {
             @RequestParam(defaultValue = "2024") int year) {
 
         Query query = new Query();
-        query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
+        // Case-insensitive state matching
+        query.addCriteria(Criteria.where("stateFull").regex("^" + state + "$", "i").and("year").is(year));
 
         List<Map<String, Object>> results = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
                 "eavsData");
@@ -68,7 +69,8 @@ public class EAVSController {
             @RequestParam(defaultValue = "2024") int year) {
 
         Query query = new Query();
-        query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
+        // Case-insensitive state matching
+        query.addCriteria(Criteria.where("stateFull").regex("^" + state + "$", "i").and("year").is(year));
 
         List<Map<String, Object>> results = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
                 "eavsData");
@@ -102,15 +104,34 @@ public class EAVSController {
             @PathVariable String state,
             @RequestParam(defaultValue = "2024") int year) {
 
-        Query query = new Query();
-        query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
+        // Try requested year first, then fall back to 2020, then 2016
+        List<Map<String, Object>> results = null;
+        int actualYear = year;
 
-        List<Map<String, Object>> results = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
-                "eavsData");
+        for (int tryYear : Arrays.asList(year, 2020, 2016)) {
+            Query query = new Query();
+            // Case-insensitive state matching
+            query.addCriteria(Criteria.where("stateFull").regex("^" + state + "$", "i").and("year").is(tryYear));
 
+            List<Map<String, Object>> tempResults = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query,
+                    Map.class, "eavsData");
+
+            if (!tempResults.isEmpty()) {
+                results = tempResults;
+                actualYear = tryYear;
+                break;
+            }
+        }
+
+        if (results == null || results.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        final int finalYear = actualYear;
         return results.stream().map(doc -> {
             Map<String, Object> row = new HashMap<>();
             row.put("geographicUnit", doc.get("jurisdictionName"));
+            row.put("dataYear", finalYear); // Include the actual year of the data
 
             // Deletion categories A12b-A12h
             row.put("A12b_Death", doc.getOrDefault("A12b", 0));
@@ -132,13 +153,16 @@ public class EAVSController {
             row.put("total", total);
 
             // Calculate deletion percentage (total deletions / total registered)
+            // Always include deletionPercentage field, even if 0
+            double deletionPercentage = 0.0;
             Object totalRegistered = doc.get("A1a");
             if (totalRegistered != null && total > 0) {
                 double registered = ((Number) totalRegistered).doubleValue();
                 if (registered > 0) {
-                    row.put("deletionPercentage", Math.round((total / registered) * 100 * 10) / 10.0);
+                    deletionPercentage = Math.round((total / registered) * 100 * 10) / 10.0;
                 }
             }
+            row.put("deletionPercentage", deletionPercentage);
 
             return row;
         }).toList();
@@ -153,46 +177,203 @@ public class EAVSController {
             @PathVariable String state,
             @RequestParam(defaultValue = "2024") int year) {
 
-        Query query = new Query();
-        query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
+        // Try requested year first, then fall back to 2020, then 2016
+        List<Map<String, Object>> results = null;
+        int actualYear = year;
 
-        List<Map<String, Object>> results = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
-                "eavsData");
+        for (int tryYear : Arrays.asList(year, 2020, 2016)) {
+            Query query = new Query();
+            // Case-insensitive state matching
+            query.addCriteria(Criteria.where("stateFull").regex("^" + state + "$", "i").and("year").is(tryYear));
 
-        return results.stream().map(doc -> {
+            List<Map<String, Object>> tempResults = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query,
+                    Map.class, "eavsData");
+
+            if (!tempResults.isEmpty()) {
+                results = tempResults;
+                actualYear = tryYear;
+                break;
+            }
+        }
+
+        if (results == null || results.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        final int finalYear = actualYear;
+        List<Map<String, Object>> processedResults = results.stream().map(doc -> {
             Map<String, Object> row = new HashMap<>();
             row.put("geographicUnit", doc.get("jurisdictionName"));
+            row.put("dataYear", finalYear);
 
-            // Rejection categories C9b-C9q
-            row.put("C9b_NoSignature", doc.getOrDefault("C9b", 0));
-            row.put("C9c_SigMismatch", doc.getOrDefault("C9c", 0));
-            row.put("C9d_ReceivedLate", doc.getOrDefault("C9d", 0));
-            row.put("C9e_MissingInfo", doc.getOrDefault("C9e", 0));
-            row.put("C9f_NotRegistered", doc.getOrDefault("C9f", 0));
-            row.put("C9g_WrongEnvelope", doc.getOrDefault("C9g", 0));
-            row.put("C9h_Other", doc.getOrDefault("C9h", 0));
-
-            // Calculate total rejections
-            int total = 0;
-            for (String field : Arrays.asList("C9b", "C9c", "C9d", "C9e", "C9f", "C9g", "C9h")) {
+            // Helper to get value or 0 if null/missing
+            java.util.function.Function<String, Integer> getIntOrZero = field -> {
                 Object val = doc.get(field);
-                if (val != null) {
-                    total += ((Number) val).intValue();
+                return (val != null) ? ((Number) val).intValue() : 0;
+            };
+
+            // Rejection categories
+            row.put("C9b_NoSignature", getIntOrZero.apply("C9b"));
+            row.put("C9c_SigMismatch", getIntOrZero.apply("C9c"));
+            row.put("C9d_ReceivedLate", getIntOrZero.apply("C9d"));
+            row.put("C9e_MissingInfo", getIntOrZero.apply("C9e"));
+            row.put("C9f_NotRegistered", getIntOrZero.apply("C9f"));
+            row.put("C9g_WrongEnvelope", getIntOrZero.apply("C9g"));
+            row.put("C9h_Other", getIntOrZero.apply("C9h"));
+
+            int total = getIntOrZero.apply("C9a");
+            if (total == 0) {
+                for (String field : Arrays.asList("C9b", "C9c", "C9d", "C9e", "C9f", "C9g", "C9h")) {
+                    total += getIntOrZero.apply(field);
                 }
             }
             row.put("total", total);
 
+            // Store raw values for aggregation
+            Object castBallots = doc.get("C3a");
+            row.put("_castBallots", castBallots != null ? ((Number) castBallots).doubleValue() : 0.0);
+
             // Calculate rejection percentage
-            Object totalBallots = doc.get("C1a"); // Total mail ballots transmitted
-            if (totalBallots != null && total > 0) {
-                double ballots = ((Number) totalBallots).doubleValue();
-                if (ballots > 0) {
-                    row.put("rejectionPercentage", Math.round((total / ballots) * 100 * 10) / 10.0);
-                }
+            double rejectionPercentage = 0.0;
+            Object transmittedBallots = doc.get("C1a");
+            double denominator = 0.0;
+
+            if (castBallots != null) {
+                denominator = ((Number) castBallots).doubleValue() + total;
+            } else if (transmittedBallots != null) {
+                denominator = ((Number) transmittedBallots).doubleValue();
             }
 
+            if (denominator > 0 && total > 0) {
+                rejectionPercentage = Math.round((total / denominator) * 100 * 10) / 10.0;
+            }
+
+            row.put("rejectionPercentage", rejectionPercentage);
             return row;
         }).toList();
+
+        // Special handling for Rhode Island: aggregate towns to counties
+        if (state.equalsIgnoreCase("RHODE ISLAND")) {
+            return aggregateRhodeIslandToCounties(processedResults, finalYear);
+        }
+
+        return processedResults;
+    }
+
+    /**
+     * Aggregate Rhode Island town-level data to county-level for choropleth display
+     */
+    private List<Map<String, Object>> aggregateRhodeIslandToCounties(List<Map<String, Object>> townData, int year) {
+        // Rhode Island town-to-county mapping
+        Map<String, String> townToCounty = new HashMap<>();
+        // Bristol County
+        townToCounty.put("BARRINGTON TOWN", "BRISTOL COUNTY");
+        townToCounty.put("BRISTOL TOWN", "BRISTOL COUNTY");
+        townToCounty.put("WARREN TOWN", "BRISTOL COUNTY");
+
+        // Providence County
+        townToCounty.put("BURRILLVILLE TOWN", "PROVIDENCE COUNTY");
+        townToCounty.put("CENTRAL FALLS CITY", "PROVIDENCE COUNTY");
+        townToCounty.put("CRANSTON CITY", "PROVIDENCE COUNTY");
+        townToCounty.put("CUMBERLAND TOWN", "PROVIDENCE COUNTY");
+        townToCounty.put("EAST PROVIDENCE CITY", "PROVIDENCE COUNTY");
+        townToCounty.put("FOSTER TOWN", "PROVIDENCE COUNTY");
+        townToCounty.put("GLOCESTER TOWN", "PROVIDENCE COUNTY");
+        townToCounty.put("JOHNSTON TOWN", "PROVIDENCE COUNTY");
+        townToCounty.put("LINCOLN TOWN", "PROVIDENCE COUNTY");
+        townToCounty.put("NORTH PROVIDENCE TOWN", "PROVIDENCE COUNTY");
+        townToCounty.put("NORTH SMITHFIELD TOWN", "PROVIDENCE COUNTY");
+        townToCounty.put("PAWTUCKET CITY", "PROVIDENCE COUNTY");
+        townToCounty.put("PROVIDENCE CITY", "PROVIDENCE COUNTY");
+        townToCounty.put("SCITUATE TOWN", "PROVIDENCE COUNTY");
+        townToCounty.put("SMITHFIELD TOWN", "PROVIDENCE COUNTY");
+        townToCounty.put("WOONSOCKET CITY", "PROVIDENCE COUNTY");
+
+        // Kent County
+        townToCounty.put("COVENTRY TOWN", "KENT COUNTY");
+        townToCounty.put("EAST GREENWICH TOWN", "KENT COUNTY");
+        townToCounty.put("WARWICK CITY", "KENT COUNTY");
+        townToCounty.put("WEST GREENWICH TOWN", "KENT COUNTY");
+        townToCounty.put("WEST WARWICK TOWN", "KENT COUNTY");
+
+        // Newport County
+        townToCounty.put("JAMESTOWN TOWN", "NEWPORT COUNTY");
+        townToCounty.put("LITTLE COMPTON TOWN", "NEWPORT COUNTY");
+        townToCounty.put("MIDDLETOWN TOWN", "NEWPORT COUNTY");
+        townToCounty.put("NEWPORT CITY", "NEWPORT COUNTY");
+        townToCounty.put("PORTSMOUTH TOWN", "NEWPORT COUNTY");
+        townToCounty.put("TIVERTON TOWN", "NEWPORT COUNTY");
+
+        // Washington County
+        townToCounty.put("CHARLESTOWN TOWN", "WASHINGTON COUNTY");
+        townToCounty.put("EXETER TOWN", "WASHINGTON COUNTY");
+        townToCounty.put("HOPKINTON TOWN", "WASHINGTON COUNTY");
+        townToCounty.put("NARRAGANSETT TOWN", "WASHINGTON COUNTY");
+        townToCounty.put("NEW SHOREHAM TOWN", "WASHINGTON COUNTY");
+        townToCounty.put("NORTH KINGSTOWN TOWN", "WASHINGTON COUNTY");
+        townToCounty.put("RICHMOND TOWN", "WASHINGTON COUNTY");
+        townToCounty.put("SOUTH KINGSTOWN TOWN", "WASHINGTON COUNTY");
+        townToCounty.put("WESTERLY TOWN", "WASHINGTON COUNTY");
+
+        // Aggregate by county
+        Map<String, Map<String, Object>> countyAggregates = new HashMap<>();
+
+        for (Map<String, Object> town : townData) {
+            String townName = (String) town.get("geographicUnit");
+            String county = townToCounty.get(townName);
+
+            if (county == null) {
+                continue; // Skip unknown towns
+            }
+
+            Map<String, Object> countyData = countyAggregates.computeIfAbsent(county, k -> {
+                Map<String, Object> newCounty = new HashMap<>();
+                newCounty.put("geographicUnit", k);
+                newCounty.put("dataYear", year);
+                newCounty.put("C9b_NoSignature", 0);
+                newCounty.put("C9c_SigMismatch", 0);
+                newCounty.put("C9d_ReceivedLate", 0);
+                newCounty.put("C9e_MissingInfo", 0);
+                newCounty.put("C9f_NotRegistered", 0);
+                newCounty.put("C9g_WrongEnvelope", 0);
+                newCounty.put("C9h_Other", 0);
+                newCounty.put("total", 0);
+                newCounty.put("_castBallots", 0.0);
+                return newCounty;
+            });
+
+            // Sum all rejection categories
+            for (String field : Arrays.asList("C9b_NoSignature", "C9c_SigMismatch", "C9d_ReceivedLate",
+                    "C9e_MissingInfo", "C9f_NotRegistered", "C9g_WrongEnvelope", "C9h_Other", "total")) {
+                int currentValue = (int) countyData.get(field);
+                int townValue = (int) town.get(field);
+                countyData.put(field, currentValue + townValue);
+            }
+
+            // Sum cast ballots
+            double currentCast = (double) countyData.get("_castBallots");
+            double townCast = (double) town.get("_castBallots");
+            countyData.put("_castBallots", currentCast + townCast);
+        }
+
+        // Calculate county-level rejection percentages
+        List<Map<String, Object>> countyResults = new ArrayList<>();
+        for (Map<String, Object> county : countyAggregates.values()) {
+            int totalRejections = (int) county.get("total");
+            double castBallots = (double) county.get("_castBallots");
+
+            double rejectionPercentage = 0.0;
+            if (castBallots > 0 && totalRejections > 0) {
+                double denominator = castBallots + totalRejections;
+                rejectionPercentage = Math.round((totalRejections / denominator) * 100 * 10) / 10.0;
+            }
+
+            county.put("rejectionPercentage", rejectionPercentage);
+            county.remove("_castBallots"); // Remove internal field
+            countyResults.add(county);
+        }
+
+        return countyResults;
     }
 
     /**
@@ -208,15 +389,15 @@ public class EAVSController {
             @PathVariable String state,
             @RequestParam(defaultValue = "2024") int year) {
 
-        // Get EAVS data
+        // Get EAVS data with case-insensitive matching
         Query eavsQuery = new Query();
-        eavsQuery.addCriteria(Criteria.where("stateFull").is(state).and("year").is(year));
+        eavsQuery.addCriteria(Criteria.where("stateFull").regex("^" + state + "$", "i").and("year").is(year));
         List<Map<String, Object>> eavsResults = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(eavsQuery,
                 Map.class, "eavsData");
 
         // Get election results for Republican/Democratic vote split
         // Note: electionResults uses stateAbbr (e.g., "AR") not full state name
-        String stateAbbr = getStateAbbreviation(state);
+        String stateAbbr = getStateAbbreviation(state.toUpperCase());
         Query electionQuery = new Query();
         electionQuery.addCriteria(Criteria.where("stateAbbr").is(stateAbbr).and("electionYear").is(year));
         List<Map<String, Object>> electionResults = (List<Map<String, Object>>) (List<?>) mongoTemplate

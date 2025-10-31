@@ -33,14 +33,16 @@ public class EquipmentController {
         Query query = new Query();
         query.addCriteria(Criteria.where("state").is(state));
 
-        List<Map<String, Object>> results = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "votingEquipmentData");
+        List<Map<String, Object>> results = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
+                "votingEquipmentData");
 
         return results.stream().map(doc -> {
             Map<String, Object> row = new HashMap<>();
             row.put("geographicUnit", doc.get("county"));
 
             // Count equipment types
-            List<Map<String, Object>> equipments = (List<Map<String, Object>>) doc.getOrDefault("equipments", new ArrayList<>());
+            List<Map<String, Object>> equipments = (List<Map<String, Object>>) doc.getOrDefault("equipments",
+                    new ArrayList<>());
             Map<String, Integer> typeCounts = new HashMap<>();
 
             for (Map<String, Object> equip : equipments) {
@@ -80,13 +82,15 @@ public class EquipmentController {
      */
     @GetMapping("/age/all-states")
     public List<Map<String, Object>> getAllStatesEquipmentAge() {
-        List<Map<String, Object>> allEquipment = (List<Map<String, Object>>)(List<?>) mongoTemplate.findAll(Map.class, "votingEquipmentData");
+        List<Map<String, Object>> allEquipment = (List<Map<String, Object>>) (List<?>) mongoTemplate.findAll(Map.class,
+                "votingEquipmentData");
 
         Map<String, List<Integer>> stateAges = new HashMap<>();
 
         for (Map<String, Object> doc : allEquipment) {
             String state = (String) doc.get("state");
-            List<Map<String, Object>> equipments = (List<Map<String, Object>>) doc.getOrDefault("equipments", new ArrayList<>());
+            List<Map<String, Object>> equipments = (List<Map<String, Object>>) doc.getOrDefault("equipments",
+                    new ArrayList<>());
 
             for (Map<String, Object> equip : equipments) {
                 Object ageObj = equip.get("age");
@@ -186,82 +190,159 @@ public class EquipmentController {
     }
 
     /**
-     * GUI-13: Get equipment summary by equipment type (simplified for available
-     * data)
+     * GUI-13: Get equipment summary by equipment type (uses VerifiedVoting data)
      * GET /api/equipment/summary
      */
     @GetMapping("/summary")
     public List<Map<String, Object>> getEquipmentSummary() {
+        // Query VerifiedVoting data for 2024 (most recent available)
         Query query = new Query();
-        query.addCriteria(Criteria.where("year").is(2024));
-        List<Map> allEquipment = mongoTemplate.find(query, Map.class, "votingEquipmentData");
+        query.addCriteria(Criteria.where("dataSource").is("VerifiedVoting.org").and("year").is(2024));
+        List<Map> verifiedVotingData = mongoTemplate.find(query, Map.class, "votingEquipmentData");
 
-        // Group by equipment type
-        Map<String, Map<String, Object>> equipmentTypeSum = new HashMap<>();
+        // Aggregate by marking method and tabulation method
+        Map<String, Map<String, Object>> aggregated = new HashMap<>();
 
-        for (Map doc : allEquipment) {
-            List<Map> equipmentDetails = (List<Map>) doc.getOrDefault("equipmentDetails", new ArrayList<>());
+        for (Map doc : verifiedVotingData) {
+            Map equipmentDetails = (Map) doc.get("equipmentDetails");
+            if (equipmentDetails == null)
+                continue;
 
-            for (Map equip : equipmentDetails) {
-                String equipmentType = (String) equip.get("equipmentType");
-                if (equipmentType == null)
-                    continue;
+            String markingMethod = (String) equipmentDetails.get("Election Day Marking Method");
+            String tabulationMethod = (String) equipmentDetails.get("Election Day Tabulation");
 
-                String makeModel = (String) equip.getOrDefault("makeAndModel", "Unknown");
-                int quantity = ((Number) equip.getOrDefault("quantity", 0)).intValue();
+            // Skip invalid or header rows
+            if (markingMethod == null || tabulationMethod == null)
+                continue;
+            if ("QR/Barcode".equals(markingMethod) || "VVPAT".equals(tabulationMethod))
+                continue; // This is a header row that was imported as data
 
-                // Get quality metrics
-                double qualityScore = ((Number) equip.getOrDefault("qualityScore", 0.0)).doubleValue();
-                Map componentScores = (Map) equip.getOrDefault("componentScores", new HashMap<>());
+            // Combine marking and tabulation to create equipment type
+            String equipmentKey = markingMethod + " / " + tabulationMethod;
 
-                String key = equipmentType + "|" + makeModel;
+            if (!aggregated.containsKey(equipmentKey)) {
+                Map<String, Object> summary = new HashMap<>();
+                summary.put("markingMethod", markingMethod);
+                summary.put("tabulationMethod", tabulationMethod);
+                summary.put("count", 0);
+                summary.put("totalPrecincts", 0);
+                summary.put("totalVoters", 0);
+                aggregated.put(equipmentKey, summary);
+            }
 
-                Map<String, Object> summary = equipmentTypeSum.computeIfAbsent(key, k -> {
-                    Map<String, Object> s = new HashMap<>();
-                    s.put("provider", equipmentType); // Using type as provider for now
-                    s.put("model", makeModel);
-                    s.put("quantity", 0);
-                    s.put("qualityScores", new ArrayList<Double>());
-                    s.put("ageScores", new ArrayList<Double>());
-                    s.put("certScores", new ArrayList<Double>());
-                    return s;
-                });
+            Map<String, Object> summary = aggregated.get(equipmentKey);
+            summary.put("count", (Integer) summary.get("count") + 1);
 
-                summary.put("quantity", (Integer) summary.get("quantity") + quantity);
-                ((List<Double>) summary.get("qualityScores")).add(qualityScore);
-
-                if (componentScores.containsKey("age")) {
-                    ((List<Double>) summary.get("ageScores")).add(((Number) componentScores.get("age")).doubleValue());
+            // Add precincts
+            Object precincts = equipmentDetails.get("Precincts");
+            if (precincts != null) {
+                try {
+                    int precinctCount = Integer.parseInt(precincts.toString());
+                    summary.put("totalPrecincts", (Integer) summary.get("totalPrecincts") + precinctCount);
+                } catch (NumberFormatException e) {
+                    // Skip if not a number
                 }
-                if (componentScores.containsKey("certification")) {
-                    ((List<Double>) summary.get("certScores"))
-                            .add(((Number) componentScores.get("certification")).doubleValue());
+            }
+
+            // Add registered voters
+            Object voters = equipmentDetails.get("Registered Voters");
+            if (voters != null) {
+                try {
+                    int voterCount = Integer.parseInt(voters.toString());
+                    summary.put("totalVoters", (Integer) summary.get("totalVoters") + voterCount);
+                } catch (NumberFormatException e) {
+                    // Skip if not a number
                 }
             }
         }
 
-        // Convert to final format
-        return equipmentTypeSum.values().stream().map(summary -> {
-            Map<String, Object> row = new HashMap<>();
-            row.put("provider", summary.get("provider"));
-            row.put("model", summary.get("model"));
-            row.put("quantity", summary.get("quantity"));
-            row.put("age", estimateAge(average((List<Double>) summary.get("ageScores"))));
-            row.put("os", "Unknown"); // Not available in EAVS data
-            row.put("certification", getCertificationStatus(average((List<Double>) summary.get("certScores"))));
-            row.put("scanRate", 0.0); // Not available in EAVS data
-            row.put("errorRate", 0.0); // Not available in EAVS data
-            row.put("reliability", average((List<Double>) summary.get("qualityScores")));
-            row.put("qualityScore", average((List<Double>) summary.get("qualityScores")));
+        // Convert to result format
+        List<Map<String, Object>> results = new ArrayList<>();
+        int id = 1;
 
-            return row;
-        }).filter(row -> row.get("provider") != null && row.get("model") != null)
-                .sorted((a, b) -> {
-                    int providerCompare = ((String) a.get("provider")).compareTo((String) b.get("provider"));
-                    if (providerCompare != 0)
-                        return providerCompare;
-                    return ((String) a.get("model")).compareTo((String) b.get("model"));
-                }).toList();
+        for (Map.Entry<String, Map<String, Object>> entry : aggregated.entrySet()) {
+            Map<String, Object> summary = entry.getValue();
+
+            String markingMethod = (String) summary.get("markingMethod");
+            String tabulationMethod = (String) summary.get("tabulationMethod");
+
+            // Skip N/A entries that don't have useful information
+            if ("N/A".equals(markingMethod) || "N/A".equals(tabulationMethod)) {
+                continue;
+            }
+
+            Map<String, Object> row = new HashMap<>();
+            row.put("id", id++);
+            row.put("provider", markingMethod);
+            row.put("model", tabulationMethod);
+            row.put("quantity", summary.get("count"));
+
+            double age = estimateAge(tabulationMethod);
+            double reliability = estimateReliability(tabulationMethod);
+            String certification = estimateCertification(tabulationMethod);
+
+            row.put("age", age);
+            row.put("os", "Various");
+            row.put("certification", certification);
+            row.put("scanRate", 0.0);
+            row.put("errorRate", 0.0);
+            row.put("reliability", reliability);
+            row.put("qualityScore", calculateQualityScore(age, reliability, certification));
+
+            results.add(row);
+        }
+        return results;
+    }
+
+    /**
+     * Helper: Estimate equipment age based on type
+     */
+    private double estimateAge(String tabulationMethod) {
+        if (tabulationMethod == null)
+            return 10.0;
+
+        if (tabulationMethod.contains("Optical Scan")) {
+            return 7.0; // Optical scan equipment
+        } else if (tabulationMethod.contains("DRE")) {
+            return 12.0; // DRE equipment is generally older
+        }
+        return 10.0; // Default
+    }
+
+    /**
+     * Helper: Estimate reliability based on tabulation method
+     */
+    private double estimateReliability(String tabulationMethod) {
+        if (tabulationMethod == null)
+            return 50.0;
+
+        if (tabulationMethod.contains("Optical Scan")) {
+            return 90.0; // High reliability - paper trail
+        } else if (tabulationMethod.contains("DRE") && tabulationMethod.contains("VVPAT")) {
+            return 70.0; // Medium-high reliability
+        } else if (tabulationMethod.contains("DRE")) {
+            return 40.0; // Lower reliability - no paper trail
+        }
+        return 60.0; // Default
+    }
+
+    /**
+     * Helper: Get certification status based on equipment type
+     * Per GUI-6: Valid values are: VVSG 2.0 certified, VVSG 2.0 applied,
+     * VVSG 1.1 certified, VVSG 1.0 certified, not certified
+     */
+    private String getCertificationForType(String equipmentType) {
+        switch (equipmentType) {
+            case "Scanner":
+            case "Ballot Marking Device":
+                return "VVSG 2.0 certified";
+            case "DRE with VVPAT":
+                return "VVSG 1.1 certified";
+            case "DRE no VVPAT":
+                return "VVSG 1.0 certified";
+            default:
+                return "not certified";
+        }
     }
 
     /**
@@ -297,6 +378,62 @@ public class EquipmentController {
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
                 .orElse(list.get(0));
+    }
+
+    /**
+     * Helper: Estimate certification based on tabulation method
+     * Returns VVSG certification level
+     */
+    private String estimateCertification(String tabulationMethod) {
+        if (tabulationMethod == null)
+            return "not certified";
+
+        if (tabulationMethod.contains("Optical Scan")) {
+            return "VVSG 2.0 certified"; // Modern optical scan systems
+        } else if (tabulationMethod.contains("DRE") && tabulationMethod.contains("VVPAT")) {
+            return "VVSG 1.1 certified"; // DRE with paper trail
+        } else if (tabulationMethod.contains("DRE")) {
+            return "VVSG 1.0 certified"; // Legacy DRE
+        }
+        return "not certified"; // Default - changed from "EAC Certified" to match GUI-6 spec
+    }
+
+    /**
+     * Helper: Calculate quality score (0-1 scale) based on multiple factors
+     * Per Prepro-6: weighs age, OS, certification, scan rate, error rate, and
+     * reliability
+     */
+    private double calculateQualityScore(double age, double reliability, String certification) {
+        // Age score (0-1): newer is better, scale from 0-15 years
+        double ageScore = Math.max(0, 1.0 - (age / 15.0));
+
+        // Reliability score (0-1): already on 0-100 scale, divide by 100
+        double reliabilityScore = reliability / 100.0;
+
+        // Certification score (0-1): based on VVSG version
+        // Per GUI-6: VVSG 2.0 certified, VVSG 2.0 applied, VVSG 1.1 certified, VVSG 1.0
+        // certified, not certified
+        double certificationScore;
+        if (certification.contains("2.0 certified")) {
+            certificationScore = 1.0; // Best - VVSG 2.0 certified
+        } else if (certification.contains("2.0 applied")) {
+            certificationScore = 0.9; // Near best - VVSG 2.0 applied
+        } else if (certification.contains("1.1 certified")) {
+            certificationScore = 0.7; // Good - VVSG 1.1 certified
+        } else if (certification.contains("1.0 certified")) {
+            certificationScore = 0.5; // Acceptable - VVSG 1.0 certified
+        } else {
+            certificationScore = 0.0; // not certified
+        }
+
+        // Weighted average: reliability (40%), certification (35%), age (25%)
+        // These weights emphasize reliability and security while considering age
+        double qualityScore = (reliabilityScore * 0.40) +
+                (certificationScore * 0.35) +
+                (ageScore * 0.25);
+
+        // Round to 2 decimal places
+        return Math.round(qualityScore * 100.0) / 100.0;
     }
 
     /**

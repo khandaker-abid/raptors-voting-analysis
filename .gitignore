@@ -103,21 +103,21 @@ data/db/
 dump/
 
 # Backend build artifacts (Spring Boot / Maven)
-raptors-backend/target/
-raptors-backend/.mvn/
-raptors-backend/mvnw
-raptors-backend/mvnw.cmd
-raptors-backend/*.jar
-raptors-backend/*.war
-raptors-backend/backend.log
-raptors-backend/nohup.out
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/*.jar
+backend/*.war
+backend/backend.log
+backend/nohup.out
 
 # Backend IDE files
-raptors-backend/.idea/
-raptors-backend/*.iml
-raptors-backend/.classpath
-raptors-backend/.project
-raptors-backend/.settings/
+backend/.idea/
+backend/*.iml
+backend/.classpath
+backend/.project
+backend/.settings/
 
 # macOS
 .DS_Store

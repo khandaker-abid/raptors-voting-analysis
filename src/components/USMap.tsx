@@ -55,10 +55,9 @@ const USMap: React.FC = () => {
 
 		layer.bindTooltip(tooltipContent, {
 			permanent: false,
-			direction: "auto",
+			direction: "top",
 			className: "custom-tooltip",
-			offset: [0, 0],
-			sticky: true,
+			offset: [0, -10],
 		});
 
 		layer.on({

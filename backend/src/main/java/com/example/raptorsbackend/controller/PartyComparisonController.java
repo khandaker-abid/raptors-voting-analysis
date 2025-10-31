@@ -34,9 +34,11 @@ public class PartyComparisonController {
         // Define party control by state (2024 data - governor/legislature control)
         Map<String, String> statePartyControl = getStatePartyControl();
 
-        // Get all EAVS data
-        List<Map<String, Object>> eavsData = (List<Map<String, Object>>) (List<?>) mongoTemplate.findAll(Map.class,
-                "eavsData");
+        // Get all EAVS data for 2024
+        org.springframework.data.mongodb.core.query.Query eavsQuery = new org.springframework.data.mongodb.core.query.Query();
+        eavsQuery.addCriteria(org.springframework.data.mongodb.core.query.Criteria.where("year").is(2024));
+        List<Map<String, Object>> eavsData = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(eavsQuery,
+                Map.class, "eavsData");
 
         // Get felony voting policies
         List<Map<String, Object>> felonyData = (List<Map<String, Object>>) (List<?>) mongoTemplate.findAll(Map.class,
@@ -50,56 +52,64 @@ public class PartyComparisonController {
         // Create state name to abbreviation mapping
         Map<String, String> stateToAbbr = getStateAbbreviations();
 
+        // Group counties by state and aggregate
+        Map<String, List<Map<String, Object>>> countiesByState = new HashMap<>();
+        for (Map<String, Object> eavs : eavsData) {
+            String state = (String) eavs.get("stateFull");
+            if (state != null) {
+                countiesByState.computeIfAbsent(state, k -> new ArrayList<>()).add(eavs);
+            }
+        }
+
         // Group states by party
         Map<String, List<Map<String, Object>>> statesByParty = new HashMap<>();
         statesByParty.put("Republican", new ArrayList<>());
         statesByParty.put("Democratic", new ArrayList<>());
         statesByParty.put("Split", new ArrayList<>());
 
-        // Process each state
-        for (Map<String, Object> eavs : eavsData) {
-            String state = (String) eavs.get("stateFull");
+        // Process each state by aggregating its counties
+        for (Map.Entry<String, List<Map<String, Object>>> entry : countiesByState.entrySet()) {
+            String state = entry.getKey();
+            List<Map<String, Object>> counties = entry.getValue();
             String party = statePartyControl.getOrDefault(state, "Split");
 
-            Map<String, Object> stateData = new HashMap<>();
-            stateData.put("state", state);
-            stateData.put("party", party);
+            // Aggregate data across all counties in the state
+            long totalRegistered = 0;
+            long totalCVAP = 0;
+            long totalVotesCast = 0;
+            long totalMailBallots = 0;
+            long totalDropBoxVotes = 0;
 
-            // Calculate registration metrics
-            Object f1aObj = eavs.get("F1a");
-            Object f1bObj = eavs.get("F1b");
-            Object f1dObj = eavs.get("F1d");
-            Object f1fObj = eavs.get("F1f");
-            Object a1bObj = eavs.get("A1b"); // CVAP
-
-            long totalRegistered = safeLong(f1aObj) + safeLong(f1bObj) + safeLong(f1dObj) + safeLong(f1fObj);
-            long cvap = safeLong(a1bObj);
-
-            double registrationRate = cvap > 0 ? (totalRegistered * 100.0 / cvap) : 0;
-            stateData.put("registrationRate", Math.round(registrationRate * 10) / 10.0);
-            stateData.put("totalRegistered", totalRegistered);
-
-            // Calculate turnout (B1 equivalent - total participated)
-            Object b1Obj = eavs.get("B1");
-            long totalParticipated = safeLong(b1Obj);
-
-            // If B1 is 0 or null, calculate from F1 fields
-            if (totalParticipated == 0) {
-                totalParticipated = safeLong(f1aObj) + safeLong(f1bObj) + safeLong(f1dObj) + safeLong(f1fObj);
+            for (Map<String, Object> county : counties) {
+                totalRegistered += safeLong(county.get("A1a")); // Total registered
+                totalCVAP += safeLong(county.get("A1b")); // CVAP
+                // Total votes = sum of all voting methods
+                totalVotesCast += safeLong(county.get("F1a")) + safeLong(county.get("F1b"))
+                        + safeLong(county.get("F1d")) + safeLong(county.get("F1f"));
+                // Mail ballots transmitted (C9a)
+                totalMailBallots += safeLong(county.get("C9a"));
+                // Drop box votes (F1f)
+                totalDropBoxVotes += safeLong(county.get("F1f"));
             }
 
-            double turnout = totalRegistered > 0 ? (totalParticipated * 100.0 / totalRegistered) : 0;
+            Map<String, Object> stateData = new HashMap<>();
+            stateData.put("state", toTitleCase(state));
+            stateData.put("party", party);
+
+            // Calculate registration rate (registered / CVAP * 100)
+            double registrationRate = totalCVAP > 0 ? (totalRegistered * 100.0 / totalCVAP) : 0;
+            stateData.put("registrationRate", Math.round(registrationRate * 10) / 10.0);
+
+            // Calculate turnout rate (votes cast / registered * 100)
+            double turnout = totalRegistered > 0 ? (totalVotesCast * 100.0 / totalRegistered) : 0;
             stateData.put("turnout", Math.round(turnout * 10) / 10.0);
 
-            // Mail ballot usage (C1a-d)
-            long mailBallots = safeLong(eavs.get("C1a")) + safeLong(eavs.get("C1b")) +
-                    safeLong(eavs.get("C1c")) + safeLong(eavs.get("C1d"));
-            double mailBallotRate = totalParticipated > 0 ? (mailBallots * 100.0 / totalParticipated) : 0;
+            // Calculate mail ballot rate (mail ballots / votes cast * 100)
+            double mailBallotRate = totalVotesCast > 0 ? (totalMailBallots * 100.0 / totalVotesCast) : 0;
             stateData.put("mailBallotRate", Math.round(mailBallotRate * 10) / 10.0);
 
-            // Drop box usage (C11a)
-            long dropBoxVotes = safeLong(eavs.get("C11a"));
-            double dropBoxRate = totalParticipated > 0 ? (dropBoxVotes * 100.0 / totalParticipated) : 0;
+            // Calculate drop box rate (drop box votes / votes cast * 100)
+            double dropBoxRate = totalVotesCast > 0 ? (totalDropBoxVotes * 100.0 / totalVotesCast) : 0;
             stateData.put("dropBoxRate", Math.round(dropBoxRate * 10) / 10.0);
 
             // Add felony policy
@@ -125,6 +135,25 @@ public class PartyComparisonController {
         result.put("stateDetails", statesByParty);
 
         return result;
+    }
+
+    /**
+     * Convert state name to title case (e.g., "RHODE ISLAND" -> "Rhode Island")
+     */
+    private String toTitleCase(String str) {
+        if (str == null || str.isEmpty()) {
+            return str;
+        }
+        String[] words = str.split(" ");
+        StringBuilder result = new StringBuilder();
+        for (String word : words) {
+            if (word.length() > 0) {
+                result.append(Character.toUpperCase(word.charAt(0)));
+                result.append(word.substring(1).toLowerCase());
+                result.append(" ");
+            }
+        }
+        return result.toString().trim();
     }
 
     /**

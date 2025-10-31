@@ -100,7 +100,7 @@ const EveryStateEquipmentTable: React.FC = () => {
 							<TableCell
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									position: "sticky",
 									left: 0,
@@ -114,7 +114,7 @@ const EveryStateEquipmentTable: React.FC = () => {
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									minWidth: 200,
 								}}
@@ -125,7 +125,7 @@ const EveryStateEquipmentTable: React.FC = () => {
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									minWidth: 200,
 								}}
@@ -136,7 +136,7 @@ const EveryStateEquipmentTable: React.FC = () => {
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									minWidth: 200,
 								}}
@@ -147,7 +147,7 @@ const EveryStateEquipmentTable: React.FC = () => {
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									minWidth: 150,
 								}}

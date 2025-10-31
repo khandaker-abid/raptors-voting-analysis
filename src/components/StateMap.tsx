@@ -262,7 +262,8 @@ const StateMap: React.FC<StateMapProps> = ({
 
 			layer.bindTooltip(countyName, {
 				permanent: false,
-				direction: "center",
+				direction: "top",
+				offset: [0, -10],
 				className: "custom-tooltip",
 			});
 
@@ -274,10 +275,10 @@ const StateMap: React.FC<StateMapProps> = ({
 					hoveredLayerRef.current = e.target;
 					lastHoveredFeatureRef.current = feature;
 					e.target.setStyle({
-						weight: 2,
-						color: "#0d47a1",
+						weight: 3,
+						color: "#424242",
 						dashArray: "",
-						fillOpacity: 0.6,
+						fillOpacity: 0.5,
 					});
 					e.target.bringToFront();
 					// Ensure tooltip opens
@@ -319,10 +320,12 @@ const StateMap: React.FC<StateMapProps> = ({
 				},
 			});
 		} else {
-			// State feature handling
-			layer.bindTooltip(stateName, {
+			// State feature handling (non-detail states)
+			const tooltipContent = `${stateName} - EAVS data available in other tabs`;
+			layer.bindTooltip(tooltipContent, {
 				permanent: false,
-				direction: "center",
+				direction: "top",
+				offset: [0, -10],
 				className: "custom-tooltip",
 			});
 
@@ -442,21 +445,33 @@ const StateMap: React.FC<StateMapProps> = ({
 	};
 
 	return (
-		<Paper elevation={2} sx={{ p: 3, textAlign: "center" }}>
-			<Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
-				{stateName} Geographic View
+		<Paper elevation={2} sx={{
+			p: 0,
+			textAlign: "center",
+			height: "100%",
+			width: "100%",
+			display: "flex",
+			flexDirection: "column",
+			flex: 1,
+		}}>
+			<Typography variant="h6" sx={{ mb: 0, pt: 0.5, fontSize: "1rem", fontWeight: 600, flexShrink: 0 }}>
+				{stateName} {isDetailState && detailStates.includes(stateName) ? "- Geographic Boundaries" : "- State Boundary"}
 			</Typography>
+			{isDetailState && detailStates.includes(stateName) && (
+				<Typography variant="body2" color="text.secondary" sx={{ mb: 0, pb: 0.5, fontSize: "0.8rem", flexShrink: 0 }}>
+					Click on any county to view registered voters
+				</Typography>
+			)}
 			<Box
 				sx={{
-					display: "flex",
-					justifyContent: "center",
-					border: "1px solid #e0e0e0",
-					borderRadius: 2,
-					padding: 0,
+					position: "relative",
+					border: "none",
+					borderRadius: 0,
 					backgroundColor: "#fafafa",
-					height: 500,
+					flex: 1,
 					width: "100%",
-					margin: "0 auto",
+					minHeight: 0,
+					overflow: "hidden",
 				}}
 			>
 				<MapContainer
@@ -467,7 +482,7 @@ const StateMap: React.FC<StateMapProps> = ({
 					maxZoom={12}
 					maxBounds={mapBounds || undefined}
 					maxBoundsViscosity={1.0}
-					style={{ height: "100%", width: "100%", borderRadius: "8px" }}
+					style={{ position: "absolute", top: 0, left: 0, height: "100%", width: "100%", borderRadius: "0px" }}
 					scrollWheelZoom={true}
 				>
 					<TileLayer
@@ -507,6 +522,7 @@ const StateMap: React.FC<StateMapProps> = ({
 				<DialogContent sx={{ p: 0, overflowY: "auto" }}>
 					{selectedRegion && (
 						<RegionRegisteredVotersTable
+							stateName={stateName}
 							geographicUnitName={selectedRegion.split(" ").slice(0, -1).join(" ")}
 						/>
 					)}

@@ -11,7 +11,6 @@ import {
     Link,
     CircularProgress,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import {
     ResponsiveContainer,
     BarChart,
@@ -87,8 +86,7 @@ const VotingEquipmentHistoryPage: React.FC = () => {
     const params = useParams<{ stateName: string }>();
     const stateName = params.stateName || "";
     const decodedStateName = decodeURIComponent(stateName);
-    const theme = useTheme();
-    const blue = theme.palette.primary.main;
+    const gray = "#616161"; // Grayscale for non-partisan equipment data
 
     const [rows, setRows] = React.useState<EquipmentHistorySeries[] | null>(null);
     const [error, setError] = React.useState<string | null>(null);
@@ -160,7 +158,7 @@ const VotingEquipmentHistoryPage: React.FC = () => {
                         key={s.category}
                         title={`Devices by Year — ${s.category}`}
                         points={makeSeriesPoints(s)}
-                        barColor={blue}
+                        barColor={gray}
                     />
                 ))}
             </Box>

@@ -34,26 +34,61 @@ body {
 
 /* Custom styles for Leaflet map tooltips */
 .custom-tooltip {
-  background-color: rgba(0, 0, 0, 0.8) !important;
+  background-color: rgba(0, 0, 0, 0.88) !important;
   color: white !important;
   border: none !important;
-  border-radius: 4px !important;
-  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  padding: 10px 14px !important;
   font-size: 12px !important;
   font-weight: 500 !important;
   z-index: 1000 !important;
   pointer-events: none !important;
   white-space: nowrap !important;
-  max-width: none !important;
+  max-width: 300px !important;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4) !important;
 }
 
 .custom-tooltip::before {
-  border-top-color: rgba(0, 0, 0, 0.8) !important;
+  border-top-color: rgba(0, 0, 0, 0.88) !important;
 }
 
 /* Ensure tooltips can extend beyond container boundaries */
 .leaflet-tooltip-pane {
-  z-index: 1000 !important;
+  z-index: 10000 !important;
+  overflow: visible !important;
+}
+
+/* Keep leaflet container with hidden overflow but ensure tooltips escape */
+.leaflet-container {
+  overflow: hidden !important;
+  background: #f5f5f5 !important;
+}
+
+/* Ensure the map popup pane also has proper z-index */
+.leaflet-pane {
+  z-index: auto !important;
+}
+
+/* Specific tooltip direction styles */
+.leaflet-tooltip-top::before {
+  border-top-color: rgba(0, 0, 0, 0.88) !important;
+}
+
+.leaflet-tooltip-bottom::before {
+  border-bottom-color: rgba(0, 0, 0, 0.88) !important;
+}
+
+.leaflet-tooltip-left::before {
+  border-left-color: rgba(0, 0, 0, 0.88) !important;
+}
+
+.leaflet-tooltip-right::before {
+  border-right-color: rgba(0, 0, 0, 0.88) !important;
+}
+
+/* Ensure tooltip auto positioning works correctly */
+.leaflet-tooltip-auto {
+  white-space: normal !important;
 }
 
 /* Leaflet map container improvements */

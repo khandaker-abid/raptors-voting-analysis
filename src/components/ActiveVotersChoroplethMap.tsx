@@ -1,15 +1,14 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
-import { Paper, Typography, Box, Chip, Alert } from "@mui/material";
-import { lighten, darken } from "@mui/material/styles";
+import { Paper, Typography, Box, Alert, Chip } from "@mui/material";
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
-import type { ActiveVotersData } from "../data/activeVotersData";
-import theme from "../theme";
+import type { ActiveVotersRow } from "../data/types";
+import { bindResponsiveTooltip } from "../utils/leafletTooltipHelper";
 
 interface ActiveVotersChoroplethMapProps {
 	stateName: string;
-	data: ActiveVotersData[];
+	data: ActiveVotersRow[];
 	/** Optional: change value (e.g., flip 0/1) when an external dialog closes to force-clear hover */
 	resetHoverKey?: number;
 }
@@ -62,19 +61,19 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 		}
 	};
 
-	// Derive a color palette from the theme primary color
+	// Gray color palette for visual consistency with Provisional Ballot map
+	// Neutral grayscale avoids political colors (no blue/red)
 	const COLOR_PALETTE = useMemo(() => {
-		const main = theme.palette.primary.main;
 		return [
-			lighten(main, 0.6),
-			lighten(main, 0.35),
-			lighten(main, 0.15),
-			main,
-			darken(main, 0.08),
-			darken(main, 0.24),
-			darken(main, 0.45),
+			"#e8e8e8", // Very light gray
+			"#d0d0d0", // Light gray
+			"#b8b8b8", // Medium-light gray
+			"#a0a0a0", // Medium gray
+			"#888888", // Medium-dark gray
+			"#707070", // Dark gray
+			"#585858", // Very dark gray
 		];
-	}, [theme.palette.primary.main]);
+	}, []);
 
 	// Calculate color scale for active voter percentage
 	const colorScale = useMemo(() => {
@@ -96,9 +95,9 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 
 	// Create a data lookup map for efficient county data retrieval
 	const dataLookup = useMemo(() => {
-		const lookup = new Map<string, ActiveVotersData>();
+		const lookup = new Map<string, ActiveVotersRow>();
 		data.forEach((item) => {
-			const normalizedCounty = item.county.toLowerCase().replace(/\s+/g, " ").trim();
+			const normalizedCounty = item.geographicUnit.toLowerCase().replace(/\s+/g, " ").trim();
 			lookup.set(normalizedCounty, item);
 
 			const withoutCounty = normalizedCounty.replace(/\s+county$/, "");
@@ -159,7 +158,8 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 					}
 				});
 
-				const paddedBounds = bounds.pad(0.1);
+				// Increase padding to 0.25 (25%) to give more space for tooltips at edges
+				const paddedBounds = bounds.pad(0.25);
 				setMapBounds(paddedBounds);
 
 				setGeoData(featureCollection);
@@ -248,23 +248,20 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 		const activePercentage = countyData?.activePercentage || 0;
 
 		const tooltipContent = `
-      <div style="font-weight: bold; margin-bottom: 4px;">${countyName}</div>
-      <div>Active Voters: <span style="color: #2196f3;">${activeVoters.toLocaleString()}</span></div>
-      <div>Total Voters: <span style="color: #90caf9;">${totalVoters.toLocaleString()}</span></div>
-      <div>Active Percentage: <span style="color: #1976d2; font-weight: bold;">${activePercentage.toFixed(
+      <div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${countyName}</div>
+      <div style="font-size: 13px;">Active Voters: <strong>${activeVoters.toLocaleString()}</strong></div>
+      <div style="font-size: 13px;">Total Voters: <strong>${totalVoters.toLocaleString()}</strong></div>
+      <div style="font-size: 13px;">Active Percentage: <strong>${activePercentage.toFixed(
 			1
-		)}%</span></div>
+		)}%</strong></div>
       ${activePercentage === 0
 				? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">No data available</div>'
 				: ""
 			}
     `;
 
-		(layer as any).bindTooltip(tooltipContent, {
-			permanent: false,
-			direction: "center",
-			className: "custom-tooltip",
-		});
+		// Bind tooltip directly - no need to check mapRef.current
+		bindResponsiveTooltip(layer, tooltipContent, mapRef.current);
 
 		layer.on({
 			mouseover: (e: any) => {
@@ -293,10 +290,6 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 				} catch {
 					/* ignore */
 				}
-			},
-			click: () => {
-				// Clear highlight proactively if a dialog opens on click
-				clearHover();
 			},
 		});
 	};
@@ -363,13 +356,13 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 		data.reduce((sum, d) => sum + d.activePercentage, 0) / data.length;
 
 	return (
-		<Paper sx={{ p: 3 }}>
-			<Box mb={3}>
+		<Paper sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
+			<Box mb={1}>
 				<Typography variant="h6" gutterBottom fontWeight={600}>
-					Active Voter Percentage Distribution - {stateName}
+					Active Voters Distribution - {stateName}
 				</Typography>
-				<Box display="flex" gap={2} flexWrap="wrap">
-					<Chip label={`Avg: ${avgPercentage.toFixed(1)}%`} size="small" />
+				<Box display="flex" gap={1} flexWrap="wrap">
+					<Chip label={`Average: ${avgPercentage.toFixed(1)}%`} size="small" />
 					<Chip
 						label={`Range: ${minPercentage.toFixed(1)}% – ${maxPercentage.toFixed(1)}%`}
 						size="small"
@@ -380,11 +373,12 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 			{/* Map Container */}
 			<Box
 				sx={{
-					height: 400,
+					flex: 1,
 					border: "1px solid #e0e0e0",
 					borderRadius: 2,
 					overflow: "hidden",
-					mb: 3,
+					minHeight: 0,
+					mb: 1,
 				}}
 			>
 				<MapContainer
@@ -414,16 +408,16 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 
 			{/* Color Legend */}
 			<Box>
-				<Typography variant="subtitle2" gutterBottom fontWeight={600}>
-					Color Scale (Active Voter Percentage)
+				<Typography variant="body2" gutterBottom fontWeight={600} fontSize="0.85rem">
+					Color Scale (Active Voter %)
 				</Typography>
 				<Box display="flex" alignItems="center" gap={0.5}>
-					<Typography variant="caption" sx={{ minWidth: 50 }}>
+					<Typography variant="caption" sx={{ minWidth: 45, fontSize: "0.75rem" }}>
 						{minPercentage.toFixed(1)}%
 					</Typography>
 					<Box
 						display="flex"
-						height={30}
+						height={24}
 						flex={1}
 						border="1px solid #e0e0e0"
 						borderRadius={1}
@@ -440,12 +434,13 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 							/>
 						))}
 					</Box>
-					<Typography variant="caption" sx={{ minWidth: 50, textAlign: "right" }}>
+					<Typography variant="caption" sx={{ minWidth: 45, textAlign: "right", fontSize: "0.75rem" }}>
 						{maxPercentage.toFixed(1)}%
 					</Typography>
 				</Box>
-				<Typography variant="caption" color="text.secondary" display="block" mt={1}>
-					8-color scale showing percentage of active voters across counties/towns.
+				<Typography variant="caption" color="text.secondary" display="block" mt={0.5} fontSize="0.7rem">
+					Interactive choropleth map showing active voter distribution across
+					counties. Hover over counties for detailed information.
 				</Typography>
 			</Box>
 		</Paper>

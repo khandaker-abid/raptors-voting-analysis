@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
-import { Paper, Typography, Box, Chip, Alert } from "@mui/material";
+import { Paper, Typography, Box, Alert } from "@mui/material";
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import type { StateVoterRegistrationData } from "../data/stateVoterRegistrationData";
 import { getStateVoterRegistrationData } from "../data/stateVoterRegistrationData";
+import { bindResponsiveTooltip } from "../utils/leafletTooltipHelper";
 
 interface VoterRegistrationChloroplethMapProps {
 	stateName: string;
@@ -82,14 +83,15 @@ const VoterRegistrationChloroplethMap: React.FC<
 		const maxValue = Math.max(...values);
 		const minValue = Math.min(...values);
 
+		// Grayscale palette (NO BLUE - blue is reserved for Democratic party only)
 		const range = [
-			"#e3f2fd",
-			"#bbdefb",
-			"#90caf9",
-			"#64b5f6",
-			"#42a5f5",
-			"#2196f3",
-			"#1976d2",
+			"#f5f5f5",
+			"#e0e0e0",
+			"#bdbdbd",
+			"#9e9e9e",
+			"#757575",
+			"#616161",
+			"#424242",
 		];
 
 		return (value: number) => {
@@ -255,18 +257,15 @@ const VoterRegistrationChloroplethMap: React.FC<
 
 		const tooltipContent = `
       <div style="font-weight: bold; margin-bottom: 4px;">${displayCountyName}</div>
-      <div>Registered Voters: <span style="color: #2196f3; font-weight: bold;">${voterCount.toLocaleString()}</span></div>
+      <div>Registered Voters: <span style="color: #424242; font-weight: bold;">${voterCount.toLocaleString()}</span></div>
       ${voterCount === 0
 				? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">No data available</div>'
 				: ""
 			}
     `;
 
-		(layer as any).bindTooltip(tooltipContent, {
-			permanent: false,
-			direction: "center",
-			className: "custom-tooltip",
-		});
+		// Bind tooltip directly - no need to check mapRef.current
+		bindResponsiveTooltip(layer, tooltipContent, mapRef.current);
 
 		layer.on({
 			mouseover: (e: any) => {
@@ -281,11 +280,21 @@ const VoterRegistrationChloroplethMap: React.FC<
 				if ((targetLayer as any).bringToFront) {
 					(targetLayer as any).bringToFront();
 				}
+				// Ensure tooltip opens
+				if (!targetLayer.isTooltipOpen()) {
+					targetLayer.openTooltip();
+				}
 			},
 			mouseout: (e: any) => {
 				// Reset just this layer's style
 				geoRef.current?.resetStyle(e.target as any);
 				if (hoveredRef.current === e.target) hoveredRef.current = null;
+				// Ensure tooltip closes
+				try {
+					(e.target as L.Path).closeTooltip();
+				} catch {
+					/* ignore */
+				}
 			},
 			click: () => {
 				// Opening your dialog typically prevents mouseout from firing; clear highlight proactively
@@ -352,14 +361,9 @@ const VoterRegistrationChloroplethMap: React.FC<
 				<Typography variant="h6" gutterBottom fontWeight={600}>
 					Registered Voters Distribution - {stateName}
 				</Typography>
-				<Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
-					<Chip label={`${data.length} Counties/Towns`} size="small" color="primary" />
-					<Chip label={`Total: ${totalVotes.toLocaleString()} voters`} size="small" />
-					<Chip
-						label={`Range: ${minValue.toLocaleString()} - ${maxValue.toLocaleString()}`}
-						size="small"
-					/>
-				</Box>
+				<Typography variant="body2" color="text.secondary">
+					{data.length} Counties/Towns | Total: {totalVotes.toLocaleString()} voters | Range: {minValue.toLocaleString()} - {maxValue.toLocaleString()}
+				</Typography>
 			</Box>
 
 			<Box
@@ -406,41 +410,37 @@ const VoterRegistrationChloroplethMap: React.FC<
 				<Typography variant="subtitle2" gutterBottom fontWeight={600}>
 					Color Scale (Total Registered Voters)
 				</Typography>
-				<Box display="flex" alignItems="center" gap={0.5}>
-					<Typography variant="caption" sx={{ minWidth: 50 }}>
-						{minValue}
-					</Typography>
-					<Box
-						display="flex"
-						height={30}
-						flex={1}
-						border="1px solid #e0e0e0"
-						borderRadius={1}
-						overflow="hidden"
-					>
-						{colorScale &&
-							[
-								"#e3f2fd",
-								"#bbdefb",
-								"#90caf9",
-								"#64b5f6",
-								"#42a5f5",
-								"#2196f3",
-								"#1976d2",
-							].map((color, index) => (
-								<Box
-									key={index}
-									sx={{
-										flex: 1,
-										backgroundColor: color,
-										height: "100%",
-									}}
-								/>
-							))}
-					</Box>
-					<Typography variant="caption" sx={{ minWidth: 50, textAlign: "right" }}>
-						{maxValue}
-					</Typography>
+				<Box display="flex" flexWrap="wrap" gap={1.5}>
+					{colorScale &&
+						[
+							"#f5f5f5",
+							"#e0e0e0",
+							"#bdbdbd",
+							"#9e9e9e",
+							"#757575",
+							"#616161",
+							"#424242",
+						].map((color, index, palette) => {
+							const binSize = (maxValue - minValue) / palette.length;
+							const rangeStart = Math.floor(minValue + index * binSize);
+							const rangeEnd = Math.floor(minValue + (index + 1) * binSize);
+							return (
+								<Box key={index} display="flex" alignItems="center" gap={0.5}>
+									<Box
+										sx={{
+											width: 24,
+											height: 24,
+											backgroundColor: color,
+											border: "1px solid #ccc",
+											borderRadius: 0.5,
+										}}
+									/>
+									<Typography variant="caption">
+										{rangeStart.toLocaleString()} - {rangeEnd.toLocaleString()}
+									</Typography>
+								</Box>
+							);
+						})}
 				</Box>
 				<Typography variant="caption" color="text.secondary" display="block" mt={1}>
 					Interactive choropleth map showing voter registration distribution across

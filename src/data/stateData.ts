@@ -160,24 +160,17 @@ export const getDetailStateDescription = (stateName: string): string => {
 	const state = stateData.find(s => s.name === stateName);
 	if (!state?.detailStateType) return "";
 
-	const { registrationType, electionDayRegistration, specialAnalysisType } = state.detailStateType;
-	const partyDominated = state.party ? `${state.party.toLowerCase()}-dominated` : "";
+	const { registrationType } = state.detailStateType;
+	const partyDominated = state.party ? `${state.party}-dominated` : "";
 
-	let description = `Voter registration ${registrationType} state`;
-
-	if (electionDayRegistration) {
-		description += " with election day registration";
-	} else {
-		description += " without election day registration";
-	}
+	// Keep it short and consistent: "Party-dominated, registration-type voter registration state"
+	let description = "";
 
 	if (partyDominated) {
-		description += `, ${partyDominated}`;
+		description += `${partyDominated}, `;
 	}
 
-	if (specialAnalysisType) {
-		description += `, ${specialAnalysisType} state`;
-	}
+	description += `${registrationType} voter registration state`;
 
 	return description;
 };

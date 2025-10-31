@@ -93,6 +93,13 @@ if [ -f "07_download_voter_registration.py" ]; then
     log ""
 fi
 
+# Prepro-17: Generate County Voter Names
+if [ -f "17_generate_county_voter_names.py" ]; then
+    log ">>> Prepro-17: Generating individual voter records for detail states..."
+    python 17_generate_county_voter_names.py 2>&1 | tee -a "$LOG_FILE" || { log "Failed at Prepro-17"; exit 1; }
+    log ""
+fi
+
 # Prepro-8: Automated Analysis (optional)
 if [ -f "08_automated_voter_analysis.py" ]; then
     log ">>> Prepro-8: Running automated voter analysis..."

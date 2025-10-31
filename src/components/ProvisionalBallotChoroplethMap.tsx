@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { Paper, Typography, Box, Chip, Alert } from "@mui/material";
-import { lighten, darken } from "@mui/material/styles";
-import theme from "../theme";
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
+import { bindResponsiveTooltip } from "../utils/leafletTooltipHelper";
 
 interface ProvisionalBallotChoroplethMapProps {
 	stateName: string;
@@ -64,19 +63,19 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		}
 	};
 
-	// Derive palette from theme primary color so all choropleths match
+	// Gray color palette for visual consistency with State Map tab
+	// Neutral grayscale avoids political colors (no blue/red)
 	const COLOR_PALETTE = useMemo(() => {
-		const main = theme.palette.primary.main;
 		return [
-			lighten(main, 0.6),
-			lighten(main, 0.35),
-			lighten(main, 0.15),
-			main,
-			darken(main, 0.08),
-			darken(main, 0.24),
-			darken(main, 0.45),
+			"#e8e8e8", // Very light gray
+			"#d0d0d0", // Light gray
+			"#b8b8b8", // Medium-light gray
+			"#a0a0a0", // Medium gray
+			"#888888", // Medium-dark gray
+			"#707070", // Dark gray
+			"#585858", // Very dark gray
 		];
-	}, [theme.palette.primary.main]);
+	}, []);
 
 	const colorScale = useMemo(() => {
 		if (!data || data.length === 0) return null;
@@ -167,7 +166,8 @@ const ProvisionalBallotChoroplethMap: React.FC<
 					}
 				});
 
-				setMapBounds(bounds.pad(0.1));
+				// Increase padding to 0.25 (25%) to give more space for tooltips at edges
+				setMapBounds(bounds.pad(0.25));
 				setGeoData(featureCollection);
 				setLoading(false);
 			} catch (err) {
@@ -244,19 +244,16 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		const ballotCount = dataLookup.get(normalizedCountyName) || 0;
 
 		const tooltipContent = `
-      <div style="font-weight: bold; margin-bottom: 4px;">${displayCountyName}</div>
-      <div>Provisional Ballots: <span style="color: #2196f3; font-weight: bold;">${ballotCount.toLocaleString()}</span></div>
+      <div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${displayCountyName}</div>
+      <div style="font-size: 13px;">Provisional Ballots: <strong>${ballotCount.toLocaleString()}</strong></div>
       ${ballotCount === 0
-				? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">No data available</div>'
+				? '<div style="color: #d84315; font-size: 11px; margin-top: 2px;">No data available</div>'
 				: ""
 			}
     `;
 
-		(layer as any).bindTooltip(tooltipContent, {
-			permanent: false,
-			direction: "center",
-			className: "custom-tooltip",
-		});
+		// Bind tooltip directly - no need to check mapRef.current
+		bindResponsiveTooltip(layer, tooltipContent, mapRef.current);
 
 		layer.on({
 			mouseover: (e: any) => {
@@ -285,10 +282,6 @@ const ProvisionalBallotChoroplethMap: React.FC<
 				} catch {
 					/* ignore */
 				}
-			},
-			click: () => {
-				// If a dialog opens on click, proactively clear highlight
-				clearHover();
 			},
 		});
 	};
@@ -350,12 +343,12 @@ const ProvisionalBallotChoroplethMap: React.FC<
 	const totalBallots = data.reduce((sum, d) => sum + d.E1a, 0);
 
 	return (
-		<Paper sx={{ p: 3 }}>
-			<Box mb={3}>
+		<Paper sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
+			<Box mb={1}>
 				<Typography variant="h6" gutterBottom fontWeight={600}>
 					Provisional Ballots Distribution - {stateName}
 				</Typography>
-				<Box display="flex" gap={2} flexWrap="wrap">
+				<Box display="flex" gap={1} flexWrap="wrap">
 					<Chip label={`Total: ${totalBallots.toLocaleString()}`} size="small" />
 					<Chip
 						label={`Range: ${minValue.toLocaleString()} – ${maxValue.toLocaleString()}`}
@@ -366,16 +359,17 @@ const ProvisionalBallotChoroplethMap: React.FC<
 
 			<Box
 				sx={{
+					flex: 1,
 					display: "flex",
 					justifyContent: "center",
 					border: "1px solid #e0e0e0",
 					borderRadius: 2,
 					padding: 0,
 					backgroundColor: "#fafafa",
-					height: 400,
 					width: "100%",
 					margin: "0 auto",
-					mb: 3,
+					mb: 1,
+					minHeight: 0,
 				}}
 			>
 				<MapContainer
@@ -405,16 +399,16 @@ const ProvisionalBallotChoroplethMap: React.FC<
 
 			{/* Color Legend */}
 			<Box>
-				<Typography variant="subtitle2" gutterBottom fontWeight={600}>
+				<Typography variant="body2" gutterBottom fontWeight={600} fontSize="0.85rem">
 					Color Scale (E1a - Total Provisional Ballots Cast)
 				</Typography>
 				<Box display="flex" alignItems="center" gap={0.5}>
-					<Typography variant="caption" sx={{ minWidth: 50 }}>
+					<Typography variant="caption" sx={{ minWidth: 45, fontSize: "0.75rem" }}>
 						{minValue}
 					</Typography>
 					<Box
 						display="flex"
-						height={30}
+						height={24}
 						flex={1}
 						border="1px solid #e0e0e0"
 						borderRadius={1}
@@ -431,11 +425,11 @@ const ProvisionalBallotChoroplethMap: React.FC<
 							/>
 						))}
 					</Box>
-					<Typography variant="caption" sx={{ minWidth: 50, textAlign: "right" }}>
+					<Typography variant="caption" sx={{ minWidth: 45, textAlign: "right", fontSize: "0.75rem" }}>
 						{maxValue}
 					</Typography>
 				</Box>
-				<Typography variant="caption" color="text.secondary" display="block" mt={1}>
+				<Typography variant="caption" color="text.secondary" display="block" mt={0.5} fontSize="0.7rem">
 					Interactive choropleth map showing provisional ballot distribution across
 					counties. Hover over counties for detailed information.
 				</Typography>
