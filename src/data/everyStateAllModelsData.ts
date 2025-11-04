@@ -1,12 +1,13 @@
 export interface EveryStateAllModelsData {
-	id: number;
-	stateName: string;
-	make: string;
-	quantity: number;
+    id: number;
+    stateName?: string;
+    make: string;
+    model?: string;
+    quantity: number;
     equipmentType: string;
     description: string;
-	age: number;
-	os: string;
+    age: number;
+    os: string;
     certification: string;
     scanRate: number;
     errorRate: string;
@@ -37519,7 +37520,7 @@ const data: EveryStateAllModelsData[] = [
 
 export async function getEveryStateAllModelsData(stateName: string) {
     try {
-        return data.filter((x) => x.stateName.toLowerCase() === stateName.trim().toLowerCase());
+        return data.filter((x) => x.stateName?.toLowerCase() === stateName.trim().toLowerCase());
     } catch (error) {
         console.error('Error:', error);
     }

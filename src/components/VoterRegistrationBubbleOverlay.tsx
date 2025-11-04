@@ -1,5 +1,5 @@
 // GUI - 18
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { MapContainer, TileLayer, CircleMarker } from "react-leaflet";
 import type { BlockBubblePayload } from "../data/types";
 
@@ -7,7 +7,7 @@ import type { BlockBubblePayload } from "../data/types";
 interface Props { stateName: string; payload: BlockBubblePayload; }
 
 
-const VoterRegistrationBubbleOverlay: React.FC<Props> = ({ stateName, payload }) => {
+const VoterRegistrationBubbleOverlay: React.FC<Props> = ({ payload }) => {
     // auto radius selection to reduce overlap: proportional to inverse sqrt of density
     const radius = useMemo(() => {
         const n = Math.max(1, payload.points.length);

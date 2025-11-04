@@ -1,30 +1,15 @@
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-deb# Preprocessing temporary/generated files
-preprocessing/*.zip
-preprocessing/*.csv
-preprocessing/*.xlsx
-preprocessing/*.xls
-preprocessing/import_equipment.py
-preprocessing/import_manual_equipment.py
-preprocessing/*.pyc
-preprocessing/.DS_Store
-preprocessing/*_output.log
-preprocessing/preprocessing_output.log
+pnpm-debug.log*
 
 # Test and validation outputs
 test_results.log
 validation_report.txt
-*.test.logna-debug.log*
-
-node_modules
-dist
-dist-ssr
-*.local
+*.test.log
 
 # Editor directories and files
 .vscode/*
@@ -37,6 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Frontend build artifacts
+node_modules/
+dist/
+dist-ssr/
+*.local
 
 # Environment variables
 .env
@@ -62,6 +53,18 @@ env/
 .coverage
 htmlcov/
 
+# Preprocessing generated artifacts
+preprocessing/*.zip
+preprocessing/*.csv
+preprocessing/*.xlsx
+preprocessing/*.xls
+preprocessing/import_equipment.py
+preprocessing/import_manual_equipment.py
+preprocessing/*_output.log
+preprocessing/preprocessing_output.log
+preprocessing/*.pyc
+preprocessing/.DS_Store
+
 # Preprocessing cache (large downloaded files)
 # Note: We commit election_results and equipment CSVs for full automation
 preprocessing/cache/*
@@ -86,18 +89,6 @@ preprocessing/logs/
 preprocessing/logs/*
 !preprocessing/logs/.gitkeep
 
-# Preprocessing - temporary/generated files
-preprocessing/*.zip
-preprocessing/*.csv
-preprocessing/*.xlsx
-preprocessing/*.xls
-preprocessing/import_equipment.py
-preprocessing/import_manual_equipment.py
-preprocessing/*.pyc
-preprocessing/.DS_Store
-preprocessing/*_output.log
-preprocessing/preprocessing_output.log
-
 # MongoDB data (if running locally)
 data/db/
 dump/
@@ -111,6 +102,11 @@ backend/*.jar
 backend/*.war
 backend/backend.log
 backend/nohup.out
+
+# Legacy backend build artifacts
+raptors-backend/target/
+raptors-backend/*.jar
+raptors-backend/*.war
 
 # Backend IDE files
 backend/.idea/

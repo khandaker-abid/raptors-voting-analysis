@@ -3,12 +3,13 @@
 // Categories: DRE no VVPAT, DRE with VVPAT, Ballot marking device, Scanner
 // Mixed equipment shows stripe pattern or blended color
 
-import React, { useMemo, useRef, useEffect } from "react";
+import React, { useMemo, useRef, useEffect, useState } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
-import { Box, Paper, Typography } from "@mui/material";
+import { Box, Paper, Typography, CircularProgress, Alert } from "@mui/material";
 import L from "leaflet";
-import type { Feature } from "geojson";
+import type { Feature, FeatureCollection, Geometry } from "geojson";
 import { bindResponsiveTooltip } from "../utils/leafletTooltipHelper";
+import { createCountyLookupMap, normalizeCountyName } from "../utils/countyNameNormalizer";
 
 interface EquipmentTypeData {
     geographicUnit: string;
@@ -25,8 +26,25 @@ interface EquipmentTypeData {
 interface Props {
     stateName: string;
     data: EquipmentTypeData[];
-    geoJsonData?: any; // GeoJSON for the state's geographic units
 }
+
+type CountyFeature = Feature<
+    Geometry,
+    {
+        ste_name: string[];
+        coty_name: string[];
+        coty_name_long: string[];
+    }
+>;
+
+type CountyGeoJSONData = FeatureCollection<
+    Geometry,
+    {
+        ste_name: string[];
+        coty_name: string[];
+        coty_name_long: string[];
+    }
+>;
 
 const EQUIPMENT_COLORS: Record<string, string> = {
     DRE_NO_VVPAT: "#424242", // Dark gray - older technology
@@ -47,8 +65,13 @@ const EQUIPMENT_LABELS: Record<string, string> = {
 const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
     stateName,
     data,
-    geoJsonData,
 }) => {
+    // State for boundary data loading
+    const [geoData, setGeoData] = useState<FeatureCollection | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
+
     // Track map + GeoJSON + hovered layer for proper highlight clearing
     const mapRef = useRef<L.Map | null>(null);
     const geoRef = useRef<L.GeoJSON | null>(null);
@@ -68,13 +91,83 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
         }
     };
 
+    // Load boundary data
+    useEffect(() => {
+        const loadMapData = async () => {
+            if (!stateName) return;
+
+            setLoading(true);
+            setError(null);
+
+            try {
+                const response = await fetch(
+                    "/georef-united-states-of-america-county.geojson"
+                );
+
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch county data: ${response.statusText}`);
+                }
+
+                const countyData = (await response.json()) as CountyGeoJSONData;
+
+                if (!countyData || !countyData.features) {
+                    throw new Error("County GeoJSON data is invalid or empty");
+                }
+
+                // Filter counties by state name
+                const features = countyData.features.filter(
+                    (feature: CountyFeature) =>
+                        feature.properties.ste_name &&
+                        feature.properties.ste_name.includes(stateName)
+                );
+
+                if (features.length === 0) {
+                    throw new Error(`No county data found for ${stateName}`);
+                }
+
+                // Create FeatureCollection for the map
+                const featureCollection: FeatureCollection = {
+                    type: "FeatureCollection",
+                    features: features,
+                };
+
+                // Calculate bounds for the map
+                const bounds = new L.LatLngBounds([]);
+                features.forEach((feature) => {
+                    if (feature.geometry.type === "Polygon") {
+                        feature.geometry.coordinates[0].forEach((coord) => {
+                            bounds.extend([coord[1], coord[0]]);
+                        });
+                    } else if (feature.geometry.type === "MultiPolygon") {
+                        feature.geometry.coordinates.forEach((polygon) => {
+                            polygon[0].forEach((coord) => {
+                                bounds.extend([coord[1], coord[0]]);
+                            });
+                        });
+                    }
+                });
+
+                setGeoData(featureCollection);
+                setMapBounds(bounds.isValid() ? bounds : null);
+                setLoading(false);
+            } catch (err: any) {
+                console.error("Error loading map data:", err);
+                setError(err.message || "Failed to load map data");
+                setLoading(false);
+            }
+        };
+
+        loadMapData();
+    }, [stateName]);
+
     // Create lookup map for equipment type by geographic unit
+    // Uses centralized normalization to handle apostrophes, periods, etc.
     const equipmentLookup = useMemo(() => {
-        const lookup = new Map<string, EquipmentTypeData>();
-        data.forEach((item) => {
-            lookup.set(item.geographicUnit.toLowerCase(), item);
-        });
-        return lookup;
+        return createCountyLookupMap(
+            data,
+            (item) => item.geographicUnit,
+            (item) => item
+        );
     }, [data]);
 
     // Style function for GeoJSON features
@@ -89,14 +182,19 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
             };
         }
 
-        const unitName = (
-            feature.properties.name ||
-            feature.properties.NAME ||
-            feature.properties.NAMELSAD ||
-            ""
-        ).toLowerCase();
+        // Get county name from GeoJSON properties
+        // The georef-united-states-of-america-county.geojson uses coty_name_long
+        const countyNameArray = feature.properties.coty_name_long ||
+            feature.properties.coty_name ||
+            [feature.properties.name] ||
+            [feature.properties.NAME] ||
+            [feature.properties.NAMELSAD] ||
+            [""];
+        const unitName = Array.isArray(countyNameArray) ? countyNameArray[0] : countyNameArray;
 
-        const equipmentData = equipmentLookup.get(unitName);
+        // Use centralized normalization for consistent matching
+        const normalizedName = normalizeCountyName(unitName);
+        const equipmentData = equipmentLookup.get(normalizedName);
 
         if (!equipmentData) {
             return {
@@ -124,20 +222,59 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
     const onEachFeature = (feature: Feature, layer: L.Layer) => {
         if (!feature.properties) return;
 
-        const unitName = (
-            feature.properties.name ||
-            feature.properties.NAME ||
-            feature.properties.NAMELSAD ||
-            "Unknown"
-        ).toLowerCase();
+        // Get county name from GeoJSON properties
+        const countyNameArray = feature.properties.coty_name_long ||
+            feature.properties.coty_name ||
+            [feature.properties.name] ||
+            [feature.properties.NAME] ||
+            [feature.properties.NAMELSAD] ||
+            ["Unknown"];
+        const unitName = Array.isArray(countyNameArray) ? countyNameArray[0] : countyNameArray;
+        const displayName = unitName || "Unknown";
 
-        const equipmentData = equipmentLookup.get(unitName);
+        const normalizedName = normalizeCountyName(unitName);
+        const equipmentData = equipmentLookup.get(normalizedName);
 
-        const tooltipContent = equipmentData
-            ? `<div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${feature.properties.name || feature.properties.NAME}</div>
-         <div style="font-size: 13px;">Equipment: <strong>${EQUIPMENT_LABELS[equipmentData.primaryEquipmentType]}</strong></div>`
-            : `<div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${feature.properties.name || feature.properties.NAME}</div>
+        let tooltipContent = "";
+        if (equipmentData) {
+            tooltipContent = `<div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${displayName}</div>`;
+            tooltipContent += `<div style="font-size: 12px;">Equipment: <strong>${EQUIPMENT_LABELS[equipmentData.primaryEquipmentType]}</strong></div>`;
+
+            // If equipment type is MIXED, show breakdown with percentages
+            if (equipmentData.primaryEquipmentType === "MIXED" && equipmentData.equipmentBreakdown) {
+                const breakdown = equipmentData.equipmentBreakdown as any;
+
+                // Check if we have equipmentTypeCounts (Rhode Island aggregated data)
+                if (breakdown.equipmentTypeCounts) {
+                    const counts = breakdown.equipmentTypeCounts;
+                    const total = Object.values(counts).reduce((sum: number, val) => sum + (val as number), 0);
+
+                    if (total > 0) {
+                        tooltipContent += `<div style="font-size: 11px; margin-top: 4px; color: #ddd;">`;
+                        Object.entries(counts).forEach(([type, count]) => {
+                            const percentage = ((count as number / total) * 100).toFixed(0);
+                            const label = EQUIPMENT_LABELS[type] || type;
+                            tooltipContent += `<div>• ${label}: ${percentage}%</div>`;
+                        });
+                        tooltipContent += `</div>`;
+                    }
+                }
+                // Check if we have markingMethod and tabulationMethod (Arkansas/Maryland data)
+                else if (breakdown.markingMethod || breakdown.tabulationMethod) {
+                    tooltipContent += `<div style="font-size: 11px; margin-top: 4px; color: #ddd;">`;
+                    if (breakdown.markingMethod) {
+                        tooltipContent += `<div>• Marking: ${breakdown.markingMethod}</div>`;
+                    }
+                    if (breakdown.tabulationMethod) {
+                        tooltipContent += `<div>• Tabulation: ${breakdown.tabulationMethod}</div>`;
+                    }
+                    tooltipContent += `</div>`;
+                }
+            }
+        } else {
+            tooltipContent = `<div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${displayName}</div>
          <div style="font-size: 13px; color: #ff9800;">No equipment data available</div>`;
+        }
 
         // Use responsive tooltip helper to avoid cutoff
         bindResponsiveTooltip(layer, tooltipContent, mapRef.current);
@@ -186,9 +323,33 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
         return () => {
             node.removeEventListener("mouseleave", handleLeave);
         };
-    }, [geoJsonData]);
+    }, [geoData]);
 
-    if (!geoJsonData) {
+    // Show loading state
+    if (loading) {
+        return (
+            <Paper sx={{ p: 3, textAlign: "center" }}>
+                <CircularProgress size={40} />
+                <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+                    Loading equipment type data...
+                </Typography>
+            </Paper>
+        );
+    }
+
+    // Show error state
+    if (error) {
+        return (
+            <Paper sx={{ p: 3 }}>
+                <Alert severity="error">
+                    {error}
+                </Alert>
+            </Paper>
+        );
+    }
+
+    // Show no data message
+    if (!geoData) {
         return (
             <Paper sx={{ p: 3, textAlign: "center" }}>
                 <Typography variant="body1" color="text.secondary">
@@ -224,9 +385,13 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
             {/* Map */}
             <Box sx={{ height: 500, border: "1px solid #ccc", borderRadius: 1 }}>
                 <MapContainer
-                    ref={(m) => { mapRef.current = m; }}
-                    center={[39.5, -96.0]}
-                    zoom={6}
+                    ref={(m) => {
+                        mapRef.current = m;
+                        if (m && mapBounds) {
+                            m.fitBounds(mapBounds, { padding: [20, 20] });
+                        }
+                    }}
+                    bounds={mapBounds || undefined}
                     style={{ height: "100%", width: "100%", borderRadius: "4px" }}
                     scrollWheelZoom={true}
                 >
@@ -236,7 +401,7 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                     />
                     <GeoJSON
                         ref={geoRef as any}
-                        data={geoJsonData}
+                        data={geoData}
                         style={getFeatureStyle}
                         onEachFeature={onEachFeature}
                     />
@@ -244,7 +409,7 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
             </Box>
 
             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-                Mixed equipment types are shown when multiple equipment categories are used
+                <strong>Note:</strong> Mixed equipment types are shown when multiple equipment categories are used
                 within a geographic region.
             </Typography>
         </Paper>

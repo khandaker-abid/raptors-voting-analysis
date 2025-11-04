@@ -270,6 +270,46 @@ export async function fetchEquipmentVsRejected(state: string): Promise<any[]> {
 }
 
 /**
+ * GUI-6: Fetch detailed equipment data for a specific state
+ * Returns all equipment models with quantity, age, error rates, etc.
+ */
+export async function fetchStateEquipmentDetails(state: string): Promise<any[]> {
+    const s = encodeURIComponent(state);
+
+    // New endpoint that aggregates VerifiedVoting data
+    const url = `${base}/equipment/state/${s}/details`;
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error(`Failed to fetch equipment details for ${state}:`, error);
+        return [];
+    }
+}
+
+/**
+ * GUI-19: Fetch voter registration data for a specific state
+ * Returns registered voters by region/county
+ */
+export async function fetchStateRegisteredVoters(state: string): Promise<any[]> {
+    const s = encodeURIComponent(state);
+    const abbr = STATE_TO_ABBR[state] || state.slice(0, 2).toUpperCase();
+
+    const urls = [
+        `${base}/registration/state/${s}`,
+        `${base}/registration/state/${abbr}`,
+        `${base}/data/state-registered-voters/${s}`, // legacy endpoint
+        `${base}/data/state-registered-voters/${abbr}`,
+    ];
+
+    return tryUrls(urls, `state-registered-voters (${state})`);
+}
+
+/**
  * GUI-21: Fetch opt-in/opt-out registration comparison
  */
 export async function fetchOptInOutComparison(): Promise<any[]> {
@@ -296,13 +336,13 @@ export async function fetchEarlyVotingComparison(): Promise<any[]> {
 /**
  * GUI-24: Fetch drop box voting bubble chart data
  * Shows relationship between drop box voting and Republican vote percentage
- * Arkansas has drop box data for 2020, Maryland for 2024
+ * All party-affiliated states support this analysis
  */
 export async function fetchDropboxBubbles(state: string, year?: number): Promise<any[]> {
     const s = encodeURIComponent(state);
     const abbr = STATE_TO_ABBR[state] || state.slice(0, 2).toUpperCase();
 
-    // Use 2020 for Arkansas (has drop box data), 2024 for Maryland
+    // Use 2020 for Arkansas (has drop box data), 2024 for Maryland and Rhode Island
     const defaultYear = state === "Arkansas" ? 2020 : 2024;
     const queryYear = year || defaultYear;
 
@@ -337,4 +377,62 @@ export async function fetchRegisteredVoters(
     return tryUrls(urls, `registered-voters (${state}, ${county})`);
 }
 
-export const API_URL = 'http://localhost:8080/api/data';
+/**
+ * GUI-10: Fetch equipment types by geographic unit for a state
+ * Returns equipment type data for choropleth display
+ */
+export async function fetchEquipmentTypes(state: string): Promise<any[]> {
+    const s = encodeURIComponent(state);
+    const abbr = STATE_TO_ABBR[state] || state.slice(0, 2).toUpperCase();
+
+    const urls = [
+        `${base}/equipment/${s}/types`,
+        `${base}/equipment/${abbr}/types`,
+    ];
+
+    return tryUrls(urls, `equipment-types (${state})`);
+}
+
+/**
+ * GUI-27: Fetch Gingles analysis data (racially polarized voting)
+ * Returns precinct-level voting and demographic data with regression coefficients
+ */
+export async function fetchGinglesData(state: string, demographic: string = "white"): Promise<any> {
+    const s = encodeURIComponent(state);
+
+    const urls = [
+        `${base}/preclearance/gingles/${s}?demographic=${demographic}`,
+    ];
+
+    return tryUrls(urls, `gingles-analysis (${state}, ${demographic})`);
+}
+
+/**
+ * GUI-28: Fetch Ecological Inference equipment quality data
+ * Returns probability curves for equipment quality by demographic
+ */
+export async function fetchEIEquipmentData(state: string, demographic?: string): Promise<any> {
+    const s = encodeURIComponent(state);
+    const demoParam = demographic ? `?demographic=${encodeURIComponent(demographic)}` : "";
+
+    const urls = [
+        `${base}/preclearance/ei-equipment/${s}${demoParam}`,
+    ];
+
+    return tryUrls(urls, `ei-equipment (${state})`);
+}
+
+/**
+ * GUI-29: Fetch Ecological Inference rejected ballots data
+ * Returns probability curves for ballot rejection rates by demographic
+ */
+export async function fetchEIRejectedData(state: string, demographic?: string): Promise<any> {
+    const s = encodeURIComponent(state);
+    const demoParam = demographic ? `?demographic=${encodeURIComponent(demographic)}` : "";
+
+    const urls = [
+        `${base}/preclearance/ei-rejected/${s}${demoParam}`,
+    ];
+
+    return tryUrls(urls, `ei-rejected (${state})`);
+}

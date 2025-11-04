@@ -12,9 +12,13 @@ import {
 	Typography,
 	TextField,
 	InputAdornment,
+	TableSortLabel,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import type { ActiveVotersRow } from "../data/types";
+
+type SortableColumn = 'geographicUnit' | 'totalVoters' | 'activeVoters' | 'inactiveVoters' | 'activePercentage' | 'inactivePercentage';
+type SortOrder = 'asc' | 'desc';
 
 interface ActiveVotersTableProps {
 	data: ActiveVotersRow[];
@@ -37,6 +41,16 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 	const [page, setPage] = useState(0);
 	const rowsPerPage = 5; // Fixed at 5 rows per page (no scrolling, just pagination)
 	const [searchTerm, setSearchTerm] = useState("");
+	const [sortColumn, setSortColumn] = useState<SortableColumn>('geographicUnit');
+	const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
+	// Helper function to normalize county names (fix all-caps issue)
+	const normalizeCountyName = (name: string): string => {
+		return name
+			.split(' ')
+			.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+			.join(' ');
+	};
 
 	const filteredData = useMemo(() => {
 		if (!data) return [];
@@ -47,10 +61,46 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 		);
 	}, [data, searchTerm]);
 
-	// Sort by total voters descending
+	// Sort data based on selected column and order
 	const sortedData = useMemo(() => {
-		return [...filteredData].sort((a, b) => b.totalVoters - a.totalVoters);
-	}, [filteredData]);
+		const sorted = [...filteredData];
+		sorted.sort((a, b) => {
+			let aValue: string | number;
+			let bValue: string | number;
+
+			if (sortColumn === 'geographicUnit') {
+				aValue = normalizeCountyName(a.geographicUnit);
+				bValue = normalizeCountyName(b.geographicUnit);
+			} else if (sortColumn === 'inactivePercentage') {
+				aValue = 100 - a.activePercentage;
+				bValue = 100 - b.activePercentage;
+			} else {
+				aValue = a[sortColumn];
+				bValue = b[sortColumn];
+			}
+
+			if (typeof aValue === 'string' && typeof bValue === 'string') {
+				return sortOrder === 'asc'
+					? aValue.localeCompare(bValue)
+					: bValue.localeCompare(aValue);
+			} else {
+				return sortOrder === 'asc'
+					? (aValue as number) - (bValue as number)
+					: (bValue as number) - (aValue as number);
+			}
+		});
+		return sorted;
+	}, [filteredData, sortColumn, sortOrder]);
+
+	const handleSort = (column: SortableColumn) => {
+		if (sortColumn === column) {
+			setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+		} else {
+			setSortColumn(column);
+			setSortOrder('asc');
+		}
+		setPage(0); // Reset to first page when sorting
+	};
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
 		setPage(newPage);
@@ -104,61 +154,139 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 							<TableCell
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									py: 1.5,
+									cursor: "pointer",
 								}}>
-								County/Town
+								<TableSortLabel
+									active={sortColumn === 'geographicUnit'}
+									direction={sortColumn === 'geographicUnit' ? sortOrder : 'asc'}
+									onClick={() => handleSort('geographicUnit')}
+									sx={{
+										color: 'white !important',
+										'&:hover': { color: 'white !important' },
+										'& .MuiTableSortLabel-icon': { color: 'white !important' },
+										'&.Mui-active': { color: 'white !important' },
+										'&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+									}}>
+									County/Town
+								</TableSortLabel>
 							</TableCell>
 							<TableCell
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									py: 1.5,
+									cursor: "pointer",
 								}}>
-								Total Voters
+								<TableSortLabel
+									active={sortColumn === 'activeVoters'}
+									direction={sortColumn === 'activeVoters' ? sortOrder : 'asc'}
+									onClick={() => handleSort('activeVoters')}
+									sx={{
+										color: 'white !important',
+										'&:hover': { color: 'white !important' },
+										'& .MuiTableSortLabel-icon': { color: 'white !important' },
+										'&.Mui-active': { color: 'white !important' },
+										'&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+									}}>
+									Active Voters
+								</TableSortLabel>
 							</TableCell>
 							<TableCell
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									py: 1.5,
+									cursor: "pointer",
 								}}>
-								Active Voters
+								<TableSortLabel
+									active={sortColumn === 'inactiveVoters'}
+									direction={sortColumn === 'inactiveVoters' ? sortOrder : 'asc'}
+									onClick={() => handleSort('inactiveVoters')}
+									sx={{
+										color: 'white !important',
+										'&:hover': { color: 'white !important' },
+										'& .MuiTableSortLabel-icon': { color: 'white !important' },
+										'&.Mui-active': { color: 'white !important' },
+										'&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+									}}>
+									Inactive Voters
+								</TableSortLabel>
 							</TableCell>
 							<TableCell
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									py: 1.5,
+									cursor: "pointer",
 								}}>
-								Inactive Voters
+								<TableSortLabel
+									active={sortColumn === 'activePercentage'}
+									direction={sortColumn === 'activePercentage' ? sortOrder : 'asc'}
+									onClick={() => handleSort('activePercentage')}
+									sx={{
+										color: 'white !important',
+										'&:hover': { color: 'white !important' },
+										'& .MuiTableSortLabel-icon': { color: 'white !important' },
+										'&.Mui-active': { color: 'white !important' },
+										'&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+									}}>
+									Active %
+								</TableSortLabel>
 							</TableCell>
 							<TableCell
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									py: 1.5,
+									cursor: "pointer",
 								}}>
-								Active %
+								<TableSortLabel
+									active={sortColumn === 'inactivePercentage'}
+									direction={sortColumn === 'inactivePercentage' ? sortOrder : 'asc'}
+									onClick={() => handleSort('inactivePercentage')}
+									sx={{
+										color: 'white !important',
+										'&:hover': { color: 'white !important' },
+										'& .MuiTableSortLabel-icon': { color: 'white !important' },
+										'&.Mui-active': { color: 'white !important' },
+										'&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+									}}>
+									Inactive %
+								</TableSortLabel>
 							</TableCell>
 							<TableCell
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									py: 1.5,
+									cursor: "pointer",
 								}}>
-								Inactive %
+								<TableSortLabel
+									active={sortColumn === 'totalVoters'}
+									direction={sortColumn === 'totalVoters' ? sortOrder : 'asc'}
+									onClick={() => handleSort('totalVoters')}
+									sx={{
+										color: 'white !important',
+										'&:hover': { color: 'white !important' },
+										'& .MuiTableSortLabel-icon': { color: 'white !important' },
+										'&.Mui-active': { color: 'white !important' },
+										'&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+									}}>
+									Total Voters
+								</TableSortLabel>
 							</TableCell>
 						</TableRow>
 					</TableHead>
@@ -178,15 +306,7 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 												fontWeight: 500,
 												backgroundColor: rowBg,
 											}}>
-											{row.geographicUnit}
-										</TableCell>
-										<TableCell
-											align="right"
-											sx={{
-												fontWeight: "bold",
-												backgroundColor: rowBg,
-											}}>
-											{row.totalVoters.toLocaleString()}
+											{normalizeCountyName(row.geographicUnit)}
 										</TableCell>
 										<TableCell align="right" sx={{ backgroundColor: rowBg }}>
 											{row.activeVoters.toLocaleString()}
@@ -199,6 +319,14 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 										</TableCell>
 										<TableCell align="right" sx={{ backgroundColor: rowBg }}>
 											{inactivePercentage.toFixed(1)}%
+										</TableCell>
+										<TableCell
+											align="right"
+											sx={{
+												fontWeight: "bold",
+												backgroundColor: rowBg,
+											}}>
+											{row.totalVoters.toLocaleString()}
 										</TableCell>
 									</TableRow>
 								);
@@ -214,9 +342,6 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 								TOTAL
 							</TableCell>
 							<TableCell align="right" sx={{ fontWeight: "bold" }}>
-								{totals.total.toLocaleString()}
-							</TableCell>
-							<TableCell align="right" sx={{ fontWeight: "bold" }}>
 								{totals.active.toLocaleString()}
 							</TableCell>
 							<TableCell align="right" sx={{ fontWeight: "bold" }}>
@@ -227,6 +352,9 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 							</TableCell>
 							<TableCell align="right" sx={{ fontWeight: "bold" }}>
 								{((totals.inactive / totals.total) * 100).toFixed(1)}%
+							</TableCell>
+							<TableCell align="right" sx={{ fontWeight: "bold" }}>
+								{totals.total.toLocaleString()}
 							</TableCell>
 						</TableRow>
 					</TableBody>

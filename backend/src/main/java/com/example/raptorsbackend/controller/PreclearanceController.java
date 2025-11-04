@@ -23,34 +23,62 @@ public class PreclearanceController {
 
     /**
      * GUI-27: Get Gingles chart data (racially polarized voting)
-     * GET /api/preclearance/gingles/{state}
+     * GET /api/preclearance/gingles/{state}?demographic=white
      */
     @GetMapping("/gingles/{state}")
-    public Map<String, Object> getGinglesData(@PathVariable String state) {
+    public Map<String, Object> getGinglesData(
+            @PathVariable String state,
+            @RequestParam(required = false, defaultValue = "white") String demographic) {
+
+        // Fetch precinct-level voting and demographic data
         Query query = new Query();
         query.addCriteria(Criteria.where("state").is(state));
 
-        List<Map<String, Object>> precincts = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "precinct_demographics");
+        List<Map<String, Object>> precincts = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
+                "precinct_demographics");
 
+        // Transform data for frontend
         List<Map<String, Object>> data = precincts.stream().map(precinct -> {
             Map<String, Object> row = new HashMap<>();
             row.put("precinct", precinct.get("precinct"));
-            row.put("democraticPct", precinct.getOrDefault("democraticPct", 0));
-            row.put("republicanPct", precinct.getOrDefault("republicanPct", 0));
-            row.put("whitePct", precinct.getOrDefault("whitePct", 0));
-            row.put("hispanicPct", precinct.getOrDefault("hispanicPct", 0));
-            row.put("africanAmericanPct", precinct.getOrDefault("africanAmericanPct", 0));
+            row.put("democraticPct", precinct.getOrDefault("democraticPct", 0.0));
+            row.put("republicanPct", precinct.getOrDefault("republicanPct", 0.0));
+            row.put("whitePct", precinct.getOrDefault("whitePct", 0.0));
+            row.put("hispanicPct", precinct.getOrDefault("hispanicPct", 0.0));
+            row.put("africanAmericanPct", precinct.getOrDefault("africanAmericanPct", 0.0));
+            row.put("asianPct", precinct.getOrDefault("asianPct", 0.0));
             return row;
         }).toList();
+
+        // Fetch regression coefficients from database
+        Query regressionQuery = new Query();
+        regressionQuery.addCriteria(Criteria.where("state").is(state));
+        Map<String, Object> regressionDoc = mongoTemplate.findOne(
+                regressionQuery, Map.class, "gingles_regressions");
 
         Map<String, Object> result = new HashMap<>();
         result.put("state", state);
         result.put("data", data);
+        result.put("totalPrecincts", data.size());
 
-        // Calculate regression coefficients (simple polynomial fit)
-        // For production, use proper statistical library
-        result.put("democraticRegression", Map.of("a", 0.5, "b", 1.1));
-        result.put("republicanRegression", Map.of("a", 0.6, "b", 0.9));
+        // Add regression coefficients for the selected demographic
+        if (regressionDoc != null && regressionDoc.containsKey("regressions")) {
+            Map<String, Object> regressions = (Map<String, Object>) regressionDoc.get("regressions");
+
+            // Map demographic parameter to DB key
+            String demographicKey = switch (demographic.toLowerCase()) {
+                case "hispanic" -> "hispanic";
+                case "africanamerican", "african_american" -> "africanAmerican";
+                case "asian" -> "asian";
+                default -> "white";
+            };
+
+            if (regressions.containsKey(demographicKey)) {
+                Map<String, Object> demoRegressions = (Map<String, Object>) regressions.get(demographicKey);
+                result.put("democraticRegression", demoRegressions.get("democratic"));
+                result.put("republicanRegression", demoRegressions.get("republican"));
+            }
+        }
 
         return result;
     }
@@ -72,7 +100,8 @@ public class PreclearanceController {
             query.addCriteria(Criteria.where("demographic").is(demographic));
         }
 
-        List<Map<String, Object>> results = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "ei_equipment_analysis");
+        List<Map<String, Object>> results = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
+                "ei_equipment_analysis");
 
         Map<String, Object> result = new HashMap<>();
         result.put("state", state);
@@ -111,7 +140,8 @@ public class PreclearanceController {
             query.addCriteria(Criteria.where("demographic").is(demographic));
         }
 
-        List<Map<String, Object>> results = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(query, Map.class, "ei_rejection_analysis");
+        List<Map<String, Object>> results = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
+                "ei_rejection_analysis");
 
         Map<String, Object> result = new HashMap<>();
         result.put("state", state);
@@ -157,7 +187,8 @@ public class PreclearanceController {
                 .and("analysis_type").is("equipment_quality"));
         long fullQueryCount = mongoTemplate.count(fullQuery, "ei_equipment_analysis");
 
-        List<Map<String, Object>> sample = (List<Map<String, Object>>)(List<?>) mongoTemplate.find(new Query().limit(1), Map.class, "ei_equipment_analysis");
+        List<Map<String, Object>> sample = (List<Map<String, Object>>) (List<?>) mongoTemplate
+                .find(new Query().limit(1), Map.class, "ei_equipment_analysis");
 
         return Map.of(
                 "totalDocuments", count,

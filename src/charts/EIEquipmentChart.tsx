@@ -58,12 +58,12 @@ const DEMOGRAPHICS = [
 ];
 
 const DEMOGRAPHIC_COLORS: Record<string, string> = {
-    "White": "#3498db",
-    "African American": "#e74c3c",
-    "Hispanic": "#f39c12",
-    "Asian": "#2ecc71",
-    "Native American": "#9b59b6",
-    "Other": "#95a5a6",
+    "White": "#212121", // Very dark gray
+    "African American": "#424242", // Dark gray
+    "Hispanic": "#616161", // Medium dark gray
+    "Asian": "#757575", // Medium gray
+    "Native American": "#9e9e9e", // Light gray
+    "Other": "#bdbdbd", // Very light gray
 };
 
 const EIEquipmentChart: React.FC<Props> = ({ stateName }) => {

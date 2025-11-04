@@ -5,6 +5,7 @@ import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import type { ActiveVotersRow } from "../data/types";
 import { bindResponsiveTooltip } from "../utils/leafletTooltipHelper";
+import { createCountyLookupMap, normalizeCountyName } from "../utils/countyNameNormalizer";
 
 interface ActiveVotersChoroplethMapProps {
 	stateName: string;
@@ -94,18 +95,13 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 	}, [data, COLOR_PALETTE]);
 
 	// Create a data lookup map for efficient county data retrieval
+	// Uses centralized normalization to handle apostrophes, periods, etc.
 	const dataLookup = useMemo(() => {
-		const lookup = new Map<string, ActiveVotersRow>();
-		data.forEach((item) => {
-			const normalizedCounty = item.geographicUnit.toLowerCase().replace(/\s+/g, " ").trim();
-			lookup.set(normalizedCounty, item);
-
-			const withoutCounty = normalizedCounty.replace(/\s+county$/, "");
-			if (withoutCounty !== normalizedCounty) {
-				lookup.set(withoutCounty, item);
-			}
-		});
-		return lookup;
+		return createCountyLookupMap(
+			data,
+			(item) => item.geographicUnit,
+			(item) => item
+		);
 	}, [data]);
 
 	useEffect(() => {
@@ -188,26 +184,13 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 		}
 
 		const countyFeature = feature as CountyFeature;
-		const countyName = (
-			countyFeature.properties.coty_name_long?.[0] ||
+		const countyName = countyFeature.properties.coty_name_long?.[0] ||
 			countyFeature.properties.coty_name?.[0] ||
-			"Unknown County"
-		)
-			.toLowerCase()
-			.replace(/\s+/g, " ")
-			.trim();
+			"Unknown County";
 
-		let countyData = dataLookup.get(countyName);
-		if (!countyData) {
-			const withoutCounty = countyName.replace(/\s+county$/, "");
-			countyData = dataLookup.get(withoutCounty);
-		}
-		if (!countyData) {
-			const withCounty = countyName.includes("county")
-				? countyName
-				: `${countyName} county`;
-			countyData = dataLookup.get(withCounty);
-		}
+		// Use centralized normalization for consistent matching
+		const normalizedName = normalizeCountyName(countyName);
+		const countyData = dataLookup.get(normalizedName);
 
 		const activePercentage = countyData?.activePercentage || 0;
 		const fillColor = colorScale(activePercentage);
@@ -230,18 +213,9 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 			countyFeature.properties.coty_name?.[0] ||
 			"Unknown County";
 
-		const normalizedName = countyName.toLowerCase().replace(/\s+/g, " ").trim();
-		let countyData = dataLookup.get(normalizedName);
-		if (!countyData) {
-			const withoutCounty = normalizedName.replace(/\s+county$/, "");
-			countyData = dataLookup.get(withoutCounty);
-		}
-		if (!countyData) {
-			const withCounty = normalizedName.includes("county")
-				? normalizedName
-				: `${normalizedName} county`;
-			countyData = dataLookup.get(withCounty);
-		}
+		// Use centralized normalization for consistent matching
+		const normalizedName = normalizeCountyName(countyName);
+		const countyData = dataLookup.get(normalizedName);
 
 		const activeVoters = countyData?.activeVoters || 0;
 		const totalVoters = countyData?.totalVoters || 0;
@@ -355,18 +329,41 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 	const avgPercentage =
 		data.reduce((sum, d) => sum + d.activePercentage, 0) / data.length;
 
+	// Check if all data is zero (no data reported)
+	const allZero = data.every((d) => d.activePercentage === 0);
+
+	// Note: Rhode Island data is now aggregated to county level by the backend,
+	// so we no longer need to show the town-level warning
+	const isRhodeIslandTownData = false;
+
 	return (
 		<Paper sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
 			<Box mb={1}>
 				<Typography variant="h6" gutterBottom fontWeight={600}>
-					Active Voters Distribution - {stateName}
+					Active Voters Distribution
 				</Typography>
-				<Box display="flex" gap={1} flexWrap="wrap">
+				<Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
 					<Chip label={`Average: ${avgPercentage.toFixed(1)}%`} size="small" />
 					<Chip
 						label={`Range: ${minPercentage.toFixed(1)}% – ${maxPercentage.toFixed(1)}%`}
 						size="small"
 					/>
+					{allZero && (
+						<Chip
+							label="⚠️ No data reported for 2024"
+							size="small"
+							color="warning"
+							sx={{ fontWeight: 600 }}
+						/>
+					)}
+					{isRhodeIslandTownData && (
+						<Chip
+							label="ℹ️ Data reported at town level (39 towns) - county map shows 5 counties only"
+							size="small"
+							color="info"
+							sx={{ fontWeight: 600 }}
+						/>
+					)}
 				</Box>
 			</Box>
 
@@ -442,6 +439,12 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 					Interactive choropleth map showing active voter distribution across
 					counties. Hover over counties for detailed information.
 				</Typography>
+				{/* Note for states that use town-level data */}
+				{(stateName === "Rhode Island" || stateName === "Vermont" || stateName === "Connecticut" || stateName === "Massachusetts") && (
+					<Typography variant="caption" color="primary.main" display="block" mt={0.5} fontSize="0.7rem" fontStyle="italic">
+						Note: {stateName} reports data at the town level. Values shown have been aggregated to county level for map display consistency.
+					</Typography>
+				)}
 			</Box>
 		</Paper>
 	);

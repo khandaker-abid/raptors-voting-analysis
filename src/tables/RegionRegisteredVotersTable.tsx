@@ -124,7 +124,13 @@ const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = 
 	}
 
 	return (
-		<Paper sx={{ pb: 3, pl: 5, pr: 5, pt: 2 }}>
+		<Paper sx={{ pb: 3, pl: 5, pr: 5, pt: 0 }}>
+			<Box sx={{ px: 2, pt: 1, pb: 1 }}>
+				<Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>
+					Note: Individual voter names are synthetically generated using U.S. Census common name data
+					and are representative of actual voter registration statistics by party affiliation for this county.
+				</Typography>
+			</Box>
 			<TableContainer sx={{ maxHeight: 600, pb: 2, position: "relative" }}>
 				<Table stickyHeader size="small">
 					<TableHead>
@@ -132,7 +138,7 @@ const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = 
 							<TableCell
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									position: "sticky",
 									left: 0,
@@ -145,7 +151,7 @@ const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = 
 								align="left"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}
 							>
@@ -155,7 +161,7 @@ const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = 
 								align="left"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}
 							>

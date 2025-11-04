@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import axios from "axios";
 import {
 	Box,
-	Chip,
 	Paper,
 	Table,
 	TableBody,
@@ -14,10 +12,14 @@ import {
 	Typography,
 	TextField,
 	InputAdornment,
+	TableSortLabel,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import type { StateVoterRegistrationData } from "../data/stateVoterRegistrationData";
-import { API_URL } from "../data/api";
+import { fetchStateRegisteredVoters } from "../data/api";
+
+type SortableColumn = 'regionName' | 'registeredVoterCount' | 'republicanCount' | 'democraticCount' | 'unaffiliatedPartyCount';
+type SortOrder = 'asc' | 'desc';
 
 interface StateVoterRegistrationTableProps {
 	stateName: string;
@@ -28,20 +30,30 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 }) => {
 	const [data, setData] = useState<StateVoterRegistrationData[]>([]);
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(10);
+	const rowsPerPage = 5; // Fixed at 5 rows per page (no scrolling, just pagination)
 	const [searchTerm, setSearchTerm] = useState("");
+	const [sortColumn, setSortColumn] = useState<SortableColumn>('regionName');
+	const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				const response = await axios.get<StateVoterRegistrationData[]>(`${API_URL}/state-registered-voters/${stateName}`);
-				setData(response.data);
+				const response = await fetchStateRegisteredVoters(stateName);
+				setData(response);
 			} catch (err) {
-				console.error(err);
+				console.error(`Failed to fetch voter registration data for ${stateName}:`, err);
 			}
 		};
 		fetchData();
-	}, []);
+	}, [stateName]);
+
+	// Helper function to normalize county names (fix all-caps issue)
+	const normalizeCountyName = (name: string): string => {
+		return name
+			.split(' ')
+			.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+			.join(' ');
+	};
 
 	const filteredData = useMemo(() => {
 		if (!data) return [];
@@ -52,21 +64,56 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 		);
 	}, [data, searchTerm]);
 
+	// Calculate totals for all data
+	const totals = useMemo(() => {
+		return {
+			registeredVoterCount: data.reduce((sum, row) => sum + (row.registeredVoterCount || 0), 0),
+			republicanCount: data.reduce((sum, row) => sum + (row.republicanCount || 0), 0),
+			democraticCount: data.reduce((sum, row) => sum + (row.democraticCount || 0), 0),
+			unaffiliatedPartyCount: data.reduce((sum, row) => sum + (row.unaffiliatedPartyCount || 0), 0),
+		};
+	}, [data]);
+
+	// Sort data based on selected column and order
 	const sortedData = useMemo(() => {
-		return [...filteredData].sort((a, b) => (
-			a.regionName.localeCompare(b.regionName)
-		));
-	}, [filteredData]);
+		const sorted = [...filteredData];
+		sorted.sort((a, b) => {
+			let aValue: string | number;
+			let bValue: string | number;
+
+			if (sortColumn === 'regionName') {
+				aValue = normalizeCountyName(a.regionName);
+				bValue = normalizeCountyName(b.regionName);
+			} else {
+				aValue = a[sortColumn];
+				bValue = b[sortColumn];
+			}
+
+			if (typeof aValue === 'string' && typeof bValue === 'string') {
+				return sortOrder === 'asc'
+					? aValue.localeCompare(bValue)
+					: bValue.localeCompare(aValue);
+			} else {
+				return sortOrder === 'asc'
+					? (aValue as number) - (bValue as number)
+					: (bValue as number) - (aValue as number);
+			}
+		});
+		return sorted;
+	}, [filteredData, sortColumn, sortOrder]);
+
+	const handleSort = (column: SortableColumn) => {
+		if (sortColumn === column) {
+			setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+		} else {
+			setSortColumn(column);
+			setSortOrder('asc');
+		}
+		setPage(0); // Reset to first page on sort
+	};
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
 		setPage(newPage);
-	};
-
-	const handleChangeRowsPerPage = (
-		event: React.ChangeEvent<HTMLInputElement>,
-	) => {
-		setRowsPerPage(parseInt(event.target.value, 10));
-		setPage(0);
 	};
 
 
@@ -81,36 +128,36 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 	}
 
 	return (
-		<Paper sx={{ p: 3 }}>
-			<Box mb={3}>
-				<Typography variant="h6" gutterBottom fontWeight={600}>
-					Voter Registration Data for {stateName}
+		<Paper sx={{ p: 2, display: "flex", flexDirection: "column", width: "100%" }}>
+			<Box
+				mb={1.5}
+				display="flex"
+				justifyContent="space-between"
+				alignItems="center"
+				flexWrap="wrap"
+				gap={1}
+			>
+				<Typography variant="h6" fontWeight={600}>
+					Voter Registration Data
 				</Typography>
-				<Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
-					<TextField
-						size="small"
-						placeholder="Region name..."
-						value={searchTerm}
-						onChange={(e) => setSearchTerm(e.target.value)}
-						InputProps={{
-							startAdornment: (
-								<InputAdornment position="start">
-									<SearchIcon fontSize="small" />
-								</InputAdornment>
-							),
-						}}
-						sx={{ minWidth: 250 }}
-					/>
-					<Chip
-						label={`${filteredData.length} regions`}
-						color="primary"
-						size="small"
-					/>
-				</Box>
+				<TextField
+					size="small"
+					placeholder="Search county/town..."
+					value={searchTerm}
+					onChange={(e) => setSearchTerm(e.target.value)}
+					InputProps={{
+						startAdornment: (
+							<InputAdornment position="start">
+								<SearchIcon fontSize="small" />
+							</InputAdornment>
+						),
+					}}
+					sx={{ minWidth: 200 }}
+				/>
 			</Box>
 
-			<TableContainer sx={{ maxHeight: 600, position: "relative" }}>
-				<Table stickyHeader size="small">
+			<TableContainer sx={{ position: "relative", overflow: "visible" }}>
+				<Table size="small">
 					<TableHead>
 						<TableRow>
 							<TableCell
@@ -118,11 +165,24 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 									fontWeight: "bold",
 									backgroundColor: "#616161",
 									color: "white",
-									position: "sticky",
-									left: 0,
-									zIndex: 3,
+									py: 1.5,
+									cursor: "pointer",
 								}}>
-								Region Name
+								<TableSortLabel
+									active={sortColumn === 'regionName'}
+									direction={sortColumn === 'regionName' ? sortOrder : 'asc'}
+									onClick={() => handleSort('regionName')}
+									sx={{
+										color: 'white !important',
+										'&:hover': { color: 'white !important' },
+										'&.Mui-active': { color: 'white !important' },
+										'& .MuiTableSortLabel-icon': {
+											color: 'white !important',
+										},
+									}}
+								>
+									Region Name
+								</TableSortLabel>
 							</TableCell>
 							<TableCell
 								align="right"
@@ -130,8 +190,25 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 									fontWeight: "bold",
 									backgroundColor: "#616161",
 									color: "white",
+									py: 1.5,
+									cursor: "pointer",
 								}}>
-								Registered Voter Count
+								<TableSortLabel
+									active={sortColumn === 'registeredVoterCount'}
+									direction={sortColumn === 'registeredVoterCount' ? sortOrder : 'asc'}
+									onClick={() => handleSort('registeredVoterCount')}
+									sx={{
+										color: 'white !important',
+										'&:hover': { color: 'white !important' },
+										'&.Mui-active': { color: 'white !important' },
+										'& .MuiTableSortLabel-icon': {
+											color: 'white !important',
+										},
+										flexDirection: 'row-reverse',
+									}}
+								>
+									Registered Voter Count
+								</TableSortLabel>
 							</TableCell>
 							<TableCell
 								align="right"
@@ -139,8 +216,25 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 									fontWeight: "bold",
 									backgroundColor: "#616161",
 									color: "white",
+									py: 1.5,
+									cursor: "pointer",
 								}}>
-								Republican Count
+								<TableSortLabel
+									active={sortColumn === 'republicanCount'}
+									direction={sortColumn === 'republicanCount' ? sortOrder : 'asc'}
+									onClick={() => handleSort('republicanCount')}
+									sx={{
+										color: 'white !important',
+										'&:hover': { color: 'white !important' },
+										'&.Mui-active': { color: 'white !important' },
+										'& .MuiTableSortLabel-icon': {
+											color: 'white !important',
+										},
+										flexDirection: 'row-reverse',
+									}}
+								>
+									Republican Count
+								</TableSortLabel>
 							</TableCell>
 							<TableCell
 								align="right"
@@ -148,8 +242,25 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 									fontWeight: "bold",
 									backgroundColor: "#616161",
 									color: "white",
+									py: 1.5,
+									cursor: "pointer",
 								}}>
-								Democratic Count
+								<TableSortLabel
+									active={sortColumn === 'democraticCount'}
+									direction={sortColumn === 'democraticCount' ? sortOrder : 'asc'}
+									onClick={() => handleSort('democraticCount')}
+									sx={{
+										color: 'white !important',
+										'&:hover': { color: 'white !important' },
+										'&.Mui-active': { color: 'white !important' },
+										'& .MuiTableSortLabel-icon': {
+											color: 'white !important',
+										},
+										flexDirection: 'row-reverse',
+									}}
+								>
+									Democratic Count
+								</TableSortLabel>
 							</TableCell>
 							<TableCell
 								align="right"
@@ -157,15 +268,32 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 									fontWeight: "bold",
 									backgroundColor: "#616161",
 									color: "white",
+									py: 1.5,
+									cursor: "pointer",
 								}}>
-								Unaffiliated Party Count
+								<TableSortLabel
+									active={sortColumn === 'unaffiliatedPartyCount'}
+									direction={sortColumn === 'unaffiliatedPartyCount' ? sortOrder : 'asc'}
+									onClick={() => handleSort('unaffiliatedPartyCount')}
+									sx={{
+										color: 'white !important',
+										'&:hover': { color: 'white !important' },
+										'&.Mui-active': { color: 'white !important' },
+										'& .MuiTableSortLabel-icon': {
+											color: 'white !important',
+										},
+										flexDirection: 'row-reverse',
+									}}
+								>
+									Unaffiliated Party Count
+								</TableSortLabel>
 							</TableCell>
 						</TableRow>
 					</TableHead>
 					<TableBody>
 						{sortedData
 							.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-							.map((row, index) => (
+							.map((row) => (
 								<TableRow
 									key={row.regionName}
 									hover
@@ -175,12 +303,8 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 										scope="row"
 										sx={{
 											fontWeight: 500,
-											position: "sticky",
-											left: 0,
-											backgroundColor: index % 2 === 0 ? "white" : "#fafafa",
-											zIndex: 1,
 										}}>
-										{row.regionName}
+										{row.regionName} County
 									</TableCell>
 
 									<TableCell
@@ -195,7 +319,7 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 										align="right"
 										sx={{
 											fontWeight: "bold",
-											color: "#880808"
+											color: "#d32f2f"
 										}}>
 										{row.republicanCount.toLocaleString()}
 									</TableCell>
@@ -204,7 +328,7 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 										align="right"
 										sx={{
 											fontWeight: "bold",
-											color: "primary.main"
+											color: "#1976d2"
 										}}>
 										{row.democraticCount.toLocaleString()}
 									</TableCell>
@@ -213,25 +337,58 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 										align="right"
 										sx={{
 											fontWeight: "bold",
-											color: "#301934"
+											color: "#757575"
 										}}>
 										{row.unaffiliatedPartyCount.toLocaleString()}
 									</TableCell>
 								</TableRow>
 							))}
+
+						{/* TOTAL Row */}
+						<TableRow sx={{ backgroundColor: "#f5f5f5", fontWeight: "bold" }}>
+							<TableCell
+								sx={{
+									fontWeight: "bold",
+									backgroundColor: "#f5f5f5",
+								}}
+							>
+								TOTAL
+							</TableCell>
+							<TableCell align="right" sx={{ fontWeight: "bold" }}>
+								{totals.registeredVoterCount.toLocaleString()}
+							</TableCell>
+							<TableCell align="right" sx={{ fontWeight: "bold", color: "#d32f2f" }}>
+								{totals.republicanCount.toLocaleString()}
+							</TableCell>
+							<TableCell align="right" sx={{ fontWeight: "bold", color: "#1976d2" }}>
+								{totals.democraticCount.toLocaleString()}
+							</TableCell>
+							<TableCell align="right" sx={{ fontWeight: "bold", color: "#757575" }}>
+								{totals.unaffiliatedPartyCount.toLocaleString()}
+							</TableCell>
+						</TableRow>
 					</TableBody>
 				</Table>
 			</TableContainer>
 
-			<TablePagination
-				component="div"
-				count={sortedData.length}
-				page={page}
-				onPageChange={handleChangePage}
-				rowsPerPage={rowsPerPage}
-				onRowsPerPageChange={handleChangeRowsPerPage}
-				rowsPerPageOptions={[5, 10, 25, 50]}
-			/>
+			<Box
+				sx={{
+					flexShrink: 0,
+					borderTop: "1px solid #e0e0e0",
+					backgroundColor: "white",
+				}}
+			>
+				<TablePagination
+					component="div"
+					count={sortedData.length}
+					page={page}
+					onPageChange={handleChangePage}
+					rowsPerPage={rowsPerPage}
+					rowsPerPageOptions={[]}
+					labelDisplayedRows={({ from, to, count }) => `${from}–${to} of ${count}`}
+					sx={{ minHeight: 52 }}
+				/>
+			</Box>
 		</Paper>
 	);
 }

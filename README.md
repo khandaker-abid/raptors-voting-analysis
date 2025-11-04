@@ -2,7 +2,7 @@
 
 [![CSE 416](https://img.shields.io/badge/CSE-416-blue)](https://www.stonybrook.edu)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
-[![Node.js](https://img.shields.io/badge/node.js-18%2B-green.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/node.js-22.12.0-green.svg)](https://nodejs.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-green.svg)](https://spring.io/projects/spring-boot)
 [![MongoDB](https://img.shields.io/badge/MongoDB-7.0-green.svg)](https://www.mongodb.com/)
 [![Tests](https://img.shields.io/badge/tests-37%2F37%20passing-brightgreen.svg)]()
@@ -14,7 +14,7 @@ Interactive web application for analyzing and visualizing election administratio
 - 🎨 **React Frontend** - Interactive maps, charts, and data visualizations with 30 GUI components
 - ⚙️ **Spring Boot Backend** - RESTful API with 30+ endpoints and MongoDB integration
 - 🗄️ **MongoDB Database** - 26,636+ records across 11 collections
-- 🔄 **Automated Pipeline** - 16 preprocessing scripts with full automation
+- 🔄 **Automated Pipeline** - 21 preprocessing stages with logging and cache-aware retries
 - ✅ **Testing Suite** - 100% pass rate on 37 integration tests
 - 📊 **Statistical Analysis** - Non-linear regression and ecological inference modeling
 
@@ -80,7 +80,7 @@ Interactive web application for analyzing and visualizing election administratio
 - **CORS Support** - Cross-origin resource sharing enabled
 
 ### Data Pipeline
-- **Python 3.12** - 16 automated ETL/preprocessing scripts
+- **Python 3.12** - 21 automated ETL/preprocessing stages with caching
 - **Pandas** - Data manipulation and analysis
 - **NumPy** - Statistical modeling and computations
 - **PyMongo** - MongoDB driver for Python
@@ -105,19 +105,11 @@ Interactive web application for analyzing and visualizing election administratio
 Before you begin, ensure you have the following installed:
 
 ### Required Software
-- **Node.js 18+** (or 20+) - [Download](https://nodejs.org/)
-- **Python 3.12+** - [Download](https://www.python.org/downloads/)
-- **MongoDB 7.0+** - [Download](https://www.mongodb.com/try/download/community)
-- **Java 17+** - [Download](https://adoptium.net/)
-- **Maven 3.8+** - [Download](https://maven.apache.org/download.cgi)
-- **Git** - [Download](https://git-scm.com/downloads)
 
 ### Optional (Recommended)
-- **MongoDB Compass** - GUI for MongoDB
-- **Postman** - API testing
-- **VS Code** - Code editor with extensions
 
----
+> ℹ️ **Node version management:** The repository includes a `.nvmrc` file pinned to `22.12.0`. With nvm, fnm, asdf, or Volta installed, run `nvm use` (or the equivalent command) after cloning to automatically match the required runtime.
+
 
 ## 🚀 Quick Start
 
@@ -127,9 +119,7 @@ git clone https://github.com/khandaker-abid/raptors-voting-analysis.git
 cd raptors-voting-analysis
 ```
 
-### 2. Start MongoDB
-```bash
-# Ubuntu/Linux
+If you manage Node versions with nvm/fnm/asdf/Volta, run the appropriate `use` command here to activate **Node.js 22.12.0** from `.nvmrc` before proceeding.
 sudo systemctl start mongod
 
 # macOS
@@ -149,7 +139,7 @@ cd preprocessing
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-./run_all_preprocessing.sh  # Populates MongoDB (~30 seconds)
+./run_all_preprocessing.sh  # Populates MongoDB (first run ~10 minutes, cached reruns <2 minutes)
 cd ..
 
 # Terminal 2 - Start backend
@@ -170,6 +160,8 @@ Then configure frontend to use real data:
 // src/data/api.ts - Line 14
 const USE_MOCKS = false;  // Change from true to false
 ```
+
+The preprocessing runner saves timestamped logs under `preprocessing/logs/` and triggers `validate_preprocessing.py` automatically. Run `./verify_preprocessing.sh` from the repository root at any time to confirm MongoDB collections and cached assets without rerunning the full pipeline.
 
 **Option B: Quick Start with Mock Data**
 
@@ -198,13 +190,13 @@ raptors-voting-analysis/
 │   └── assets/                  # Images, icons
 │
 ├── preprocessing/               # Python data pipeline ⭐
-│   ├── 01-16_*.py              # 16 preprocessing scripts
+│   ├── 01-18_*.py, 27_*.py    # Automated preprocessing stages
 │   │   ├── 01-04: Boundaries   # Geographic data
-│   │   ├── 05-06: EAVS/Quality # Survey data & quality metrics
-│   │   ├── 07-10: Voters       # Registration & geocoding
+│   │   ├── 05-06c: EAVS/Equipment # Survey data & equipment quality
+│   │   ├── 07-10,17-18: Voters # Registration, rosters, aggregation
 │   │   ├── 11-13: Elections    # Results, CVAP, policies
-│   │   ├── 14-15: GUI Data     # Equipment history, bubbles
-│   │   └── 16: EI Analysis     # Ecological inference
+│   │   ├── 14-16: GUI Data     # Equipment history, bubbles, EI models
+│   │   └── 27: VRA Analysis    # Gingles factors
 │   ├── utils/                   # Shared utilities
 │   │   ├── database.py         # MongoDB connection
 │   │   ├── census_api.py       # Census API wrapper
@@ -257,11 +249,11 @@ cd preprocessing
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-./run_all_preprocessing.sh  # Runs all 16 scripts
+./run_all_preprocessing.sh  # Runs the full preprocessing pipeline
 python validate_preprocessing.py  # Verify results
 ```
 
-**Runtime:** ~30 seconds | **Status:** Fully automated with cached data files
+**First run:** ~10 minutes (network dependent) | **Subsequent runs:** <2 minutes with cached data | **Status:** Fully automated with timestamped logs
 
 ### Data Sources
 
@@ -281,35 +273,32 @@ All data files are cached and committed to the repository for zero-setup deploym
 
 ### Pipeline Details
 
-The pipeline runs 16 automated scripts organized by function:
+The pipeline runs the following stages in order (*optional* stages may be skipped without aborting the run):
 
-**Geographic Setup (Scripts 1-4):**
-1. Download state/county boundaries
-2. Download EAVS survey data (2016-2024)
-3. Populate EAVS database
-4. Download geographic boundaries
+1. `01_download_boundaries.py` – Download state and county outlines
+2. `02_download_eavs_data.py` – Pull EAVS survey datasets (2016-2024)
+3. `03_populate_eavs_db.py` – Load EAVS data into MongoDB
+4. `04_download_geographic_boundaries.py` – Fetch supplemental geographic shapes
+5. `05_calculate_data_completeness.py` – Score reporting completeness by state and county
+6. `05b_extract_equipment_from_eavs.py` – Derive equipment metadata from EAVS submissions *(optional)*
+7. `06b_import_equipment_data.py` – Ingest VerifiedVoting CSV equipment reference files
+8. `06_calculate_equipment_quality.py` – Compute equipment quality metrics and rankings
+9. `06c_import_equipment_details.py` – Add manual equipment detail overrides *(on-demand)*
+10. `07_download_voter_registration.py` – Retrieve state voter registration files
+11. `17_generate_county_voter_names.py` – Produce county-level voter rosters for detail states
+12. `08_automated_voter_analysis.py` – Run diagnostic metrics on voter files *(optional)*
+13. `09_geocode_voters_to_census_blocks.py` – Geocode voters to census blocks *(optional)*
+14. `10_assign_voters_to_eavs_regions.py` – Map voters to EAVS regions for aggregation
+15. `11_download_election_results.py` – Pull presidential election results (2000-2024)
+16. `12_download_cvap_data.py` – Download CVAP demographic data from the Census API
+17. `13_collect_felony_voting_policies.py` – Scrape felony voting policy summaries
+18. `14_generate_equipment_history.py` – Build equipment history trends for the GUI
+19. `15_generate_census_block_bubbles.py` – Produce census block bubble datasets
+20. `16_generate_ei_analysis.py` – Generate ecological inference models
+21. `18_aggregate_voter_registration.py` – Aggregate voter registration metrics for charts
+22. `27_generate_gingles_analysis.py` – Prepare VRA Gingles factor analysis outputs
 
-**Data Quality (Scripts 5-6):**
-5. Calculate data completeness metrics
-6. Calculate equipment quality scores
-
-**Voter Analysis (Scripts 7-10):**
-7. Download voter registration data
-8. Automated voter analysis
-9. Geocode voters to census blocks
-10. Assign voters to EAVS regions
-
-**Supplementary Data (Scripts 11-13):**
-11. Download election results
-12. Download CVAP demographic data
-13. Collect felony voting policies
-
-**GUI Data Generation (Scripts 14-16):**
-14. Generate equipment history trends
-15. Generate census block bubbles
-16. Generate ecological inference analysis
-
-**Total runtime:** ~30 seconds | **Configuration:** `preprocessing/config.json`
+**Configuration:** `preprocessing/config.json`
 
 For detailed script documentation, see [`preprocessing/README.md`](preprocessing/README.md).
 
@@ -414,7 +403,7 @@ npm install
 npm run dev
 ```
 
-**App:** http://localhost:5173 | **Tech:** React 18 + TypeScript + Vite
+**App:** http://localhost:5173 | **Tech:** React 18 + TypeScript + Vite | **Runtime:** Node.js 22.12.0
 
 ### Features
 
@@ -682,6 +671,37 @@ python validate_database.py --auto-fix   # Apply repairs automatically
 - Detailed error messages
 - Collection health summaries
 
+### Preprocessing Verifier (`verify_preprocessing.sh`)
+
+Lightweight shell script that validates your local environment between full pipeline runs.
+
+```bash
+./verify_preprocessing.sh
+```
+
+**What it checks:**
+- MongoDB availability and database existence
+- Presence of required collections and document counts for detail states
+- Cached assets in `preprocessing/cache/`
+- Latest preprocessing log entry for quick troubleshooting
+- Configuration sanity for `preprocessing/config.json`
+
+Use this script after pulling new data or before handing the project off to ensure preprocessing prerequisites are still satisfied.
+
+### GUI Use Case Checklist (`test_gui_use_cases.sh`)
+
+Automates smoke tests for the frontend while documenting any manual follow-up steps.
+
+```bash
+./test_gui_use_cases.sh
+```
+
+**Highlights:**
+- Pings critical backend endpoints to confirm API availability before UI checks
+- Reports all 30 GUI use cases with pass/partial/missing indicators
+- Calls out manual verification steps when the frontend is running locally
+- Provides a concise pre-demo checklist for the product team
+
 ---
 
 ## 📄 License
@@ -750,7 +770,7 @@ curl http://localhost:8080/api/eavs/MARYLAND/active-voters?year=2020
 - ✅ **Frontend:** 30 GUI components with interactive maps, charts, and visualizations
 - ✅ **Backend:** 30+ REST API endpoints with Spring Boot and MongoDB
 - ✅ **Database:** 26,636+ records across 11 collections with optimized indexes
-- ✅ **Data Pipeline:** Fully automated preprocessing (16 scripts, ~30 second runtime)
+- ✅ **Data Pipeline:** Fully automated preprocessing (21 stages with logging; first run ~10 minutes)
 - ✅ **Testing:** 100% pass rate (37/37 integration tests)
 - ✅ **Quality Assurance:** Automated database validation and repair tools
 - ✅ **Statistical Analysis:** Non-linear regression and ecological inference models
@@ -818,7 +838,7 @@ Features:
 A: No - all data files are committed to the repository. Just clone and run the preprocessing script.
 
 **Q: How long does preprocessing take?**  
-A: ~30 seconds total. All data files are cached for instant loading.
+A: First run typically takes 8-12 minutes (network dependent). Subsequent runs reuse cached downloads and complete in under two minutes.
 
 **Q: Can I use different states?**  
 A: Yes - edit `preprocessing/config.json` and modify state lists in the frontend code.

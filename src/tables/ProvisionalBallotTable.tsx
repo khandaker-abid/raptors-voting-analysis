@@ -12,9 +12,13 @@ import {
 	Typography,
 	TextField,
 	InputAdornment,
+	TableSortLabel,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { getProvisionalBallotCategories } from "../data/provisionalBallotData";
+
+type SortableColumn = 'county' | 'E1a' | 'E2a' | 'E2b' | 'E2c' | 'E2d' | 'E2e' | 'E2f' | 'E2g' | 'E2h' | 'E2i';
+type SortOrder = 'asc' | 'desc';
 
 interface ProvisionalBallotTableProps {
 	data: Array<{
@@ -38,6 +42,16 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 	const [page, setPage] = useState(0);
 	const rowsPerPage = 5; // Fixed at 5 rows per page (no scrolling, just pagination)
 	const [searchTerm, setSearchTerm] = useState("");
+	const [sortColumn, setSortColumn] = useState<SortableColumn>('county');
+	const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
+	// Helper function to normalize county names (fix all-caps issue)
+	const normalizeCountyName = (name: string): string => {
+		return name
+			.split(' ')
+			.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+			.join(' ');
+	};
 
 	// Get category mappings
 	const categories = useMemo(() => getProvisionalBallotCategories(), []);
@@ -57,6 +71,44 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 			row.county.toLowerCase().includes(searchTerm.toLowerCase()),
 		);
 	}, [data, searchTerm]);
+
+	// Add sorting logic
+	const sortedData = useMemo(() => {
+		const sorted = [...filteredData];
+		sorted.sort((a, b) => {
+			let aValue: string | number;
+			let bValue: string | number;
+
+			if (sortColumn === 'county') {
+				aValue = normalizeCountyName(a.county);
+				bValue = normalizeCountyName(b.county);
+			} else {
+				aValue = a[sortColumn] as number;
+				bValue = b[sortColumn] as number;
+			}
+
+			if (typeof aValue === 'string' && typeof bValue === 'string') {
+				return sortOrder === 'asc'
+					? aValue.localeCompare(bValue)
+					: bValue.localeCompare(aValue);
+			} else {
+				return sortOrder === 'asc'
+					? (aValue as number) - (bValue as number)
+					: (bValue as number) - (aValue as number);
+			}
+		});
+		return sorted;
+	}, [filteredData, sortColumn, sortOrder]);
+
+	const handleSort = (column: SortableColumn) => {
+		if (sortColumn === column) {
+			setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+		} else {
+			setSortColumn(column);
+			setSortOrder('asc');
+		}
+		setPage(0); // Reset to first page when sorting
+	};
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
 		setPage(newPage);
@@ -127,21 +179,24 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 							<TableCell
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									py: 1.5,
+									cursor: "pointer",
 								}}>
-								County/Town
-							</TableCell>
-							<TableCell
-								align="right"
-								sx={{
-									fontWeight: "bold",
-									backgroundColor: "primary.main",
-									color: "white",
-									py: 1.5,
-								}}>
-								Total
+								<TableSortLabel
+									active={sortColumn === 'county'}
+									direction={sortColumn === 'county' ? sortOrder : 'asc'}
+									onClick={() => handleSort('county')}
+									sx={{
+										color: 'white !important',
+										'&:hover': { color: 'white !important' },
+										'& .MuiTableSortLabel-icon': { color: 'white !important' },
+										'&.Mui-active': { color: 'white !important' },
+										'&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+									}}>
+									County/Town
+								</TableSortLabel>
 							</TableCell>
 							{[
 								"E2a",
@@ -159,17 +214,53 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 									align="right"
 									sx={{
 										fontWeight: "bold",
-										backgroundColor: "primary.main",
+										backgroundColor: "#616161",
 										color: "white",
 										py: 1.5,
+										cursor: "pointer",
 									}}>
-									{categoryMap[cat] || cat}
+									<TableSortLabel
+										active={sortColumn === cat}
+										direction={sortColumn === cat ? sortOrder : 'asc'}
+										onClick={() => handleSort(cat as SortableColumn)}
+										sx={{
+											color: 'white !important',
+											'&:hover': { color: 'white !important' },
+											'& .MuiTableSortLabel-icon': { color: 'white !important' },
+											'&.Mui-active': { color: 'white !important' },
+											'&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+										}}>
+										{categoryMap[cat] || cat}
+									</TableSortLabel>
 								</TableCell>
 							))}
+							<TableCell
+								align="right"
+								sx={{
+									fontWeight: "bold",
+									backgroundColor: "#616161",
+									color: "white",
+									py: 1.5,
+									cursor: "pointer",
+								}}>
+								<TableSortLabel
+									active={sortColumn === 'E1a'}
+									direction={sortColumn === 'E1a' ? sortOrder : 'asc'}
+									onClick={() => handleSort('E1a')}
+									sx={{
+										color: 'white !important',
+										'&:hover': { color: 'white !important' },
+										'& .MuiTableSortLabel-icon': { color: 'white !important' },
+										'&.Mui-active': { color: 'white !important' },
+										'&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+									}}>
+									Total
+								</TableSortLabel>
+							</TableCell>
 						</TableRow>
 					</TableHead>
 					<TableBody>
-						{filteredData
+						{sortedData
 							.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
 							.map((row, index) => {
 								const globalIndex = page * rowsPerPage + index;
@@ -183,14 +274,7 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 												fontWeight: 500,
 												backgroundColor: rowBg,
 											}}>
-											{row.county}
-										</TableCell>
-										<TableCell
-											align="right"
-											sx={{
-												fontWeight: "bold",
-											}}>
-											{row.E1a.toLocaleString()}
+											{normalizeCountyName(row.county)}
 										</TableCell>
 										{[
 											"E2a",
@@ -214,6 +298,14 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 												).toLocaleString()}
 											</TableCell>
 										))}
+										<TableCell
+											align="right"
+											sx={{
+												fontWeight: "bold",
+												backgroundColor: rowBg,
+											}}>
+											{row.E1a.toLocaleString()}
+										</TableCell>
 									</TableRow>
 								);
 							})}
@@ -227,7 +319,6 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 								TOTAL
 							</TableCell>
 							{[
-								"E1a",
 								"E2a",
 								"E2b",
 								"E2c",
@@ -242,6 +333,9 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 									{(totalsByCategory[cat] || 0).toLocaleString()}
 								</TableCell>
 							))}
+							<TableCell align="right" sx={{ fontWeight: "bold" }}>
+								{(totalsByCategory["E1a"] || 0).toLocaleString()}
+							</TableCell>
 						</TableRow>
 					</TableBody>
 				</Table>

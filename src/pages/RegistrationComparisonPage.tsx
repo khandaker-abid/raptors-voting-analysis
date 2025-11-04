@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Typography,
@@ -18,10 +18,7 @@ import {
   fetchOptInOutComparison,
   fetchPartyComparison,
   fetchEarlyVotingComparison,
-  fetchDropboxBubbles,
 } from "../data/api";
-import DropBoxBubbleChart from "../charts/DropboxBubbleChart";
-import { calculatePowerRegression } from "../utils/regression";
 
 const RegistrationComparisonPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
@@ -31,7 +28,6 @@ const RegistrationComparisonPage: React.FC = () => {
   const [optInOutData, setOptInOutData] = useState<any[]>([]);
   const [partyData, setPartyData] = useState<any[]>([]);
   const [earlyVotingData, setEarlyVotingData] = useState<any[]>([]);
-  const [dropBoxData, setDropBoxData] = useState<any[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -39,13 +35,10 @@ const RegistrationComparisonPage: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        const [optInOut, party, earlyVoting, arkansasDropBox, marylandDropBox, rhodeIslandDropBox] = await Promise.all([
+        const [optInOut, party, earlyVoting] = await Promise.all([
           fetchOptInOutComparison(),
           fetchPartyComparison(),
           fetchEarlyVotingComparison(),
-          fetchDropboxBubbles("ARKANSAS", 2020),
-          fetchDropboxBubbles("MARYLAND", 2024),
-          fetchDropboxBubbles("RHODE ISLAND", 2024),
         ]);
 
         setOptInOutData(optInOut);
@@ -73,30 +66,6 @@ const RegistrationComparisonPage: React.FC = () => {
 
         setEarlyVotingData(earlyVoting);
 
-        // Combine drop box data and convert to proper format
-        const combinedDropBox = [
-          ...(arkansasDropBox || []).map((d: any) => ({
-            county: d.geographicUnit || d.jurisdictionName || d.county,
-            republicanPct: d.republicanPercentage || 0,
-            dropBoxPct: d.dropBoxPercentage || 0,
-            party: (d.republicanPercentage || 0) > 50 ? "R" as const : "D" as const
-          })),
-          ...(marylandDropBox || []).map((d: any) => ({
-            county: d.geographicUnit || d.jurisdictionName || d.county,
-            republicanPct: d.republicanPercentage || 0,
-            dropBoxPct: d.dropBoxPercentage || 0,
-            party: (d.republicanPercentage || 0) > 50 ? "R" as const : "D" as const
-          })),
-          ...(rhodeIslandDropBox || []).map((d: any) => ({
-            county: d.geographicUnit || d.jurisdictionName || d.county,
-            republicanPct: d.republicanPercentage || 0,
-            dropBoxPct: d.dropBoxPercentage || 0,
-            party: (d.republicanPercentage || 0) > 50 ? "R" as const : "D" as const
-          }))
-        ];
-
-        setDropBoxData(combinedDropBox);
-
       } catch (err) {
         console.error("Error loading registration comparison data:", err);
         setError(err instanceof Error ? err.message : "Failed to load data");
@@ -106,32 +75,7 @@ const RegistrationComparisonPage: React.FC = () => {
     };
 
     loadData();
-  }, []);  // Calculate regression lines for drop box bubble chart (GUI-26)
-  const dropBoxRegressionLines = useMemo(() => {
-    const democraticPoints = dropBoxData
-      .filter((d) => d.party === "D")
-      .map((d) => ({ x: d.republicanPct, y: d.dropBoxPct }));
-
-    const republicanPoints = dropBoxData
-      .filter((d) => d.party === "R")
-      .map((d) => ({ x: d.republicanPct, y: d.dropBoxPct }));
-
-    const dRegression = calculatePowerRegression(democraticPoints);
-    const rRegression = calculatePowerRegression(republicanPoints);
-
-    return [
-      {
-        party: "D" as const,
-        coefficients: { a: dRegression.a, b: dRegression.b },
-        r2: dRegression.r2,
-      },
-      {
-        party: "R" as const,
-        coefficients: { a: rRegression.a, b: rRegression.b },
-        r2: rRegression.r2,
-      },
-    ];
-  }, [dropBoxData]);
+  }, []);
 
   const handleChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -180,9 +124,7 @@ const RegistrationComparisonPage: React.FC = () => {
         sx={{
           fontWeight: 700,
           mb: 1.5,
-          background: "linear-gradient(90deg,#1976d2,#42a5f5)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
+          color: "text.primary",
         }}
       >
         Registration & Early Voting Comparisons (2024)
@@ -200,7 +142,6 @@ const RegistrationComparisonPage: React.FC = () => {
           <Tab label="Opt-in vs Opt-out" />
           <Tab label="Party Comparison" />
           <Tab label="Early Voting" />
-          <Tab label="Drop Box Voting" />
         </Tabs>
       </Paper>
 
@@ -250,6 +191,9 @@ const RegistrationComparisonPage: React.FC = () => {
           <Paper sx={{ p: 2, borderRadius: 3, height: "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             <Typography variant="subtitle1" gutterBottom fontWeight={600} align="center">
               Democratic vs Republican States
+            </Typography>
+            <Typography variant="caption" color="text.secondary" align="center" sx={{ mb: 1, display: "block" }}>
+              Comparing registration and turnout rates across political party affiliations
             </Typography>
             <Box sx={{ overflow: "auto", flex: 1 }}>
               <Table size="small">
@@ -319,12 +263,6 @@ const RegistrationComparisonPage: React.FC = () => {
               Percentages calculated based on total votes cast in each state
             </Typography>
           </Paper>
-        )}
-
-        {tabValue === 3 && (
-          <Box sx={{ height: "100%", overflow: "hidden" }}>
-            <DropBoxBubbleChart data={dropBoxData} regressionLines={dropBoxRegressionLines} />
-          </Box>
         )}
       </Box>
     </Container>

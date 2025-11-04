@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { Paper, Typography, Box, Chip, Alert } from "@mui/material";
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import { bindResponsiveTooltip } from "../utils/leafletTooltipHelper";
+import { createCountyLookupMap, normalizeCountyName } from "../utils/countyNameNormalizer";
 
 interface ProvisionalBallotChoroplethMapProps {
 	stateName: string;
@@ -94,21 +95,13 @@ const ProvisionalBallotChoroplethMap: React.FC<
 	}, [data, COLOR_PALETTE]);
 
 	// Create a data lookup map for efficient county data retrieval
+	// Uses centralized normalization to handle apostrophes, periods, etc.
 	const dataLookup = useMemo(() => {
-		const lookup = new Map<string, number>();
-		data.forEach((item) => {
-			const normalizedCounty = item.county
-				.toLowerCase()
-				.replace(/\s+/g, " ")
-				.trim();
-			lookup.set(normalizedCounty, item.E1a);
-
-			const withoutCounty = normalizedCounty.replace(/\s+county$/, "");
-			if (withoutCounty !== normalizedCounty) {
-				lookup.set(withoutCounty, item.E1a);
-			}
-		});
-		return lookup;
+		return createCountyLookupMap(
+			data,
+			(item) => item.county,
+			(item) => item.E1a
+		);
 	}, [data]);
 
 	useEffect(() => {
@@ -194,27 +187,13 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		}
 
 		const countyFeature = feature as CountyFeature;
-		const countyName = (
-			countyFeature.properties.coty_name_long?.[0] ||
+		const countyName = countyFeature.properties.coty_name_long?.[0] ||
 			countyFeature.properties.coty_name?.[0] ||
-			"Unknown County"
-		)
-			.toLowerCase()
-			.replace(/\s+/g, " ")
-			.trim();
+			"Unknown County";
 
-		let ballotCount = dataLookup.get(countyName);
-		if (ballotCount === undefined) {
-			const withoutCounty = countyName.replace(/\s+county$/, "");
-			ballotCount = dataLookup.get(withoutCounty);
-		}
-		if (ballotCount === undefined) {
-			const withCounty = countyName.includes("county")
-				? countyName
-				: `${countyName} county`;
-			ballotCount = dataLookup.get(withCounty);
-		}
-		ballotCount = ballotCount || 0;
+		// Use centralized normalization for consistent matching
+		const normalizedName = normalizeCountyName(countyName);
+		const ballotCount = dataLookup.get(normalizedName) || 0;
 
 		const fillColor = colorScale(ballotCount);
 
@@ -236,11 +215,8 @@ const ProvisionalBallotChoroplethMap: React.FC<
 			countyFeature.properties.coty_name?.[0] ||
 			"Unknown County";
 
-		const normalizedCountyName = displayCountyName
-			.toLowerCase()
-			.replace(/\s+/g, " ")
-			.trim();
-
+		// Use centralized normalization for consistent matching
+		const normalizedCountyName = normalizeCountyName(displayCountyName);
 		const ballotCount = dataLookup.get(normalizedCountyName) || 0;
 
 		const tooltipContent = `
@@ -342,18 +318,41 @@ const ProvisionalBallotChoroplethMap: React.FC<
 	const minValue = Math.min(...data.map((d) => d.E1a));
 	const totalBallots = data.reduce((sum, d) => sum + d.E1a, 0);
 
+	// Check if all data is zero (no data reported)
+	const allZero = data.every((d) => d.E1a === 0);
+
+	// Note: Rhode Island data is now aggregated to county level by the backend,
+	// so we no longer need to show the town-level warning
+	const isRhodeIslandTownData = false;
+
 	return (
 		<Paper sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
 			<Box mb={1}>
 				<Typography variant="h6" gutterBottom fontWeight={600}>
-					Provisional Ballots Distribution - {stateName}
+					Provisional Ballots Distribution
 				</Typography>
-				<Box display="flex" gap={1} flexWrap="wrap">
+				<Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
 					<Chip label={`Total: ${totalBallots.toLocaleString()}`} size="small" />
 					<Chip
 						label={`Range: ${minValue.toLocaleString()} – ${maxValue.toLocaleString()}`}
 						size="small"
 					/>
+					{allZero && (
+						<Chip
+							label="⚠️ No data reported for 2024"
+							size="small"
+							color="warning"
+							sx={{ fontWeight: 600 }}
+						/>
+					)}
+					{isRhodeIslandTownData && (
+						<Chip
+							label="ℹ️ Data reported at town level (39 towns) - county map shows 5 counties only"
+							size="small"
+							color="info"
+							sx={{ fontWeight: 600 }}
+						/>
+					)}
 				</Box>
 			</Box>
 
@@ -433,6 +432,12 @@ const ProvisionalBallotChoroplethMap: React.FC<
 					Interactive choropleth map showing provisional ballot distribution across
 					counties. Hover over counties for detailed information.
 				</Typography>
+				{/* Note for states that use town-level data */}
+				{(stateName === "Rhode Island" || stateName === "Vermont" || stateName === "Connecticut" || stateName === "Massachusetts") && (
+					<Typography variant="caption" color="primary.main" display="block" mt={0.5} fontSize="0.7rem" fontStyle="italic">
+						Note: {stateName} reports data at the town level. Values shown have been aggregated to county level for map display consistency.
+					</Typography>
+				)}
 			</Box>
 		</Paper>
 	);

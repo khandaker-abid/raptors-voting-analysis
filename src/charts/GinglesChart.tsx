@@ -13,17 +13,19 @@ import {
     XAxis,
     YAxis,
     Tooltip,
-    Legend,
     CartesianGrid,
     Line,
+    Legend,
 } from "recharts";
 import {
     Paper,
     Typography,
     Box,
-    FormGroup,
+    FormControl,
     FormControlLabel,
-    Checkbox,
+    Radio,
+    RadioGroup,
+    Alert,
 } from "@mui/material";
 
 interface PrecinctData {
@@ -58,41 +60,23 @@ interface Props {
 }
 
 const GinglesChart: React.FC<Props> = ({
-    stateName,
     data,
     democraticRegression,
     republicanRegression,
 }) => {
-    const [selectedDemographics, setSelectedDemographics] = useState({
-        white: true,
-        hispanic: true,
-        africanAmerican: true,
-    });
+    // Only allow ONE demographic to be selected at a time
+    const [selectedDemographic, setSelectedDemographic] = useState<"white" | "hispanic" | "africanAmerican">("white");
 
-    const demographicKey =
-        selectedDemographics.white && selectedDemographics.hispanic && selectedDemographics.africanAmerican
-            ? "all"
-            : selectedDemographics.white
-                ? "white"
-                : selectedDemographics.hispanic
-                    ? "hispanic"
-                    : "africanAmerican";
+    const demographicKey = selectedDemographic;
 
     // Transform data for charting
     const chartData = useMemo(() => {
         const points: GinglesDataPoint[] = [];
 
         data.forEach((precinct) => {
-            // Get the selected demographic percentage
+            // Get the selected demographic percentage based on radio button
             let demographicPct: number;
-            if (demographicKey === "all") {
-                // Average all demographics
-                demographicPct =
-                    (precinct.whitePct +
-                        precinct.hispanicPct +
-                        precinct.africanAmericanPct) /
-                    3;
-            } else if (demographicKey === "white") {
+            if (demographicKey === "white") {
                 demographicPct = precinct.whitePct;
             } else if (demographicKey === "hispanic") {
                 demographicPct = precinct.hispanicPct;
@@ -160,149 +144,178 @@ const GinglesChart: React.FC<Props> = ({
         return lines;
     }, [democraticRegression, republicanRegression]);
 
-    const handleDemographicChange = (demographic: keyof typeof selectedDemographics) => {
-        setSelectedDemographics((prev) => ({
-            ...prev,
-            [demographic]: !prev[demographic],
-        }));
+    const handleDemographicChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setSelectedDemographic(event.target.value as "white" | "hispanic" | "africanAmerican");
     };
 
     const democraticPoints = chartData.filter((d) => d.party === "D");
     const republicanPoints = chartData.filter((d) => d.party === "R");
 
     const getDemographicLabel = () => {
-        if (selectedDemographics.white && !selectedDemographics.hispanic && !selectedDemographics.africanAmerican) {
-            return "White";
-        }
-        if (!selectedDemographics.white && selectedDemographics.hispanic && !selectedDemographics.africanAmerican) {
-            return "Hispanic";
-        }
-        if (!selectedDemographics.white && !selectedDemographics.hispanic && selectedDemographics.africanAmerican) {
-            return "African American";
-        }
-        return "Selected Demographics";
+        if (selectedDemographic === "white") return "White";
+        if (selectedDemographic === "hispanic") return "Hispanic";
+        if (selectedDemographic === "africanAmerican") return "African American";
+        return "White";
     };
 
     return (
-        <Paper sx={{ p: 3, mt: 3 }}>
-            <Typography variant="h6" gutterBottom>
+        <Paper
+            sx={{
+                p: 2,
+                borderRadius: 3,
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+            }}
+        >
+            {/* Centered Title */}
+            <Typography
+                variant="subtitle1"
+                align="center"
+                sx={{
+                    fontWeight: 600,
+                    mb: 0.5,
+                }}
+            >
                 Gingles Chart - Racially Polarized Voting Analysis
             </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-                {stateName} - 2024 Presidential Election
+
+            {/* Description */}
+            <Typography
+                variant="caption"
+                color="text.secondary"
+                align="center"
+                sx={{
+                    mb: 1,
+                    display: "block",
+                }}
+            >
+                Vote % vs. Demographic % by Precinct (Data Year: 2024)
             </Typography>
 
             {/* Demographic Selection */}
-            <Box sx={{ my: 2 }}>
-                <Typography variant="subtitle2" gutterBottom>
-                    Select Demographic Group:
-                </Typography>
-                <FormGroup row>
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={selectedDemographics.white}
-                                onChange={() => handleDemographicChange("white")}
-                            />
-                        }
-                        label="White"
-                    />
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={selectedDemographics.hispanic}
-                                onChange={() => handleDemographicChange("hispanic")}
-                            />
-                        }
-                        label="Hispanic"
-                    />
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={selectedDemographics.africanAmerican}
-                                onChange={() => handleDemographicChange("africanAmerican")}
-                            />
-                        }
-                        label="African American"
-                    />
-                </FormGroup>
+            <Box sx={{ mb: 2, display: "flex", justifyContent: "center" }}>
+                <FormControl>
+                    <Typography variant="subtitle2" gutterBottom sx={{ textAlign: "center" }}>
+                        Select Demographic Group:
+                    </Typography>
+                    <RadioGroup
+                        row
+                        value={selectedDemographic}
+                        onChange={handleDemographicChange}
+                    >
+                        <FormControlLabel
+                            value="white"
+                            control={<Radio />}
+                            label="White"
+                        />
+                        <FormControlLabel
+                            value="hispanic"
+                            control={<Radio />}
+                            label="Hispanic"
+                        />
+                        <FormControlLabel
+                            value="africanAmerican"
+                            control={<Radio />}
+                            label="African American"
+                        />
+                    </RadioGroup>
+                </FormControl>
             </Box>
 
             {/* Chart */}
-            <ResponsiveContainer width="100%" height={500}>
-                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                        type="number"
-                        dataKey="demographicPct"
-                        name={`${getDemographicLabel()} %`}
-                        domain={[0, 100]}
-                        label={{
-                            value: `Percentage of ${getDemographicLabel()} Population`,
-                            position: "insideBottom",
-                            offset: -10,
-                        }}
-                    />
-                    <YAxis
-                        type="number"
-                        dataKey="votePct"
-                        name="Vote %"
-                        domain={[0, 100]}
-                        label={{
-                            value: "Percentage of Votes",
-                            angle: -90,
-                            position: "insideLeft",
-                        }}
-                    />
-                    <Tooltip
-                        cursor={{ strokeDasharray: "3 3" }}
-                        formatter={(value: number, name: string) => {
-                            if (name === "votePct") return [`${value.toFixed(1)}%`, "Vote %"];
-                            if (name === "demographicPct")
-                                return [`${value.toFixed(1)}%`, `${getDemographicLabel()} %`];
-                            return [value, name];
-                        }}
-                        labelFormatter={(_, payload) => {
-                            const data = payload?.[0]?.payload;
-                            return data
-                                ? `${data.precinct} (${data.party === "D" ? "Democratic" : "Republican"})`
-                                : "";
-                        }}
-                    />
-                    <Legend />
+            {data.length === 0 ? (
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                    No precinct data available for this state.
+                </Alert>
+            ) : (
+                <Box sx={{ flex: 1, minHeight: 500, height: 500 }}>
+                    <ResponsiveContainer width="100%" height={500}>
+                        <ScatterChart margin={{ top: 8, right: 16, left: 8, bottom: 16 }}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis
+                                type="number"
+                                dataKey="demographicPct"
+                                name={`${getDemographicLabel()} %`}
+                                domain={[0, 100]}
+                                tickFormatter={(v) => `${v}%`}
+                            />
+                            <YAxis
+                                type="number"
+                                dataKey="votePct"
+                                name="Vote %"
+                                domain={[0, 100]}
+                                tickFormatter={(v) => `${v}%`}
+                            />
+                            <Tooltip
+                                cursor={{ strokeDasharray: "3 3" }}
+                                content={({ payload }) => {
+                                    if (!payload || payload.length === 0) return null;
 
-                    {/* Bubbles */}
-                    <Scatter
-                        name="Democratic Votes"
-                        data={democraticPoints}
-                        fill="#1976d2"
-                    />
-                    <Scatter
-                        name="Republican Votes"
-                        data={republicanPoints}
-                        fill="#d32f2f"
-                    />
+                                    const data = payload[0].payload as GinglesDataPoint;
+                                    if (!data) return null;
 
-                    {/* Regression Lines */}
-                    {regressionLines.map((line, index) => (
-                        <Line
-                            key={index}
-                            type="monotone"
-                            data={line.points}
-                            dataKey="votePct"
-                            stroke={line.party === "D" ? "#1976d2" : "#d32f2f"}
-                            strokeWidth={3}
-                            dot={false}
-                            name={`${line.party === "D" ? "Democratic" : "Republican"} Trend`}
-                        />
-                    ))}
-                </ScatterChart>
-            </ResponsiveContainer>
+                                    return (
+                                        <Box
+                                            sx={{
+                                                backgroundColor: "rgba(255, 255, 255, 0.95)",
+                                                border: "1px solid #ccc",
+                                                borderRadius: "4px",
+                                                padding: "8px 12px",
+                                                fontSize: "13px",
+                                            }}
+                                        >
+                                            <Typography sx={{ fontWeight: 600, fontSize: "14px", mb: 0.5, color: "#000" }}>
+                                                {data.precinct}
+                                            </Typography>
+                                            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
+                                                <Typography variant="body2" sx={{ fontSize: "12px" }}>
+                                                    {getDemographicLabel()} %: {data.demographicPct.toFixed(1)}%
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ fontSize: "12px" }}>
+                                                    {data.party === "D" ? "Democratic" : "Republican"} Vote %: {data.votePct.toFixed(1)}%
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                    );
+                                }}
+                            />
+                            <Legend verticalAlign="bottom" align="center" />
 
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: "block" }}>
-                The Gingles chart helps identify racially polarized voting patterns. Separate trend
-                lines for each party suggest different voting behaviors across demographic groups.
-            </Typography>
+                            {/* Democratic Bubbles - Blue */}
+                            <Scatter
+                                name="Democratic counties"
+                                data={democraticPoints}
+                                fill="#1976d2"
+                                fillOpacity={0.7}
+                            />
+
+                            {/* Republican Bubbles - Red */}
+                            <Scatter
+                                name="Republican counties"
+                                data={republicanPoints}
+                                fill="#d32f2f"
+                                fillOpacity={0.7}
+                            />
+
+                            {/* Regression Lines - Don't show in legend */}
+                            {regressionLines.map((line, index) => (
+                                <Line
+                                    key={index}
+                                    name={line.party === "D" ? "Democratic regression" : "Republican regression"}
+                                    type="monotone"
+                                    data={line.points}
+                                    dataKey="votePct"
+                                    stroke={line.party === "D" ? "#1976d2" : "#d32f2f"}
+                                    strokeWidth={3}
+                                    dot={false}
+                                    strokeDasharray="5 5"
+                                />
+                            ))}
+                        </ScatterChart>
+                    </ResponsiveContainer>
+                </Box>
+            )}
         </Paper>
     );
 };

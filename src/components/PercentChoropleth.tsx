@@ -5,6 +5,7 @@ import { Paper, Typography, Box, Chip } from "@mui/material";
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import { bindResponsiveTooltip } from "../utils/leafletTooltipHelper";
+import { createCountyLookupMap, normalizeCountyName } from "../utils/countyNameNormalizer";
 
 
 interface Props {
@@ -47,10 +48,13 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, descriptio
     };
 
 
+    // Uses centralized normalization to handle apostrophes, periods, etc.
     const lookup = useMemo(() => {
-        const m = new Map<string, number>();
-        data.forEach(d => m.set(d.geographicUnit.toLowerCase().replace(/\s+county$/, "").trim(), d.percentOfTotal));
-        return m;
+        return createCountyLookupMap(
+            data,
+            (item) => item.geographicUnit,
+            (item) => item.percentOfTotal
+        );
     }, [data]);
 
 
@@ -96,8 +100,10 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, descriptio
     const styleFor = (feature?: Feature) => {
         if (!feature) return { weight: 1, color: "#fff", fillOpacity: .7 } as L.PathOptions;
         const f = feature as CountyFeature;
-        const raw = (f.properties.coty_name_long?.[0] || f.properties.coty_name?.[0] || "").toLowerCase();
-        const key = raw.replace(/\s+county$/, "").trim();
+        const raw = f.properties.coty_name_long?.[0] || f.properties.coty_name?.[0] || "";
+
+        // Use centralized normalization for consistent matching
+        const key = normalizeCountyName(raw);
         const p = lookup.get(key) ?? 0;
         return { fillColor: color(p), weight: 1, color: "#fff", fillOpacity: .75 } as L.PathOptions;
     };
@@ -106,8 +112,9 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, descriptio
     const onEachFeature = (feature: Feature, layer: L.Layer) => {
         const f = feature as CountyFeature;
         const displayName = f.properties.coty_name_long?.[0] || f.properties.coty_name?.[0] || "Unknown";
-        const raw = displayName.toLowerCase();
-        const key = raw.replace(/\s+county$/, "").trim();
+
+        // Use centralized normalization for consistent matching
+        const key = normalizeCountyName(displayName);
         const hasData = lookup.has(key);
         const p = lookup.get(key) ?? 0;
 
@@ -220,26 +227,12 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, descriptio
     // Check if all data is zero (no data reported)
     const allZero = percentages.every(p => p === 0);
 
-    // Check if this is Rhode Island with town-level data that can't be mapped to counties
-    const isRhodeIslandTownData = stateName === "Rhode Island" &&
-        data.length > 5 &&
-        data.some(d => d.geographicUnit.toLowerCase().includes('town') || d.geographicUnit.toLowerCase().includes('city'));
+    // Note: Rhode Island data is now aggregated to county level by the backend,
+    // so we no longer need to show the town-level warning
+    const isRhodeIslandTownData = false;
 
-    // Debug logging
-    console.log('PercentChoropleth Debug:', {
-        stateName,
-        dataCount: data.length,
-        sampleData: data.slice(0, 3),
-        percentages: percentages.slice(0, 5),
-        allZero,
-        maxPercentage,
-        avgPercentage,
-        lookupEntries: Array.from(lookup.entries()).slice(0, 5),
-        isRhodeIslandTownData
-    });
-
-    // Use custom title/description or defaults
-    const displayTitle = title || `Pollbook Deletions Distribution - ${stateName}`;
+    // Use custom title/description or defaults (without state name suffix - user already knows the state)
+    const displayTitle = title || `Pollbook Deletions Distribution`;
     const displayDescription = description || "Interactive choropleth map showing pollbook deletion distribution across counties. Hover over counties for detailed information.";
 
     return (
@@ -344,6 +337,12 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, descriptio
                 <Typography variant="caption" color="text.secondary" display="block" mt={0.5} fontSize="0.7rem">
                     {displayDescription}
                 </Typography>
+                {/* Note for states that use town-level data */}
+                {(stateName === "Rhode Island" || stateName === "Vermont" || stateName === "Connecticut" || stateName === "Massachusetts") && (
+                    <Typography variant="caption" color="primary.main" display="block" mt={0.5} fontSize="0.7rem" fontStyle="italic">
+                        Note: {stateName} reports data at the town level. Values shown have been aggregated to county level for map display consistency.
+                    </Typography>
+                )}
             </Box>
         </Paper>
     );

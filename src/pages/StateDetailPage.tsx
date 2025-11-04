@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
 	Typography,
 	Box,
@@ -9,7 +9,11 @@ import {
 	Alert,
 	Button,
 	CircularProgress,
+	Select,
+	MenuItem,
+	FormControl,
 } from "@mui/material";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 // Core state helpers
 import {
@@ -44,6 +48,9 @@ import {
 	fetchRegistrationTrends,
 	fetchBlockBubbles,
 	fetchDropboxBubbles,
+	fetchEquipmentTypes,
+	fetchStateRegisteredVoters,
+	fetchGinglesData,
 } from "../data/api";
 import PollbookDeletionsBarChart from "../charts/PollbookDeletionsBarChart";
 import PollbookDeletionsTable from "../tables/PollbookDeletionsTable";
@@ -51,6 +58,7 @@ import MailRejectionsBarChart from "../charts/MailRejectionsBarChart";
 import MailRejectionsTable from "../tables/MailRejectionsTable";
 import PercentChoropleth from "../components/PercentChoropleth";
 import VoterRegistrationTrendChart from "../charts/VoterRegistrationTrendChart";
+import VoterRegistrationBarChart from "../charts/VoterRegistrationBarChart";
 import VoterRegistrationBubbleOverlay from "../components/VoterRegistrationBubbleOverlay";
 import ResetButton from "../components/ResetButton";
 
@@ -61,6 +69,7 @@ import DropboxBubbleChart from "../charts/DropboxBubbleChart";
 import GinglesChart from "../charts/GinglesChart";
 import EIEquipmentChart from "../charts/EIEquipmentChart";
 import EIRejectedBallotsChart from "../charts/EIRejectedBallotsChart";
+import EquipmentQualityVsRejectionsChart from "../charts/EquipmentQualityVsRejectionsChart";
 // Types
 import type {
 	ActiveVotersRow,
@@ -96,7 +105,25 @@ function TabPanel(props: TabPanelProps) {
 
 const StateDetailPage: React.FC = () => {
 	const { stateName } = useParams<{ stateName: string }>();
-	const [tabValue, setTabValue] = React.useState(0);
+	const navigate = useNavigate();
+
+	// List of all three detailed states
+	const DETAILED_STATES = ["Arkansas", "Maryland", "Rhode Island"];
+
+	// Get initial tab from URL search params
+	const [searchParams, setSearchParams] = React.useState(() => {
+		if (typeof window !== 'undefined') {
+			return new URLSearchParams(window.location.search);
+		}
+		return new URLSearchParams();
+	});
+
+	const initialTab = React.useMemo(() => {
+		const tabParam = searchParams.get('tab');
+		return tabParam ? parseInt(tabParam, 10) : 0;
+	}, []);
+
+	const [tabValue, setTabValue] = React.useState(initialTab);
 
 	// Decode the state name from URL
 	const decodedStateName = decodeURIComponent(stateName || "");
@@ -117,14 +144,16 @@ const StateDetailPage: React.FC = () => {
 	}, [decodedStateName]);
 
 	// Check if this is a preclearance state (for VRA analysis)
+	// GUI-27, GUI-28, GUI-29: Maryland only (preclearance state)
 	const isPreclearance = useMemo(() => {
 		return decodedStateName === "Maryland";
 	}, [decodedStateName]);
 
 	// Check if this is a party state (Republican or Democratic dominated)
+	// All three detailed states can support party analysis
 	const isPartyState = useMemo(() => {
-		return decodedStateName === "Arkansas" || decodedStateName === "Maryland";
-	}, [decodedStateName]);
+		return isDetail && stateInfo?.party !== undefined;
+	}, [decodedStateName, isDetail, stateInfo]);
 
 	// Get provisional ballot data
 	const provisionalData = useMemo(() => {
@@ -144,6 +173,12 @@ const StateDetailPage: React.FC = () => {
 
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
 		setTabValue(newValue);
+		// Update URL with new tab value
+		const newSearchParams = new URLSearchParams(window.location.search);
+		newSearchParams.set('tab', newValue.toString());
+		setSearchParams(newSearchParams);
+		// Update browser URL without triggering navigation
+		window.history.replaceState(null, '', `?${newSearchParams.toString()}`);
 	};
 
 	// -------------------------------
@@ -174,6 +209,19 @@ const StateDetailPage: React.FC = () => {
 	const [dropboxBubbleData, setDropboxBubbleData] = React.useState<any[]>([]);
 	const [dropboxBubbleLoading, setDropboxBubbleLoading] = React.useState(false);
 
+	// State for GUI-10: Equipment Types
+	const [equipmentTypesData, setEquipmentTypesData] = React.useState<any[]>([]);
+	const [equipmentTypesLoading, setEquipmentTypesLoading] = React.useState(false);
+	const [equipmentTypesError, setEquipmentTypesError] = React.useState<string | null>(null);
+
+	// State for GUI-17: Voter Registration Data
+	const [voterRegistrationData, setVoterRegistrationData] = React.useState<any[]>([]);
+
+	// State for GUI-27: Gingles Analysis
+	const [ginglesData, setGinglesData] = React.useState<any>(null);
+	const [ginglesLoading, setGinglesLoading] = React.useState(false);
+	const [ginglesError, setGinglesError] = React.useState<string | null>(null);
+
 	React.useEffect(() => {
 		if (!decodedStateName) return;
 
@@ -189,6 +237,10 @@ const StateDetailPage: React.FC = () => {
 		setShowBubbles(false);
 		setDropboxBubbleData([]);
 		setDropboxBubbleLoading(true);
+		setEquipmentTypesData([]);
+		setEquipmentTypesLoading(true);
+		setEquipmentTypesError(null);
+		setVoterRegistrationData([]);
 
 		let alive = true;
 		(async () => {
@@ -239,8 +291,8 @@ const StateDetailPage: React.FC = () => {
 				if (alive) setBlockBubbles(null);
 			}
 
-			// GUI-24: Fetch dropbox bubble data (for Arkansas & Maryland)
-			if (decodedStateName === "Arkansas" || decodedStateName === "Maryland") {
+			// GUI-24: Fetch dropbox bubble data (for all party-affiliated detailed states)
+			if (isDetail && stateInfo?.party !== undefined) {
 				try {
 					const dropboxData = await fetchDropboxBubbles(decodedStateName);
 					if (alive) {
@@ -256,12 +308,60 @@ const StateDetailPage: React.FC = () => {
 			} else {
 				if (alive) setDropboxBubbleLoading(false);
 			}
+
+			// GUI-10: Fetch equipment types data (for detailed states)
+			if (isDetail) {
+				try {
+					const equipmentTypes = await fetchEquipmentTypes(decodedStateName);
+					if (alive) {
+						setEquipmentTypesData(equipmentTypes);
+						setEquipmentTypesLoading(false);
+					}
+				} catch (e: any) {
+					if (alive) {
+						setEquipmentTypesError(e?.message || "Failed to fetch equipment types.");
+						setEquipmentTypesData([]);
+						setEquipmentTypesLoading(false);
+					}
+				}
+			} else {
+				if (alive) setEquipmentTypesLoading(false);
+			}
+
+			// GUI-17: Fetch voter registration data (for detailed states)
+			if (isDetail) {
+				try {
+					const regData = await fetchStateRegisteredVoters(decodedStateName);
+					if (alive) setVoterRegistrationData(regData);
+				} catch (e) {
+					if (alive) setVoterRegistrationData([]);
+				}
+			}
+
+			// GUI-27: Fetch Gingles analysis data (for preclearance states: MD, AR, RI)
+			if (["Maryland", "Arkansas", "Rhode Island"].includes(decodedStateName)) {
+				setGinglesLoading(true);
+				try {
+					const gingles = await fetchGinglesData(decodedStateName, "white");
+					if (alive) {
+						setGinglesData(gingles);
+						setGinglesLoading(false);
+						setGinglesError(null);
+					}
+				} catch (e: any) {
+					if (alive) {
+						setGinglesError(e?.message || "Failed to fetch Gingles data.");
+						setGinglesData(null);
+						setGinglesLoading(false);
+					}
+				}
+			}
 		})();
 
 		return () => {
 			alive = false;
 		};
-	}, [decodedStateName, isDetail]);
+	}, [decodedStateName, isDetail, stateInfo]);
 
 	if (!stateInfo) {
 		return (
@@ -282,6 +382,7 @@ const StateDetailPage: React.FC = () => {
 	const IDX_MAIL = isDetail ? idx++ : -1;
 	const IDX_EQUIPMENT = idx++;
 	const IDX_EQUIPMENT_TYPES = isDetail ? idx++ : -1; // NEW - GUI-10
+	const IDX_EQUIPMENT_QUALITY = isDetail ? idx++ : -1; // NEW - GUI-25
 	const IDX_REG = isDetail ? idx++ : -1;
 	const IDX_DROPBOX = isPartyState ? idx++ : -1; // NEW - GUI-24
 	const IDX_GINGLES = isPreclearance ? idx++ : -1; // NEW - GUI-27
@@ -292,7 +393,7 @@ const StateDetailPage: React.FC = () => {
 		<Box sx={{ py: 0, px: 0, width: "100%", margin: 0, height: "100%" }}>
 			{/* Organized Content with Category Groups */}
 			<Paper sx={{ width: "100%", mb: 0, height: "100%" }}>
-				<Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+				<Box sx={{ borderBottom: 1, borderColor: "divider", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
 					<Tabs
 						value={tabValue}
 						onChange={handleTabChange}
@@ -304,12 +405,40 @@ const StateDetailPage: React.FC = () => {
 						{isDetail && <Tab label="Mail Rejections" />}
 						<Tab label="Voting Equipment" />
 						{isDetail && <Tab label="Equipment Types" />}
+						{isDetail && <Tab label="Equipment Quality" />}
 						{isDetail && <Tab label="Voter Registration" />}
 						{isPartyState && <Tab label="Drop Box Analysis" />}
 						{isPreclearance && <Tab label="Gingles Analysis" />}
 						{isPreclearance && <Tab label="EI Equipment" />}
 						{isPreclearance && <Tab label="EI Rejected" />}
 					</Tabs>
+					<Box sx={{ pr: 2, display: "flex", alignItems: "center", gap: 1.5 }}>
+						<Button
+							variant="outlined"
+							startIcon={<ArrowBackIcon />}
+							onClick={() => navigate("/")}
+							sx={{
+								minWidth: 100,
+								textTransform: "none",
+								fontWeight: 600,
+							}}
+						>
+							Home
+						</Button>
+						<FormControl size="small" sx={{ minWidth: 160 }}>
+							<Select
+								value={decodedStateName}
+								onChange={(e) => navigate(`/state/${encodeURIComponent(e.target.value)}?tab=0`)}
+								sx={{ fontWeight: 700 }}
+							>
+								{DETAILED_STATES.map((state) => (
+									<MenuItem key={state} value={state}>
+										{state}
+									</MenuItem>
+								))}
+							</Select>
+						</FormControl>
+					</Box>
 				</Box>
 
 				{/* Overview Tab */}
@@ -748,18 +877,26 @@ const StateDetailPage: React.FC = () => {
 					</Box>
 				</TabPanel>
 
-				{/* Voter Registration Data Tab (GUI-16 & GUI-18) */}
+				{/* Voter Registration Data Tab (GUI-17) - Matching other tabs layout */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_REG}>
-						<Box sx={{ p: 0 }}>
+						<Box sx={{
+							p: 0,
+							display: "flex",
+							flexDirection: "column",
+							gap: 1.5,
+							minHeight: "calc(100vh - 280px)",
+						}}>
+							{/* Bar Chart and Map - top section */}
 							<Box
 								sx={{
 									display: "flex",
-									gap: 2,
+									gap: 1.5,
 									flexDirection: { xs: "column", md: "row" },
 									alignItems: "stretch",
 									justifyContent: "space-between",
-									mb: 4,
+									height: { xs: "auto", md: "420px" },
+									flexShrink: 0,
 								}}
 							>
 								<Box
@@ -767,10 +904,11 @@ const StateDetailPage: React.FC = () => {
 										flex: 1,
 										minWidth: { xs: "100%", md: "calc(50% - 8px)" },
 										maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
+										height: "100%",
 									}}
 								>
-									<StateVoterRegistrationTable
-										stateName={stateName ? stateName : ""}
+									<VoterRegistrationBarChart
+										data={voterRegistrationData || []}
 									/>
 								</Box>
 								<Box
@@ -778,14 +916,21 @@ const StateDetailPage: React.FC = () => {
 										flex: 1,
 										minWidth: { xs: "100%", md: "calc(50% - 8px)" },
 										maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
+										height: "100%",
 									}}
 								>
-									{/* Default map; bubble overlay toggled below if available */}
 									<VoterRegistrationChloroplethMap
 										stateName={decodedStateName}
-										data={choroplethData || []}
+										data={voterRegistrationData || []}
 									/>
 								</Box>
+							</Box>
+
+							{/* Table - bottom section */}
+							<Box sx={{ flex: 1, display: "flex" }}>
+								<StateVoterRegistrationTable
+									stateName={stateName ? stateName : ""}
+								/>
 							</Box>
 
 							{/* Trends (2016/2020/2024) */}
@@ -834,61 +979,46 @@ const StateDetailPage: React.FC = () => {
 				{isDetail && IDX_EQUIPMENT_TYPES >= 0 && (
 					<TabPanel value={tabValue} index={IDX_EQUIPMENT_TYPES}>
 						<Box sx={{ p: 3 }}>
-							<Alert severity="info" sx={{ mb: 3 }}>
-								This map shows voting equipment types by county. Different colors
-								represent different equipment types used for voting.
-							</Alert>
-							<VotingEquipmentTypeChoropleth
-								stateName={decodedStateName}
-								data={[]}
-								geoJsonData={undefined}
-							/>
-							{/* Color Legend */}
-							<Box sx={{ mt: 2, p: 2, bgcolor: "background.paper" }}>
-								<Typography variant="subtitle2" gutterBottom>
-									Equipment Type Legend:
-								</Typography>
-								<Box display="flex" gap={2} flexWrap="wrap">
-									<Box display="flex" alignItems="center" gap={1}>
-										<Box sx={{ width: 20, height: 20, bgcolor: "#1976d2" }} />
-										<Typography variant="body2">Optical Scan</Typography>
-									</Box>
-									<Box display="flex" alignItems="center" gap={1}>
-										<Box sx={{ width: 20, height: 20, bgcolor: "#dc004e" }} />
-										<Typography variant="body2">DRE</Typography>
-									</Box>
-									<Box display="flex" alignItems="center" gap={1}>
-										<Box sx={{ width: 20, height: 20, bgcolor: "#ff9800" }} />
-										<Typography variant="body2">BMD</Typography>
-									</Box>
-									<Box display="flex" alignItems="center" gap={1}>
-										<Box sx={{ width: 20, height: 20, bgcolor: "#4caf50" }} />
-										<Typography variant="body2">Paper Ballot</Typography>
-									</Box>
-									<Box display="flex" alignItems="center" gap={1}>
-										<Box sx={{ width: 20, height: 20, bgcolor: "#9c27b0" }} />
-										<Typography variant="body2">Mixed</Typography>
-									</Box>
+							{equipmentTypesLoading ? (
+								<Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+									<CircularProgress />
 								</Box>
-							</Box>
+							) : equipmentTypesError ? (
+								<Alert severity="error">{equipmentTypesError}</Alert>
+							) : (
+								<VotingEquipmentTypeChoropleth
+									stateName={decodedStateName}
+									data={equipmentTypesData}
+								/>
+							)}
 						</Box>
 					</TabPanel>
 				)}
 
-				{/* NEW: Drop Box Analysis Tab - GUI-24 (Arkansas & Maryland) */}
+				{/* NEW: Equipment Quality vs Rejections Tab - GUI-25 & GUI-26 */}
+				{isDetail && IDX_EQUIPMENT_QUALITY >= 0 && (
+					<TabPanel value={tabValue} index={IDX_EQUIPMENT_QUALITY}>
+						<Box sx={{ p: 3 }}>
+							<EquipmentQualityVsRejectionsChart
+								stateName={decodedStateName}
+							/>
+						</Box>
+					</TabPanel>
+				)}
+
+				{/* NEW: Drop Box Analysis Tab - GUI-24 (Arkansas, Maryland, Rhode Island) */}
 				{isPartyState && IDX_DROPBOX >= 0 && (
 					<TabPanel value={tabValue} index={IDX_DROPBOX}>
 						<Box sx={{ p: 3 }}>
-							<Alert severity="info" sx={{ mb: 3 }}>
-								<strong>Drop Box Voting Analysis</strong> - This bubble chart shows
-								the relationship between Republican vote percentage and drop box
-								voting usage in each county. Each bubble represents one county,
-								colored red for Republican majority or blue for Democratic majority.
-							</Alert>
 							{dropboxBubbleLoading ? (
 								<Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
 									<CircularProgress />
 								</Box>
+							) : dropboxBubbleData.length === 0 ? (
+								<Alert severity="warning">
+									No drop box voting records were returned for {decodedStateName}. Please
+									verify the preprocessing cache includes C3a totals for this state.
+								</Alert>
 							) : (
 								<DropboxBubbleChart
 									data={dropboxBubbleData}
@@ -899,27 +1029,28 @@ const StateDetailPage: React.FC = () => {
 					</TabPanel>
 				)}
 
-				{/* NEW: Gingles Analysis Tab - GUI-27 (Maryland only) */}
+				{/* NEW: Gingles Analysis Tab - GUI-27 (MD, AR, RI) */}
 				{isPreclearance && IDX_GINGLES >= 0 && (
 					<TabPanel value={tabValue} index={IDX_GINGLES}>
 						<Box sx={{ p: 3 }}>
-							<Alert severity="info" sx={{ mb: 3 }}>
-								<strong>Gingles Analysis</strong> - This chart shows the three
-								preconditions for vote dilution under the Voting Rights Act:
-								<br />
-								1. Minority group is sufficiently large and geographically compact
-								<br />
-								2. Minority group is politically cohesive
-								<br />
-								3. Majority votes as a bloc to usually defeat minority-preferred
-								candidates
-							</Alert>
-							<GinglesChart
-								stateName={decodedStateName}
-								data={[]}
-								democraticRegression={undefined}
-								republicanRegression={undefined}
-							/>
+							{ginglesLoading && (
+								<Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+									<CircularProgress />
+								</Box>
+							)}
+							{ginglesError && (
+								<Alert severity="error" sx={{ mb: 2 }}>
+									{ginglesError}
+								</Alert>
+							)}
+							{!ginglesLoading && !ginglesError && ginglesData && (
+								<GinglesChart
+									stateName={decodedStateName}
+									data={ginglesData.data || []}
+									democraticRegression={ginglesData.democraticRegression}
+									republicanRegression={ginglesData.republicanRegression}
+								/>
+							)}
 						</Box>
 					</TabPanel>
 				)}

@@ -54,7 +54,7 @@ export const scatterAnimationProps = {
 };
 
 // Staggered animation for multiple series
-export const getStaggeredAnimationProps = (index: number, totalSeries: number) => {
+export const getStaggeredAnimationProps = (index: number) => {
     const staggerDelay = 100; // milliseconds between each series
     return {
         animationBegin: index * staggerDelay,

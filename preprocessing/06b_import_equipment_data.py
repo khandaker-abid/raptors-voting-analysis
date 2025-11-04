@@ -107,6 +107,15 @@ class EquipmentDataImporter:
             if not row or not any(row):
                 continue
             
+            # Stop parsing when we hit the second section (equipment details)
+            # The second section has different columns - check if "Equipment Type" column appears
+            if row and len(row) > 3:
+                # Check if this looks like the equipment details section
+                # Equipment details have "Internet Voting", "Batch-Fed", etc. in column 4
+                if any(term in str(row[3]) for term in ['Internet Voting', 'Batch-Fed', 'Equipment Type']):
+                    logger.info(f"  Reached equipment details section, stopping jurisdiction parsing")
+                    break
+            
             # Create a dictionary from the row
             row_dict = {}
             for i, value in enumerate(row):

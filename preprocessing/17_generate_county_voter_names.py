@@ -156,6 +156,10 @@ def generate_county_voters():
         {"state": "Arkansas", "county": "Cross", "dem": 31512, "rep": 8324, "unaf": 25639},
         {"state": "Arkansas", "county": "Newton", "dem": 258, "rep": 13165, "unaf": 23975},
         {"state": "Arkansas", "county": "Logan", "dem": 24207, "rep": 54070, "unaf": 15957},
+        {"state": "Arkansas", "county": "Sebastian", "dem": 3200, "rep": 4500, "unaf": 2800},
+        {"state": "Arkansas", "county": "Miller", "dem": 2800, "rep": 5200, "unaf": 3100},
+        {"state": "Arkansas", "county": "Little River", "dem": 2500, "rep": 3800, "unaf": 2200},
+        {"state": "Arkansas", "county": "Baxter", "dem": 3500, "rep": 6200, "unaf": 3800},
         
         # MARYLAND COUNTIES
         {"state": "Maryland", "county": "Allegany", "dem": 30222, "rep": 55698, "unaf": 18315},
@@ -179,6 +183,9 @@ def generate_county_voters():
         {"state": "Maryland", "county": "Wicomico", "dem": 26685, "rep": 34826, "unaf": 14261},
         {"state": "Maryland", "county": "Worcester", "dem": 6098, "rep": 8908, "unaf": 5981},
         {"state": "Maryland", "county": "Baltimore City", "dem": 25132, "rep": 19823, "unaf": 2537},
+        {"state": "Maryland", "county": "Frederick", "dem": 42315, "rep": 38920, "unaf": 28450},
+        {"state": "Maryland", "county": "Prince George's", "dem": 68450, "rep": 18230, "unaf": 45820},
+        {"state": "Maryland", "county": "Caroline", "dem": 8920, "rep": 12450, "unaf": 5830},
         
         # RHODE ISLAND COUNTIES
         {"state": "Rhode Island", "county": "Providence", "dem": 16889, "rep": 36352, "unaf": 36856},

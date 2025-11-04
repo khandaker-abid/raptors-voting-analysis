@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
-import { Paper, Typography, Box, Alert } from "@mui/material";
+import { Paper, Typography, Box, Alert, Chip } from "@mui/material";
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import type { StateVoterRegistrationData } from "../data/stateVoterRegistrationData";
-import { getStateVoterRegistrationData } from "../data/stateVoterRegistrationData";
+import { fetchStateRegisteredVoters } from "../data/api";
 import { bindResponsiveTooltip } from "../utils/leafletTooltipHelper";
 
 interface VoterRegistrationChloroplethMapProps {
@@ -37,6 +37,48 @@ type CountyGeoJSONData = FeatureCollection<
 	}
 >;
 
+const canonicalizeCountyName = (raw?: string | null): string => {
+	if (!raw) return "";
+
+	const normalizeWhitespace = (value: string) => value.replace(/\s+/g, " ").trim();
+
+	let cleaned = normalizeWhitespace(
+		raw
+			.toLowerCase()
+			.normalize("NFD")
+			.replace(/[\u0300-\u036f]/g, "")
+			.replace(/&/g, " and ")
+			.replace(/["'’`]/g, "")
+			.replace(/\./g, " ")
+	);
+
+	// Harmonise common abbreviations so "Saint" and "St" map together, likewise "Ft" -> "Fort".
+	cleaned = cleaned
+		.replace(/\bsaint\b/g, "st")
+		.replace(/\bft\b/g, "fort");
+
+	// Drop standard geographic suffixes so "County", "Parish", etc. do not break matches.
+	const suffixes = [
+		"county",
+		"parish",
+		"borough",
+		"census area",
+		"municipality",
+		"municipio",
+		"district",
+		"city",
+	];
+	for (const suffix of suffixes) {
+		if (cleaned.endsWith(` ${suffix}`)) {
+			cleaned = cleaned.slice(0, -(suffix.length + 1));
+			cleaned = normalizeWhitespace(cleaned);
+			break;
+		}
+	}
+
+	return cleaned.replace(/[^a-z0-9]/g, "");
+};
+
 const VoterRegistrationChloroplethMap: React.FC<
 	VoterRegistrationChloroplethMapProps
 > = ({ stateName, resetHoverKey }) => {
@@ -66,16 +108,16 @@ const VoterRegistrationChloroplethMap: React.FC<
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				const result = await getStateVoterRegistrationData(stateName);
+				const result = await fetchStateRegisteredVoters(stateName);
 				setData(Array.isArray(result) ? result : []);
 			} catch (error) {
-				console.error("Error fetching voting equipment data:", error);
+				console.error(`Error fetching voter registration data for ${stateName}:`, error);
 			}
 		};
 		fetchData();
 	}, [stateName]);
 
-	// Calculate color scale for registered voters
+	// Calculate color scale for registered voters (5 bins for compact legend)
 	const colorScale = useMemo(() => {
 		if (!data || data.length === 0) return null;
 
@@ -83,11 +125,9 @@ const VoterRegistrationChloroplethMap: React.FC<
 		const maxValue = Math.max(...values);
 		const minValue = Math.min(...values);
 
-		// Grayscale palette (NO BLUE - blue is reserved for Democratic party only)
+		// Grayscale palette with 5 bins for compact display (NO BLUE - blue is reserved for Democratic party only)
 		const range = [
-			"#f5f5f5",
 			"#e0e0e0",
-			"#bdbdbd",
 			"#9e9e9e",
 			"#757575",
 			"#616161",
@@ -105,20 +145,34 @@ const VoterRegistrationChloroplethMap: React.FC<
 	// Create a data lookup map for efficient county data retrieval
 	const dataLookup = useMemo(() => {
 		const lookup = new Map<string, number>();
-		data.forEach((item) => {
-			const normalizedCounty = item.regionName
-				.toLowerCase()
-				.replace(/\s+/g, " ")
-				.trim();
-			lookup.set(normalizedCounty, item.registeredVoterCount);
 
-			const withoutCounty = normalizedCounty.replace(/\s+county$/, "");
-			if (withoutCounty !== normalizedCounty) {
-				lookup.set(withoutCounty, item.registeredVoterCount);
-			}
+		data.forEach((item) => {
+			const candidateKeys = new Set<string>();
+			candidateKeys.add(canonicalizeCountyName(item.regionName));
+			candidateKeys.add(canonicalizeCountyName(`${item.regionName} county`));
+			candidateKeys.add(canonicalizeCountyName(`${item.regionName} parish`));
+
+			candidateKeys.forEach((key) => {
+				if (key) {
+					lookup.set(key, item.registeredVoterCount);
+				}
+			});
 		});
+
 		return lookup;
 	}, [data]);
+
+	const resolveVoterCount = (names: Array<string | null | undefined>) => {
+		for (const name of names) {
+			const key = canonicalizeCountyName(name);
+			if (!key) continue;
+			const found = dataLookup.get(key);
+			if (found !== undefined) {
+				return found;
+			}
+		}
+		return 0;
+	};
 
 	useEffect(() => {
 		const loadMapData = async () => {
@@ -203,27 +257,16 @@ const VoterRegistrationChloroplethMap: React.FC<
 		}
 
 		const countyFeature = feature as CountyFeature;
-		const countyName = (
-			countyFeature.properties.coty_name_long?.[0] ||
-			countyFeature.properties.coty_name?.[0] ||
-			"Unknown County"
-		)
-			.toLowerCase()
-			.replace(/\s+/g, " ")
-			.trim();
-
-		let voterCount = dataLookup.get(countyName);
-		if (voterCount === undefined) {
-			const withoutCounty = countyName.replace(/\s+county$/, "");
-			voterCount = dataLookup.get(withoutCounty);
-		}
-		if (voterCount === undefined) {
-			const withCounty = countyName.includes("county")
-				? countyName
-				: `${countyName} county`;
-			voterCount = dataLookup.get(withCounty);
-		}
-		voterCount = voterCount || 0;
+		const voterCount = resolveVoterCount([
+			countyFeature.properties.coty_name_long?.[0],
+			countyFeature.properties.coty_name?.[0],
+			countyFeature.properties.coty_name?.[0]
+				? `${countyFeature.properties.coty_name?.[0]} County`
+				: undefined,
+			countyFeature.properties.coty_name?.[0]
+				? `${countyFeature.properties.coty_name?.[0]} Parish`
+				: undefined,
+		]);
 
 		const fillColor = colorScale(voterCount);
 
@@ -245,21 +288,23 @@ const VoterRegistrationChloroplethMap: React.FC<
 			countyFeature.properties.coty_name?.[0] ||
 			"Unknown County";
 
-		const normalizedCountyName = displayCountyName
-			.toLowerCase()
-			.replace(/\s+/g, " ")
-			.trim()
-			.split(" ")
-			.slice(0, -1)
-			.join(" ");
-
-		const voterCount = dataLookup.get(normalizedCountyName) || 0;
+		const voterCount = resolveVoterCount([
+			displayCountyName,
+			countyFeature.properties.coty_name_long?.[0],
+			countyFeature.properties.coty_name?.[0],
+			countyFeature.properties.coty_name?.[0]
+				? `${countyFeature.properties.coty_name?.[0]} County`
+				: undefined,
+			countyFeature.properties.coty_name?.[0]
+				? `${countyFeature.properties.coty_name?.[0]} Parish`
+				: undefined,
+		]);
 
 		const tooltipContent = `
-      <div style="font-weight: bold; margin-bottom: 4px;">${displayCountyName}</div>
-      <div>Registered Voters: <span style="color: #424242; font-weight: bold;">${voterCount.toLocaleString()}</span></div>
+      <div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${displayCountyName}</div>
+      <div style="font-size: 13px;">Registered Voters: <strong>${voterCount.toLocaleString()}</strong></div>
       ${voterCount === 0
-				? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">No data available</div>'
+				? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">⚠️ No data available</div>'
 				: ""
 			}
     `;
@@ -354,30 +399,54 @@ const VoterRegistrationChloroplethMap: React.FC<
 	const maxValue = Math.max(...data.map((d) => d.registeredVoterCount));
 	const minValue = Math.min(...data.map((d) => d.registeredVoterCount));
 	const totalVotes = data.reduce((sum, d) => sum + d.registeredVoterCount, 0);
+	const avgValue = totalVotes / data.length;
+
+	// Check if all data is zero (no data reported)
+	const allZero = data.every((d) => d.registeredVoterCount === 0);
+
+	// Note: Rhode Island data is now aggregated to county level by the backend,
+	// so we no longer need to show the town-level warning
+	const isRhodeIslandTownData = false;
 
 	return (
-		<Paper sx={{ p: 3 }}>
-			<Box mb={3}>
+		<Paper sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
+			<Box mb={1}>
 				<Typography variant="h6" gutterBottom fontWeight={600}>
-					Registered Voters Distribution - {stateName}
+					Registered Voters Distribution
 				</Typography>
-				<Typography variant="body2" color="text.secondary">
-					{data.length} Counties/Towns | Total: {totalVotes.toLocaleString()} voters | Range: {minValue.toLocaleString()} - {maxValue.toLocaleString()}
-				</Typography>
+				<Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
+					<Chip label={`Average: ${Math.round(avgValue).toLocaleString()}`} size="small" />
+					<Chip
+						label={`Range: ${minValue.toLocaleString()} – ${maxValue.toLocaleString()}`}
+						size="small"
+					/>
+					{allZero && (
+						<Chip
+							label="⚠️ No data reported for 2024"
+							size="small"
+							color="warning"
+							sx={{ fontWeight: 600 }}
+						/>
+					)}
+					{isRhodeIslandTownData && (
+						<Chip
+							label="ℹ️ Data reported at town level (39 towns) - county map shows 5 counties only"
+							size="small"
+							color="info"
+							sx={{ fontWeight: 600 }}
+						/>
+					)}
+				</Box>
 			</Box>
 
 			<Box
 				sx={{
-					display: "flex",
-					justifyContent: "center",
+					flex: 1,
 					border: "1px solid #e0e0e0",
 					borderRadius: 2,
-					padding: 0,
-					backgroundColor: "#fafafa",
-					height: 400,
-					width: "100%",
-					margin: "0 auto",
-					mb: 3,
+					overflow: "hidden",
+					minHeight: 0,
+					mb: 1,
 				}}
 			>
 				<MapContainer
@@ -405,47 +474,53 @@ const VoterRegistrationChloroplethMap: React.FC<
 				</MapContainer>
 			</Box>
 
-			{/* Color Legend */}
+			{/* Color Legend - Gradient style matching other tabs */}
 			<Box>
-				<Typography variant="subtitle2" gutterBottom fontWeight={600}>
+				<Typography variant="body2" gutterBottom fontWeight={600} fontSize="0.85rem">
 					Color Scale (Total Registered Voters)
 				</Typography>
-				<Box display="flex" flexWrap="wrap" gap={1.5}>
-					{colorScale &&
-						[
-							"#f5f5f5",
+				<Box display="flex" alignItems="center" gap={0.5}>
+					<Typography variant="caption" sx={{ minWidth: 45, fontSize: "0.75rem" }}>
+						{minValue.toLocaleString()}
+					</Typography>
+					<Box
+						display="flex"
+						height={24}
+						flex={1}
+						border="1px solid #e0e0e0"
+						borderRadius={1}
+						overflow="hidden"
+					>
+						{[
 							"#e0e0e0",
-							"#bdbdbd",
 							"#9e9e9e",
 							"#757575",
 							"#616161",
 							"#424242",
-						].map((color, index, palette) => {
-							const binSize = (maxValue - minValue) / palette.length;
-							const rangeStart = Math.floor(minValue + index * binSize);
-							const rangeEnd = Math.floor(minValue + (index + 1) * binSize);
-							return (
-								<Box key={index} display="flex" alignItems="center" gap={0.5}>
-									<Box
-										sx={{
-											width: 24,
-											height: 24,
-											backgroundColor: color,
-											border: "1px solid #ccc",
-											borderRadius: 0.5,
-										}}
-									/>
-									<Typography variant="caption">
-										{rangeStart.toLocaleString()} - {rangeEnd.toLocaleString()}
-									</Typography>
-								</Box>
-							);
-						})}
+						].map((color, index) => (
+							<Box
+								key={index}
+								sx={{
+									flex: 1,
+									backgroundColor: color,
+									height: "100%",
+								}}
+							/>
+						))}
+					</Box>
+					<Typography variant="caption" sx={{ minWidth: 45, textAlign: "right", fontSize: "0.75rem" }}>
+						{maxValue.toLocaleString()}
+					</Typography>
 				</Box>
-				<Typography variant="caption" color="text.secondary" display="block" mt={1}>
-					Interactive choropleth map showing voter registration distribution across
-					counties. Hover over counties for detailed information.
+				<Typography variant="caption" color="text.secondary" display="block" mt={0.5} fontSize="0.7rem">
+					Interactive choropleth map showing voter registration distribution across counties. Hover over counties for detailed information.
 				</Typography>
+				{/* Note for states that use town-level data */}
+				{(stateName === "Rhode Island" || stateName === "Vermont" || stateName === "Connecticut" || stateName === "Massachusetts") && (
+					<Typography variant="caption" color="primary.main" display="block" mt={0.5} fontSize="0.7rem" fontStyle="italic">
+						Note: {stateName} reports data at the town level. Values shown have been aggregated to county level for map display consistency.
+					</Typography>
+				)}
 			</Box>
 		</Paper>
 	);

@@ -27,6 +27,7 @@ import {
     CircularProgress,
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material";
+import { ExportButton } from "../components/ExportButton";
 
 interface ProbabilityCurvePoint {
     rejectionProbability: number; // 0-100 (percentage)
@@ -57,12 +58,12 @@ const DEMOGRAPHICS = [
 ];
 
 const DEMOGRAPHIC_COLORS: Record<string, string> = {
-    "White": "#3498db",
-    "African American": "#e74c3c",
-    "Hispanic": "#f39c12",
-    "Asian": "#2ecc71",
-    "Native American": "#9b59b6",
-    "Other": "#95a5a6",
+    "White": "#212121", // Very dark gray
+    "African American": "#424242", // Dark gray
+    "Hispanic": "#616161", // Medium dark gray
+    "Asian": "#757575", // Medium gray
+    "Native American": "#9e9e9e", // Light gray
+    "Other": "#bdbdbd", // Very light gray
 };
 
 const EIRejectedBallotsChart: React.FC<Props> = ({ stateName }) => {
@@ -159,9 +160,24 @@ const EIRejectedBallotsChart: React.FC<Props> = ({ stateName }) => {
 
     return (
         <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-                Ecological Inference: Ballot Rejection Probability by Demographic
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                <Typography variant="h6" gutterBottom>
+                    Ecological Inference: Ballot Rejection Probability by Demographic
+                </Typography>
+                <ExportButton
+                    chartId="ei-rejected-chart"
+                    chartName={`ei-rejected-${stateName}`}
+                    tableData={chartData}
+                    tableColumns={[
+                        { header: "Rejection Probability (%)", accessor: "rejectionProbability" },
+                        ...selectedDemographics.map(demo => ({
+                            header: demo,
+                            accessor: demo,
+                        })),
+                    ]}
+                    tableName={`ei-rejected-data-${stateName}`}
+                />
+            </Box>
 
             <Alert severity="warning" sx={{ mb: 2 }}>
                 This chart shows the probability distribution of ballot rejection rates across different
@@ -197,7 +213,7 @@ const EIRejectedBallotsChart: React.FC<Props> = ({ stateName }) => {
                 </FormControl>
             </Box>
 
-            <ResponsiveContainer width="100%" height={400}>
+            <ResponsiveContainer width="100%" height={400} id="ei-rejected-chart">
                 <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis

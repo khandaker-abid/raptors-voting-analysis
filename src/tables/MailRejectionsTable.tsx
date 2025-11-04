@@ -13,9 +13,13 @@ import {
     Typography,
     TextField,
     InputAdornment,
+    TableSortLabel,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import type { MailRejectionRow } from "../data/types";
+
+type SortableColumn = 'geographicUnit' | 'C9b_NoSignature' | 'C9c_SigMismatch' | 'C9d_ReceivedLate' | 'C9e_MissingInfo' | 'C9f_NotRegistered' | 'C9g_WrongEnvelope' | 'C9h_Other' | 'total';
+type SortOrder = 'asc' | 'desc';
 
 
 interface Props { data: MailRejectionRow[]; }
@@ -25,6 +29,16 @@ const MailRejectionsTable: React.FC<Props> = ({ data }) => {
     const [page, setPage] = useState(0);
     const rowsPerPage = 5; // Fixed at 5 rows per page (no scrolling, just pagination)
     const [searchTerm, setSearchTerm] = useState("");
+    const [sortColumn, setSortColumn] = useState<SortableColumn>('geographicUnit');
+    const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
+    // Helper function to normalize county names (fix all-caps issue)
+    const normalizeCountyName = (name: string): string => {
+        return name
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+    };
 
     const filteredData = useMemo(() => {
         if (!data) return [];
@@ -35,10 +49,43 @@ const MailRejectionsTable: React.FC<Props> = ({ data }) => {
         );
     }, [data, searchTerm]);
 
-    // Sort by total rejections descending
+    // Sort data based on selected column and order
     const sortedData = useMemo(() => {
-        return [...filteredData].sort((a, b) => b.total - a.total);
-    }, [filteredData]);
+        const sorted = [...filteredData];
+        sorted.sort((a, b) => {
+            let aValue: string | number;
+            let bValue: string | number;
+
+            if (sortColumn === 'geographicUnit') {
+                aValue = normalizeCountyName(a.geographicUnit);
+                bValue = normalizeCountyName(b.geographicUnit);
+            } else {
+                aValue = a[sortColumn];
+                bValue = b[sortColumn];
+            }
+
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+                return sortOrder === 'asc'
+                    ? aValue.localeCompare(bValue)
+                    : bValue.localeCompare(aValue);
+            } else {
+                return sortOrder === 'asc'
+                    ? (aValue as number) - (bValue as number)
+                    : (bValue as number) - (aValue as number);
+            }
+        });
+        return sorted;
+    }, [filteredData, sortColumn, sortOrder]);
+
+    const handleSort = (column: SortableColumn) => {
+        if (sortColumn === column) {
+            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortColumn(column);
+            setSortOrder('asc');
+        }
+        setPage(0); // Reset to first page when sorting
+    };
 
     const handleChangePage = (_event: unknown, newPage: number) => {
         setPage(newPage);
@@ -107,91 +154,208 @@ const MailRejectionsTable: React.FC<Props> = ({ data }) => {
                             <TableCell
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}>
-                                Region
+                                <TableSortLabel
+                                    active={sortColumn === 'geographicUnit'}
+                                    direction={sortColumn === 'geographicUnit' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('geographicUnit')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    Region
+                                </TableSortLabel>
                             </TableCell>
                             <TableCell
                                 align="right"
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}>
-                                No Signature
+                                <TableSortLabel
+                                    active={sortColumn === 'C9b_NoSignature'}
+                                    direction={sortColumn === 'C9b_NoSignature' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('C9b_NoSignature')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    No Signature
+                                </TableSortLabel>
                             </TableCell>
                             <TableCell
                                 align="right"
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}>
-                                Signature Mismatch
+                                <TableSortLabel
+                                    active={sortColumn === 'C9c_SigMismatch'}
+                                    direction={sortColumn === 'C9c_SigMismatch' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('C9c_SigMismatch')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    Signature Mismatch
+                                </TableSortLabel>
                             </TableCell>
                             <TableCell
                                 align="right"
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}>
-                                Received Late
+                                <TableSortLabel
+                                    active={sortColumn === 'C9d_ReceivedLate'}
+                                    direction={sortColumn === 'C9d_ReceivedLate' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('C9d_ReceivedLate')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    Received Late
+                                </TableSortLabel>
                             </TableCell>
                             <TableCell
                                 align="right"
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}>
-                                Missing Info
+                                <TableSortLabel
+                                    active={sortColumn === 'C9e_MissingInfo'}
+                                    direction={sortColumn === 'C9e_MissingInfo' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('C9e_MissingInfo')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    Missing Info
+                                </TableSortLabel>
                             </TableCell>
                             <TableCell
                                 align="right"
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}>
-                                Not Registered
+                                <TableSortLabel
+                                    active={sortColumn === 'C9f_NotRegistered'}
+                                    direction={sortColumn === 'C9f_NotRegistered' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('C9f_NotRegistered')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    Not Registered
+                                </TableSortLabel>
                             </TableCell>
                             <TableCell
                                 align="right"
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}>
-                                Wrong Envelope
+                                <TableSortLabel
+                                    active={sortColumn === 'C9g_WrongEnvelope'}
+                                    direction={sortColumn === 'C9g_WrongEnvelope' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('C9g_WrongEnvelope')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    Wrong Envelope
+                                </TableSortLabel>
                             </TableCell>
                             <TableCell
                                 align="right"
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}>
-                                Other
+                                <TableSortLabel
+                                    active={sortColumn === 'C9h_Other'}
+                                    direction={sortColumn === 'C9h_Other' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('C9h_Other')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    Other
+                                </TableSortLabel>
                             </TableCell>
                             <TableCell
                                 align="right"
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}>
-                                Total
+                                <TableSortLabel
+                                    active={sortColumn === 'total'}
+                                    direction={sortColumn === 'total' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('total')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    Total
+                                </TableSortLabel>
                             </TableCell>
                         </TableRow>
                     </TableHead>
@@ -210,7 +374,7 @@ const MailRejectionsTable: React.FC<Props> = ({ data }) => {
                                                 fontWeight: 500,
                                                 backgroundColor: rowBg,
                                             }}>
-                                            {row.geographicUnit}
+                                            {normalizeCountyName(row.geographicUnit)}
                                         </TableCell>
                                         <TableCell align="right" sx={{ backgroundColor: rowBg }}>
                                             {row.C9b_NoSignature.toLocaleString()}

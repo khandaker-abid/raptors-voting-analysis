@@ -13,9 +13,13 @@ import {
     Typography,
     TextField,
     InputAdornment,
+    TableSortLabel,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import type { PollbookDeletionRow } from "../data/types";
+
+type SortableColumn = 'geographicUnit' | 'A12b_Death' | 'A12c_Moved' | 'A12d_Felon' | 'A12e_MentalIncap' | 'A12f_Requested' | 'A12g_FailedToVote' | 'A12h_Other' | 'total';
+type SortOrder = 'asc' | 'desc';
 
 interface Props {
     data: PollbookDeletionRow[];
@@ -25,6 +29,16 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
     const [page, setPage] = useState(0);
     const rowsPerPage = 5; // Fixed at 5 rows per page to match Active Voters
     const [searchTerm, setSearchTerm] = useState("");
+    const [sortColumn, setSortColumn] = useState<SortableColumn>('geographicUnit');
+    const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
+    // Helper function to normalize county names (fix all-caps issue)
+    const normalizeCountyName = (name: string): string => {
+        return name
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+    };
 
     const filteredData = useMemo(() => {
         if (!data) return [];
@@ -35,10 +49,43 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
         );
     }, [data, searchTerm]);
 
-    // Sort by total deletions descending
+    // Sort data based on selected column and order
     const sortedData = useMemo(() => {
-        return [...filteredData].sort((a, b) => (b.total || 0) - (a.total || 0));
-    }, [filteredData]);
+        const sorted = [...filteredData];
+        sorted.sort((a, b) => {
+            let aValue: string | number;
+            let bValue: string | number;
+
+            if (sortColumn === 'geographicUnit') {
+                aValue = normalizeCountyName(a.geographicUnit);
+                bValue = normalizeCountyName(b.geographicUnit);
+            } else {
+                aValue = a[sortColumn] || 0;
+                bValue = b[sortColumn] || 0;
+            }
+
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+                return sortOrder === 'asc'
+                    ? aValue.localeCompare(bValue)
+                    : bValue.localeCompare(aValue);
+            } else {
+                return sortOrder === 'asc'
+                    ? (aValue as number) - (bValue as number)
+                    : (bValue as number) - (aValue as number);
+            }
+        });
+        return sorted;
+    }, [filteredData, sortColumn, sortOrder]);
+
+    const handleSort = (column: SortableColumn) => {
+        if (sortColumn === column) {
+            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortColumn(column);
+            setSortOrder('asc');
+        }
+        setPage(0); // Reset to first page when sorting
+    };
 
     const handleChangePage = (_event: unknown, newPage: number) => {
         setPage(newPage);
@@ -116,100 +163,217 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                             <TableCell
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}
                             >
-                                Region
+                                <TableSortLabel
+                                    active={sortColumn === 'geographicUnit'}
+                                    direction={sortColumn === 'geographicUnit' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('geographicUnit')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    Region
+                                </TableSortLabel>
                             </TableCell>
                             <TableCell
                                 align="right"
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}
                             >
-                                A12b Death
+                                <TableSortLabel
+                                    active={sortColumn === 'A12b_Death'}
+                                    direction={sortColumn === 'A12b_Death' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('A12b_Death')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    A12b Death
+                                </TableSortLabel>
                             </TableCell>
                             <TableCell
                                 align="right"
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}
                             >
-                                A12c Moved
+                                <TableSortLabel
+                                    active={sortColumn === 'A12c_Moved'}
+                                    direction={sortColumn === 'A12c_Moved' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('A12c_Moved')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    A12c Moved
+                                </TableSortLabel>
                             </TableCell>
                             <TableCell
                                 align="right"
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}
                             >
-                                A12d Felon
+                                <TableSortLabel
+                                    active={sortColumn === 'A12d_Felon'}
+                                    direction={sortColumn === 'A12d_Felon' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('A12d_Felon')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    A12d Felon
+                                </TableSortLabel>
                             </TableCell>
                             <TableCell
                                 align="right"
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}
                             >
-                                A12e Mental Incap
+                                <TableSortLabel
+                                    active={sortColumn === 'A12e_MentalIncap'}
+                                    direction={sortColumn === 'A12e_MentalIncap' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('A12e_MentalIncap')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    A12e Mental Incap
+                                </TableSortLabel>
                             </TableCell>
                             <TableCell
                                 align="right"
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}
                             >
-                                A12f Requested
+                                <TableSortLabel
+                                    active={sortColumn === 'A12f_Requested'}
+                                    direction={sortColumn === 'A12f_Requested' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('A12f_Requested')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    A12f Requested
+                                </TableSortLabel>
                             </TableCell>
                             <TableCell
                                 align="right"
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}
                             >
-                                A12g Failed to Vote
+                                <TableSortLabel
+                                    active={sortColumn === 'A12g_FailedToVote'}
+                                    direction={sortColumn === 'A12g_FailedToVote' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('A12g_FailedToVote')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    A12g Failed to Vote
+                                </TableSortLabel>
                             </TableCell>
                             <TableCell
                                 align="right"
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}
                             >
-                                A12h Other
+                                <TableSortLabel
+                                    active={sortColumn === 'A12h_Other'}
+                                    direction={sortColumn === 'A12h_Other' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('A12h_Other')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    A12h Other
+                                </TableSortLabel>
                             </TableCell>
                             <TableCell
                                 align="right"
                                 sx={{
                                     fontWeight: "bold",
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: "#616161",
                                     color: "white",
                                     py: 1.5,
+                                    cursor: "pointer",
                                 }}
                             >
-                                Total
+                                <TableSortLabel
+                                    active={sortColumn === 'total'}
+                                    direction={sortColumn === 'total' ? sortOrder : 'asc'}
+                                    onClick={() => handleSort('total')}
+                                    sx={{
+                                        color: 'white !important',
+                                        '&:hover': { color: 'white !important' },
+                                        '& .MuiTableSortLabel-icon': { color: 'white !important' },
+                                        '&.Mui-active': { color: 'white !important' },
+                                        '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
+                                    }}>
+                                    Total
+                                </TableSortLabel>
                             </TableCell>
                         </TableRow>
                     </TableHead>
@@ -229,7 +393,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                                 backgroundColor: rowBg,
                                             }}
                                         >
-                                            {row.geographicUnit}
+                                            {normalizeCountyName(row.geographicUnit)}
                                         </TableCell>
                                         <TableCell align="right" sx={{ backgroundColor: rowBg }}>
                                             {(row.A12b_Death || 0).toLocaleString()}

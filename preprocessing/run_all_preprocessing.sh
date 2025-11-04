@@ -140,6 +140,41 @@ log ">>> Prepro-13: Collecting felony voting policies..."
 python 13_collect_felony_voting_policies.py 2>&1 | tee -a "$LOG_FILE" || { log "Failed at Prepro-13"; exit 1; }
 log ""
 
+# Prepro-14: Equipment History
+if [ -f "14_generate_equipment_history.py" ]; then
+    log ">>> Prepro-14: Generating equipment history..."
+    python 14_generate_equipment_history.py 2>&1 | tee -a "$LOG_FILE" || { log "Failed at Prepro-14"; exit 1; }
+    log ""
+fi
+
+# Prepro-15: Census Block Bubbles
+if [ -f "15_generate_census_block_bubbles.py" ]; then
+    log ">>> Prepro-15: Generating census block bubbles..."
+    python 15_generate_census_block_bubbles.py 2>&1 | tee -a "$LOG_FILE" || { log "Failed at Prepro-15"; exit 1; }
+    log ""
+fi
+
+# Prepro-16: EI Analysis
+if [ -f "16_generate_ei_analysis.py" ]; then
+    log ">>> Prepro-16: Generating ecological inference analysis..."
+    python 16_generate_ei_analysis.py 2>&1 | tee -a "$LOG_FILE" || { log "Failed at Prepro-16"; exit 1; }
+    log ""
+fi
+
+# Prepro-18: Aggregate Voter Registration
+if [ -f "18_aggregate_voter_registration.py" ]; then
+    log ">>> Prepro-18: Aggregating voter registration data..."
+    python 18_aggregate_voter_registration.py 2>&1 | tee -a "$LOG_FILE" || { log "Failed at Prepro-18"; exit 1; }
+    log ""
+fi
+
+# Prepro-27: Gingles Analysis
+if [ -f "27_generate_gingles_analysis.py" ]; then
+    log ">>> Prepro-27: Generating Gingles analysis..."
+    python 27_generate_gingles_analysis.py 2>&1 | tee -a "$LOG_FILE" || { log "Failed at Prepro-27"; exit 1; }
+    log ""
+fi
+
 log "========================================="
 log "  Preprocessing Complete!"
 log "========================================="

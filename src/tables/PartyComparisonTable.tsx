@@ -12,9 +12,7 @@ import {
 	Typography,
 } from "@mui/material";
 import type { PartyComparisonData } from "../data/partyComparisonData";
-import { getPartyComparisonData } from "../data/partyComparisonData";
-import axios from "axios";
-import { API_URL } from "../data/api";
+import { fetchPartyComparison } from "../data/api";
 
 
 interface PartyComparisonTableProps {
@@ -25,19 +23,18 @@ interface PartyComparisonTableProps {
 const PartyComparisonTable: React.FC<PartyComparisonTableProps> = ({
 	republicanStateName,
 	democraticStateName,
-}) => { 
+}) => {
 	const [data, setData] = useState<PartyComparisonData[]>([])
-    const [page, setPage] = useState(0);
+	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(5);
 
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				const response = await axios.get<PartyComparisonData[]>(`${API_URL}/party-comparison`);
-				setData(response.data);
+				const response = await fetchPartyComparison();
+				setData(response);
 			} catch (err) {
-				console.log(err)
-				console.error(err);
+				console.error("Failed to fetch party comparison data:", err);
 			}
 		};
 		fetchData();
@@ -49,7 +46,7 @@ const PartyComparisonTable: React.FC<PartyComparisonTableProps> = ({
 	}, [data]);
 
 	const sortedData = useMemo(() => {
-		return [...filteredData].sort((a,b) => a.metric.localeCompare(b.metric));
+		return [...filteredData].sort((a, b) => a.metric.localeCompare(b.metric));
 	}, [filteredData]);
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
@@ -90,7 +87,7 @@ const PartyComparisonTable: React.FC<PartyComparisonTableProps> = ({
 								align="left"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Evaluation Metric
@@ -99,7 +96,7 @@ const PartyComparisonTable: React.FC<PartyComparisonTableProps> = ({
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 									position: "sticky",
 									left: 0,
@@ -111,7 +108,7 @@ const PartyComparisonTable: React.FC<PartyComparisonTableProps> = ({
 								align="right"
 								sx={{
 									fontWeight: "bold",
-									backgroundColor: "primary.main",
+									backgroundColor: "#616161",
 									color: "white",
 								}}>
 								Democratic Data ({democraticStateName})
@@ -148,7 +145,7 @@ const PartyComparisonTable: React.FC<PartyComparisonTableProps> = ({
 										{row.republicanData.toLocaleString()}
 									</TableCell>
 
-                                    <TableCell
+									<TableCell
 										align="right"
 										sx={{
 											fontWeight: "bold",
