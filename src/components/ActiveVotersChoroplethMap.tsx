@@ -408,17 +408,15 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 				<Typography variant="body2" gutterBottom fontWeight={600} fontSize="0.85rem">
 					Color Scale (Active Voter %)
 				</Typography>
-				<Box display="flex" alignItems="center" gap={0.5}>
-					<Typography variant="caption" sx={{ minWidth: 45, fontSize: "0.75rem" }}>
-						{minPercentage.toFixed(1)}%
-					</Typography>
+				<Box>
+					{/* Color bar */}
 					<Box
 						display="flex"
 						height={24}
-						flex={1}
 						border="1px solid #e0e0e0"
 						borderRadius={1}
 						overflow="hidden"
+						mb={0.5}
 					>
 						{COLOR_PALETTE.map((color, index) => (
 							<Box
@@ -431,9 +429,32 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 							/>
 						))}
 					</Box>
-					<Typography variant="caption" sx={{ minWidth: 45, textAlign: "right", fontSize: "0.75rem" }}>
-						{maxPercentage.toFixed(1)}%
-					</Typography>
+
+					{/* Boundary values at dividing lines between segments */}
+					<Box sx={{ position: "relative", height: "1.5rem" }}>
+						{Array.from({ length: COLOR_PALETTE.length + 1 }, (_, i) => {
+							const ratio = i / COLOR_PALETTE.length;
+							const value = minPercentage === maxPercentage ? minPercentage : minPercentage + ratio * (maxPercentage - minPercentage);
+							const percentPosition = ratio * 100;
+							return (
+								<Typography
+									key={i}
+									variant="caption"
+									sx={{
+										position: "absolute",
+										left: `${percentPosition}%`,
+										transform: "translateX(-50%)",
+										fontSize: "0.7rem",
+										color: "text.secondary",
+										fontWeight: 500,
+										whiteSpace: "nowrap",
+									}}
+								>
+									{value.toFixed(1)}%
+								</Typography>
+							);
+						})}
+					</Box>
 				</Box>
 				<Typography variant="caption" color="text.secondary" display="block" mt={0.5} fontSize="0.7rem">
 					Interactive choropleth map showing active voter distribution across

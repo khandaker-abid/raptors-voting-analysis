@@ -137,7 +137,7 @@ net start MongoDB
 # Terminal 1 - Setup and populate database
 cd preprocessing
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+source .venv/Scripts/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ./run_all_preprocessing.sh  # Populates MongoDB (first run ~10 minutes, cached reruns <2 minutes)
 cd ..

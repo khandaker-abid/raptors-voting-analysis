@@ -101,9 +101,6 @@ const ProvisionalBallotBarChart: React.FC<ProvisionalBallotBarChartProps> = ({
 				<Typography variant="h6" gutterBottom fontWeight={600}>
 					Provisional Ballot Categories Analysis
 				</Typography>
-				<Typography variant="caption" color="text.secondary" display="block" fontSize="0.7rem">
-					Each bar represents a different provisional ballot category. Hover over bars for detailed descriptions.
-				</Typography>
 			</Box>
 
 			<Box sx={{ flex: 1, minHeight: 0 }}>

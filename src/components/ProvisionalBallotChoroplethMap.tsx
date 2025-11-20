@@ -332,11 +332,6 @@ const ProvisionalBallotChoroplethMap: React.FC<
 					Provisional Ballots Distribution
 				</Typography>
 				<Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
-					<Chip label={`Total: ${totalBallots.toLocaleString()}`} size="small" />
-					<Chip
-						label={`Range: ${minValue.toLocaleString()} – ${maxValue.toLocaleString()}`}
-						size="small"
-					/>
 					{allZero && (
 						<Chip
 							label="⚠️ No data reported for 2024"
@@ -396,22 +391,24 @@ const ProvisionalBallotChoroplethMap: React.FC<
 				</MapContainer>
 			</Box>
 
+
+
+
+
 			{/* Color Legend */}
 			<Box>
 				<Typography variant="body2" gutterBottom fontWeight={600} fontSize="0.85rem">
 					Color Scale (E1a - Total Provisional Ballots Cast)
 				</Typography>
-				<Box display="flex" alignItems="center" gap={0.5}>
-					<Typography variant="caption" sx={{ minWidth: 45, fontSize: "0.75rem" }}>
-						{minValue}
-					</Typography>
+				<Box>
+					{/* Color bar */}
 					<Box
 						display="flex"
 						height={24}
-						flex={1}
 						border="1px solid #e0e0e0"
 						borderRadius={1}
 						overflow="hidden"
+						mb={0.5}
 					>
 						{COLOR_PALETTE.map((color, index) => (
 							<Box
@@ -424,14 +421,38 @@ const ProvisionalBallotChoroplethMap: React.FC<
 							/>
 						))}
 					</Box>
-					<Typography variant="caption" sx={{ minWidth: 45, textAlign: "right", fontSize: "0.75rem" }}>
-						{maxValue}
-					</Typography>
+
+					{/* Boundary values at dividing lines between segments */}
+					<Box sx={{ position: "relative", height: "1.5rem" }}>
+						{Array.from({ length: COLOR_PALETTE.length + 1 }, (_, i) => {
+							const ratio = i / COLOR_PALETTE.length;
+							const value = minValue === maxValue ? minValue : Math.round(minValue + ratio * (maxValue - minValue));
+							const percentPosition = ratio * 100;
+							return (
+								<Typography
+									key={i}
+									variant="caption"
+									sx={{
+										position: "absolute",
+										left: `${percentPosition}%`,
+										transform: "translateX(-50%)",
+										fontSize: "0.7rem",
+										color: "text.secondary",
+										fontWeight: 500,
+										whiteSpace: "nowrap",
+									}}
+								>
+									{value.toLocaleString()}
+								</Typography>
+							);
+						})}
+					</Box>
 				</Box>
-				<Typography variant="caption" color="text.secondary" display="block" mt={0.5} fontSize="0.7rem">
-					Interactive choropleth map showing provisional ballot distribution across
-					counties. Hover over counties for detailed information.
-				</Typography>
+
+
+
+
+
 				{/* Note for states that use town-level data */}
 				{(stateName === "Rhode Island" || stateName === "Vermont" || stateName === "Connecticut" || stateName === "Massachusetts") && (
 					<Typography variant="caption" color="primary.main" display="block" mt={0.5} fontSize="0.7rem" fontStyle="italic">
