@@ -326,8 +326,6 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 
 	const maxPercentage = Math.max(...data.map((d) => d.activePercentage));
 	const minPercentage = Math.min(...data.map((d) => d.activePercentage));
-	const avgPercentage =
-		data.reduce((sum, d) => sum + d.activePercentage, 0) / data.length;
 
 	// Check if all data is zero (no data reported)
 	const allZero = data.every((d) => d.activePercentage === 0);
@@ -343,11 +341,6 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 					Active Voters Distribution
 				</Typography>
 				<Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
-					<Chip label={`Average: ${avgPercentage.toFixed(1)}%`} size="small" />
-					<Chip
-						label={`Range: ${minPercentage.toFixed(1)}% – ${maxPercentage.toFixed(1)}%`}
-						size="small"
-					/>
 					{allZero && (
 						<Chip
 							label="⚠️ No data reported for 2024"
@@ -456,10 +449,6 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 						})}
 					</Box>
 				</Box>
-				<Typography variant="caption" color="text.secondary" display="block" mt={0.5} fontSize="0.7rem">
-					Interactive choropleth map showing active voter distribution across
-					counties. Hover over counties for detailed information.
-				</Typography>
 				{/* Note for states that use town-level data */}
 				{(stateName === "Rhode Island" || stateName === "Vermont" || stateName === "Connecticut" || stateName === "Massachusetts") && (
 					<Typography variant="caption" color="primary.main" display="block" mt={0.5} fontSize="0.7rem" fontStyle="italic">

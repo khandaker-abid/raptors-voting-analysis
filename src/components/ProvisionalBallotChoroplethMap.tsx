@@ -316,7 +316,6 @@ const ProvisionalBallotChoroplethMap: React.FC<
 
 	const maxValue = Math.max(...data.map((d) => d.E1a));
 	const minValue = Math.min(...data.map((d) => d.E1a));
-	const totalBallots = data.reduce((sum, d) => sum + d.E1a, 0);
 
 	// Check if all data is zero (no data reported)
 	const allZero = data.every((d) => d.E1a === 0);
