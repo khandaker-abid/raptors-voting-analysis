@@ -120,7 +120,7 @@ def generate_equipment_history():
     # Insert all at once
     if history_docs:
         db.equipment_history.insert_many(history_docs)
-        print(f"\n✓ Generated {len(history_docs)} equipment history records!")
+        print(f"\n[OK] Generated {len(history_docs)} equipment history records!")
         print(f"Years: {years}")
         print(f"States: {len(current_equipment)}")
         print(f"Equipment types: {len(equipment_types)}")
@@ -137,7 +137,7 @@ def generate_equipment_history():
 if __name__ == '__main__':
     try:
         generate_equipment_history()
-        print("\n✓ Equipment history generation complete!")
+        print("\n[OK] Equipment history generation complete!")
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)

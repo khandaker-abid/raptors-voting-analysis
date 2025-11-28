@@ -91,7 +91,7 @@ def aggregate_voter_registration():
     with open(output_file, 'w') as f:
         json.dump(aggregated_data, f, indent=2)
     
-    print(f"\n✓ Aggregated data saved to {output_file}")
+    print(f"\n[OK] Aggregated data saved to {output_file}")
     print(f"  Total records: {len(aggregated_data)}")
     
     # Print summary by state

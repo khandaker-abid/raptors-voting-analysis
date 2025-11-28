@@ -284,11 +284,11 @@ def generate_county_voters():
     maryland_count = db.voter_registration.count_documents({"state": "Maryland"})
     rhode_island_count = db.voter_registration.count_documents({"state": "Rhode Island"})
     
-    print(f"\n✓ Successfully generated {total_voters_generated:,} voter records across 3 states:")
+    print(f"\n[OK] Successfully generated {total_voters_generated:,} voter records across 3 states:")
     print(f"  - Arkansas: {arkansas_count:,} voters")
     print(f"  - Maryland: {maryland_count:,} voters")
     print(f"  - Rhode Island: {rhode_island_count:,} voters")
-    print(f"✓ Data stored in voting_analysis.voter_registration collection")
+    print(f"[OK] Data stored in voting_analysis.voter_registration collection")
     
     client.close()
 

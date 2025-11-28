@@ -21,7 +21,7 @@ Output Collection:
 import sys
 from pymongo import MongoClient
 import numpy as np
-from datetime import datetime
+from datetime import datetime, UTC
 from scipy import stats
 
 # MongoDB connection
@@ -211,7 +211,7 @@ def generate_precincts_for_county(state_name, state_abbr, county_name, county_de
             "hispanicPct": round(demographics["hispanic"] * 100, 2),
             "asianPct": round(demographics["asian"] * 100, 2),
             
-            "generated_at": datetime.utcnow(),
+            "generated_at": datetime.now(UTC),
             "data_source": "Simulated based on county-level demographic patterns"
         }
         
@@ -306,7 +306,7 @@ def generate_state_data(state_name, state_abbr):
             "hispanic": calculate_regression_coefficients(all_precincts, "hispanicPct"),
             "asian": calculate_regression_coefficients(all_precincts, "asianPct"),
         },
-        "generated_at": datetime.utcnow()
+        "generated_at": datetime.now(UTC)
     }
     
     return all_precincts, regression_data
@@ -323,13 +323,13 @@ def main():
         print("\n1. Connecting to MongoDB...")
         client = MongoClient(MONGO_URI)
         db = client[DB_NAME]
-        print("   ✓ Connected successfully")
+        print("   [OK] Connected successfully")
         
         # Clear existing data
         print("\n2. Clearing existing precinct data...")
         db.precinct_demographics.delete_many({})
         db.gingles_regressions.delete_many({})
-        print("   ✓ Cleared existing data")
+        print("   [OK] Cleared existing data")
         
         # Generate data for each state
         print("\n3. Generating precinct-level data...")
@@ -364,7 +364,7 @@ def main():
         print(f"\nTotal Precincts: {total_precincts}")
         print(f"Regression Models: {len(all_regressions)} states")
         
-        print("\n✓ Gingles analysis data generation complete!")
+        print("\n[OK] Gingles analysis data generation complete!")
         print("\nCollections created/updated:")
         print("  - precinct_demographics (precinct-level voting and demographics)")
         print("  - gingles_regressions (regression coefficients for trend lines)")
@@ -380,7 +380,7 @@ def main():
         client.close()
         
     except Exception as e:
-        print(f"\n✗ Error: {e}", file=sys.stderr)
+        print(f"\n[ERROR] Error: {e}", file=sys.stderr)
         import traceback
         traceback.print_exc()
         sys.exit(1)

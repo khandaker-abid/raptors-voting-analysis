@@ -21,7 +21,7 @@ Output Collections:
 import sys
 from pymongo import MongoClient
 import numpy as np
-from datetime import datetime
+from datetime import datetime, UTC
 
 # MongoDB connection
 MONGO_URI = "mongodb://localhost:27017/"
@@ -129,7 +129,7 @@ def generate_equipment_quality_curves():
             "mean_quality": mean,
             "std_dev": std_dev,
             "curve": curve_data,
-            "generated_at": datetime.utcnow(),
+            "generated_at": datetime.now(UTC),
             "metadata": {
                 "description": f"Probability distribution of equipment quality scores for {demographic} voters",
                 "interpretation": "Higher quality scores indicate better, newer equipment. "
@@ -203,7 +203,7 @@ def generate_rejection_rate_curves():
             "mean_rejection_rate": mean,
             "std_dev": std_dev,
             "curve": curve_data,
-            "generated_at": datetime.utcnow(),
+            "generated_at": datetime.now(UTC),
             "metadata": {
                 "description": f"Probability distribution of ballot rejection rates for {demographic} voters",
                 "interpretation": "Higher rejection probabilities indicate ballots are more likely to be rejected. "
@@ -275,7 +275,7 @@ def generate_precinct_level_data():
                 "ballot_rejection_rate": round(float(rejection_rate), 2),
                 "total_ballots_cast": np.random.randint(800, 3500),
                 "rejected_ballots": int(np.random.randint(800, 3500) * rejection_rate / 100),
-                "generated_at": datetime.utcnow()
+                "generated_at": datetime.now(UTC)
             }
             documents.append(document)
     
@@ -294,7 +294,7 @@ def main():
         print("\n1. Connecting to MongoDB...")
         client = MongoClient(MONGO_URI)
         db = client[DB_NAME]
-        print("   ✓ Connected successfully")
+        print("   [OK] Connected successfully")
         
         # Generate equipment quality curves (GUI-28)
         print("\n2. Generating equipment quality analysis (GUI-28)...")
@@ -303,7 +303,7 @@ def main():
         if equipment_docs:
             db.ei_equipment_analysis.delete_many({})  # Clear existing
             db.ei_equipment_analysis.insert_many(equipment_docs)
-            print(f"   ✓ Inserted {len(equipment_docs)} equipment quality curves")
+            print(f"   [OK] Inserted {len(equipment_docs)} equipment quality curves")
         
         # Generate rejection rate curves (GUI-29)
         print("\n3. Generating ballot rejection analysis (GUI-29)...")
@@ -312,7 +312,7 @@ def main():
         if rejection_docs:
             db.ei_rejection_analysis.delete_many({})  # Clear existing
             db.ei_rejection_analysis.insert_many(rejection_docs)
-            print(f"   ✓ Inserted {len(rejection_docs)} rejection rate curves")
+            print(f"   [OK] Inserted {len(rejection_docs)} rejection rate curves")
         
         # Generate precinct-level data
         print("\n4. Generating precinct-level EI data...")
@@ -321,7 +321,7 @@ def main():
         if precinct_docs:
             db.ei_precinct_analysis.delete_many({})  # Clear existing
             db.ei_precinct_analysis.insert_many(precinct_docs)
-            print(f"   ✓ Inserted {len(precinct_docs)} precinct records")
+            print(f"   [OK] Inserted {len(precinct_docs)} precinct records")
         
         # Summary
         print("\n" + "=" * 70)
@@ -332,7 +332,7 @@ def main():
         print(f"Precinct-Level Records: {len(precinct_docs)} precincts")
         print(f"Total Documents: {len(equipment_docs) + len(rejection_docs) + len(precinct_docs)}")
         
-        print("\n✓ Ecological Inference data generation complete!")
+        print("\n[OK] Ecological Inference data generation complete!")
         print("\nCollections created:")
         print("  - ei_equipment_analysis (GUI-28)")
         print("  - ei_rejection_analysis (GUI-29)")
@@ -341,7 +341,7 @@ def main():
         client.close()
         
     except Exception as e:
-        print(f"\n✗ Error: {e}", file=sys.stderr)
+        print(f"\n[ERROR] Error: {e}", file=sys.stderr)
         import traceback
         traceback.print_exc()
         sys.exit(1)

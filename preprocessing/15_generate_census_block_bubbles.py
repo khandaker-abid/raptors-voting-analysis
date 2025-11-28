@@ -153,7 +153,7 @@ def generate_census_block_bubbles():
     # Insert all blocks
     if blocks:
         db.census_block_voters.insert_many(blocks)
-        print(f"\n✓ Generated {len(blocks)} census block bubbles!")
+        print(f"\n[OK] Generated {len(blocks)} census block bubbles!")
         
         # Show summary by state
         for state in state_centers.keys():
@@ -175,7 +175,7 @@ def generate_census_block_bubbles():
 if __name__ == '__main__':
     try:
         generate_census_block_bubbles()
-        print("\n✓ Census block bubble generation complete!")
+        print("\n[OK] Census block bubble generation complete!")
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         import traceback
