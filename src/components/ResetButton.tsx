@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Box, Tooltip } from "@mui/material";
+import { Button, Tooltip } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
@@ -37,35 +37,23 @@ const ResetButton: React.FC = () => {
   return (
     <Tooltip
       title={location.pathname === "/" ? "Already at starting page" : "Reset page to default state"}
-      placement="top"
+      placement="bottom"
     >
-      <Box
+      <Button
+        variant="contained"
+        color="error"
+        onClick={handleReset}
+        disabled={location.pathname === "/"}
+        startIcon={<RestartAltIcon />}
         sx={{
-          position: "fixed",
-          bottom: 20,
-          right: 180,
-          zIndex: 1300, // stay on top
+          borderRadius: 2,
+          px: 3,
+          fontWeight: 600,
+          textTransform: "none",
         }}
       >
-        <Button
-          variant="contained"
-          color="error"
-          onClick={handleReset}
-          disabled={location.pathname === "/"}
-          startIcon={<RestartAltIcon />}
-          sx={{
-            borderRadius: 3,
-            px: 3,
-            py: 1,
-            boxShadow: 3,
-            '&:hover': {
-              boxShadow: 6,
-            }
-          }}
-        >
-          Reset
-        </Button>
-      </Box>
+        Reset
+      </Button>
     </Tooltip>
   );
 };

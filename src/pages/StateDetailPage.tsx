@@ -4,8 +4,6 @@ import {
 	Typography,
 	Box,
 	Paper,
-	Tabs,
-	Tab,
 	Alert,
 	Button,
 	CircularProgress,
@@ -14,6 +12,7 @@ import {
 	FormControl,
 } from "@mui/material";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ResetButton from "../components/ResetButton";
 
 // Core state helpers
 import {
@@ -30,6 +29,7 @@ import {
 	getChoroplethData,
 } from "../data/provisionalBallotData";
 import StateMap from "../components/StateMap";
+import ProvisionalBallotTab from "./ProvisionalBallotTab";
 import ProvisionalBallotBarChart from "../charts/ProvisionalBallotBarChart";
 import ProvisionalBallotTable from "../tables/ProvisionalBallotTable";
 import ProvisionalBallotChoroplethMap from "../components/ProvisionalBallotChoroplethMap";
@@ -60,7 +60,6 @@ import PercentChoropleth from "../components/PercentChoropleth";
 import VoterRegistrationTrendChart from "../charts/VoterRegistrationTrendChart";
 import VoterRegistrationBarChart from "../charts/VoterRegistrationBarChart";
 import VoterRegistrationBubbleOverlay from "../components/VoterRegistrationBubbleOverlay";
-import ResetButton from "../components/ResetButton";
 
 // New component imports for integration (GUI-10, GUI-19, GUI-24, GUI-27, GUI-28, GUI-29)
 import RegisteredVotersList from "../components/RegisteredVotersList";
@@ -373,7 +372,7 @@ const StateDetailPage: React.FC = () => {
 		);
 	}
 
-	// Robust tab indexing
+	// Robust tab indexing and labels
 	let idx = 0;
 	const IDX_OVERVIEW = idx++;
 	const IDX_PROVISIONAL = isDetail ? idx++ : -1;
@@ -389,29 +388,30 @@ const StateDetailPage: React.FC = () => {
 	const IDX_EI_EQUIPMENT = isPreclearance ? idx++ : -1; // NEW - GUI-28
 	const IDX_EI_REJECTED = isPreclearance ? idx++ : -1; // NEW - GUI-29
 
+	// Build tabs array for dropdown selector
+	const tabOptions: Array<{ index: number; label: string }> = [];
+	tabOptions.push({ index: IDX_OVERVIEW, label: "Overview" });
+	if (isDetail) tabOptions.push({ index: IDX_PROVISIONAL, label: "Provisional Ballot" });
+	if (isDetail) tabOptions.push({ index: IDX_ACTIVE, label: "Active Voters" });
+	if (isDetail) tabOptions.push({ index: IDX_POLLBOOK, label: "Pollbook Deletions" });
+	if (isDetail) tabOptions.push({ index: IDX_MAIL, label: "Mail Rejections" });
+	tabOptions.push({ index: IDX_EQUIPMENT, label: "Voting Equipment" });
+	if (isDetail) tabOptions.push({ index: IDX_EQUIPMENT_TYPES, label: "Equipment Types" });
+	if (isDetail) tabOptions.push({ index: IDX_EQUIPMENT_QUALITY, label: "Equipment Quality" });
+	if (isDetail) tabOptions.push({ index: IDX_REG, label: "Voter Registration" });
+	if (isPartyState) tabOptions.push({ index: IDX_DROPBOX, label: "Drop Box Analysis" });
+	if (isPreclearance) tabOptions.push({ index: IDX_GINGLES, label: "Gingles Analysis" });
+	if (isPreclearance) tabOptions.push({ index: IDX_EI_EQUIPMENT, label: "EI Equipment" });
+	if (isPreclearance) tabOptions.push({ index: IDX_EI_REJECTED, label: "EI Rejected" });
+
 	return (
 		<Box sx={{ py: 0, px: 0, width: "100%", margin: 0, height: "100%" }}>
 			{/* Organized Content with Category Groups */}
 			<Paper sx={{ width: "100%", mb: 0, height: "100%" }}>
-				<Box sx={{ borderBottom: 1, borderColor: "divider", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-					<Tabs
-						value={tabValue}
-						onChange={handleTabChange}
-						aria-label="state data tabs">
-						<Tab label="State Map" />
-						{isDetail && <Tab label="Provisional Ballot" />}
-						{isDetail && <Tab label="Active Voters" />}
-						{isDetail && <Tab label="Pollbook Deletions" />}
-						{isDetail && <Tab label="Mail Rejections" />}
-						<Tab label="Voting Equipment" />
-						{isDetail && <Tab label="Equipment Types" />}
-						{isDetail && <Tab label="Equipment Quality" />}
-						{isDetail && <Tab label="Voter Registration" />}
-						{isPartyState && <Tab label="Drop Box Analysis" />}
-						{isPreclearance && <Tab label="Gingles Analysis" />}
-						{isPreclearance && <Tab label="EI Equipment" />}
-						{isPreclearance && <Tab label="EI Rejected" />}
-					</Tabs>
+				<Box sx={{ borderBottom: 1, borderColor: "divider", display: "flex", alignItems: "center", justifyContent: "space-between", p: 1.5 }}>
+					<Typography variant="h6" sx={{ fontWeight: 600, fontSize: "1rem" }}>
+						{decodedStateName}
+					</Typography>
 					<Box sx={{ pr: 2, display: "flex", alignItems: "center", gap: 1.5 }}>
 						<Button
 							variant="outlined"
@@ -425,6 +425,19 @@ const StateDetailPage: React.FC = () => {
 						>
 							Home
 						</Button>
+						<FormControl size="small" sx={{ minWidth: 180 }}>
+							<Select
+								value={tabValue}
+								onChange={(e) => handleTabChange({} as React.SyntheticEvent, e.target.value as number)}
+								sx={{ fontWeight: 700 }}
+							>
+								{tabOptions.map((tab) => (
+									<MenuItem key={tab.index} value={tab.index}>
+										{tab.label}
+									</MenuItem>
+								))}
+							</Select>
+						</FormControl>
 						<FormControl size="small" sx={{ minWidth: 160 }}>
 							<Select
 								value={decodedStateName}
@@ -438,6 +451,7 @@ const StateDetailPage: React.FC = () => {
 								))}
 							</Select>
 						</FormControl>
+						<ResetButton />
 					</Box>
 				</Box>
 
@@ -607,7 +621,11 @@ const StateDetailPage: React.FC = () => {
 					</Box>
 				</TabPanel>
 
-				{/* Provisional Ballots Tab */}
+			<TabPanel value={tabValue} index={IDX_PROVISIONAL}>
+				<ProvisionalBallotTab stateName={decodedStateName} />
+			</TabPanel>
+
+			{/* Provisional Ballots Tab
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_PROVISIONAL}>
 						<Box sx={{
@@ -662,6 +680,7 @@ const StateDetailPage: React.FC = () => {
 						</Box>
 					</TabPanel>
 				)}
+			*/}
 				{/* Active Voters Tab - Matching Provisional Ballot layout */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_ACTIVE}>
@@ -1096,7 +1115,6 @@ const StateDetailPage: React.FC = () => {
 					/>
 				)}
 			</Paper>
-			<ResetButton />
 		</Box>
 	);
 };
