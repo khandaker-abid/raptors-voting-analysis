@@ -69,14 +69,10 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 	}
 
 	return (
-		<Paper sx={{ p: 3 }}>
-			<Box mb={3}>
-				<Typography variant="h6" gutterBottom fontWeight={600}>
+		<Paper sx={{ p: 0.5 }}>
+			<Box mb={0}>
+				<Typography variant="h6" gutterBottom fontWeight={600} sx={{ fontSize: "0.95rem" }}>
 					Voting Equipment Information
-				</Typography>
-				<Typography variant="body2" color="text.secondary">
-					Detailed information about voting equipment deployed in this state, including
-					make, model, certification status, and performance metrics.
 				</Typography>
 			</Box>
 
@@ -330,28 +326,6 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 											<Typography variant="body2" sx={{ fontWeight: 500, minWidth: 40 }}>
 												{row.reliability}
 											</Typography>
-											<Box
-												sx={{
-													width: 60,
-													height: 6,
-													backgroundColor: "#e0e0e0",
-													borderRadius: 3,
-													overflow: "hidden",
-												}}
-											>
-												<Box
-													sx={{
-														width: row.reliability,
-														height: "100%",
-														// Grayscale: darker = higher reliability
-														backgroundColor:
-															parseInt(row.reliability) >= 90 ? "#212121" :
-																parseInt(row.reliability) >= 80 ? "#424242" :
-																	parseInt(row.reliability) >= 70 ? "#616161" : "#757575",
-														transition: "width 0.3s ease",
-													}}
-												/>
-											</Box>
 										</Box>
 									</TableCell>
 								</TableRow>

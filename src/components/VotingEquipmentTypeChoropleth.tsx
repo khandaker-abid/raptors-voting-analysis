@@ -76,6 +76,7 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
     const mapRef = useRef<L.Map | null>(null);
     const geoRef = useRef<L.GeoJSON | null>(null);
     const hoveredRef = useRef<L.Path | null>(null);
+    const boundsFittedRef = useRef<boolean>(false);
 
     const clearHover = () => {
         if (hoveredRef.current) {
@@ -98,6 +99,7 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
 
             setLoading(true);
             setError(null);
+            boundsFittedRef.current = false; // Reset flag when loading new state
 
             try {
                 const response = await fetch(
@@ -360,13 +362,15 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
     }
 
     return (
-        <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
+        // The line below is the key to getting huge cut off components to fit in
+        // grid views without expanding their size and cutting off content
+        <Paper sx={{ p: 0.5, height: "100%", display: "flex", flexDirection: "column" }}>
+            <Typography variant="h6" gutterBottom fontWeight={600} sx={{ fontSize: "0.95rem" }}>
                 Voting Equipment Types by Region
             </Typography>
 
             {/* Legend */}
-            <Box sx={{ mb: 2, display: "flex", gap: 2, flexWrap: "wrap" }}>
+            <Box sx={{ mb: 0.5, display: "flex", gap: 2, flexWrap: "wrap" }}>
                 {Object.entries(EQUIPMENT_LABELS).map(([key, label]) => (
                     <Box key={key} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <Box
@@ -383,15 +387,19 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
             </Box>
 
             {/* Map */}
-            <Box sx={{ height: 500, border: "1px solid #ccc", borderRadius: 1 }}>
+            <Box sx={{ flex: 1, minHeight: 0, border: "1px solid #ccc", borderRadius: 1 }}>
                 <MapContainer
+                    key={stateName}
                     ref={(m) => {
                         mapRef.current = m;
                         if (m && mapBounds) {
-                            m.fitBounds(mapBounds, { padding: [20, 20] });
+                            setTimeout(() => {
+                                m.fitBounds(mapBounds, { padding: [10, 10] });
+                            }, 100);
                         }
                     }}
-                    bounds={mapBounds || undefined}
+                    center={[39.8283, -98.5795]}
+                    zoom={4}
                     style={{ height: "100%", width: "100%", borderRadius: "4px" }}
                     scrollWheelZoom={true}
                 >
@@ -407,11 +415,13 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                     />
                 </MapContainer>
             </Box>
-
+            
+            {/* Note about mixed equipment types 
             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
                 <strong>Note:</strong> Mixed equipment types are shown when multiple equipment categories are used
                 within a geographic region.
             </Typography>
+            */}
         </Paper>
     );
 };

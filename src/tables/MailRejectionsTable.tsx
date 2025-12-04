@@ -148,8 +148,11 @@ const MailRejectionsTable: React.FC<Props> = ({ data }) => {
                 />
             </Box>
 
-            <TableContainer sx={{ mb: 0, position: "relative", overflow: "visible" }}>
-                <Table size="small">
+            {/* These two lines below are the key to getting the table to stay 
+                in its grid spot and not increase in width, causing the lower 
+                few table cells to be hidden from view */}
+            <TableContainer sx={{ mb: 0, overflowX: "auto", overflowY: "hidden" }}>
+                <Table size="small" sx={{ width: "max-content", minWidth: "100%" }}>
                     <TableHead>
                         <TableRow>
                             <TableCell

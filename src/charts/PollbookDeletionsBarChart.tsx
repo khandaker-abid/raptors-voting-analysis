@@ -119,6 +119,7 @@ export default function PollbookDeletionsBarChart({ stateName, data }: Props) {
                             textAnchor="end"
                             height={80}
                             tick={{ fontSize: 11 }}
+                            style={{ fontSize: 12, fontWeight: 600 }}
                         />
                         <YAxis
                             tick={{ fontSize: 11 }}
@@ -128,7 +129,7 @@ export default function PollbookDeletionsBarChart({ stateName, data }: Props) {
                                 angle: -90,
                                 position: "insideLeft",
                                 dy: 15,
-                                style: { fontSize: 11, textAnchor: "middle" },
+                                style: { fontSize: 12, fontWeight: 600, textAnchor: "middle" },
                             }}
                         />
                         <RechartsTooltip content={<CustomTooltip />} />

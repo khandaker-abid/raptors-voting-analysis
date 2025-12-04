@@ -25,12 +25,10 @@ import { getCountyCount } from "../data/stateShapes";
 // Existing datasets/components
 import {
 	getProvisionalBallotData,
-	getChoroplethData,
 } from "../data/provisionalBallotData";
 import StateMap from "../components/StateMap";
 import ProvisionalBallotTab from "./ProvisionalBallotTab";
 import ActiveVoterTab from "./ActiveVoterTab";
-import StateVotingEquipmentTable from "../tables/StateVotingEquipmentTable";
 import StateVoterRegistrationTable from "../tables/StateVoterRegistrationTable";
 import VoterRegistrationChloroplethMap from "../components/VoterRegistrationChloroplethMap";
 
@@ -41,7 +39,6 @@ import {
 	fetchRegistrationTrends,
 	fetchBlockBubbles,
 	fetchDropboxBubbles,
-	fetchEquipmentTypes,
 	fetchStateRegisteredVoters,
 	fetchGinglesData,
 } from "../data/api";
@@ -56,12 +53,10 @@ import VoterRegistrationBubbleOverlay from "../components/VoterRegistrationBubbl
 
 // New component imports for integration (GUI-10, GUI-19, GUI-24, GUI-27, GUI-28, GUI-29)
 import RegisteredVotersList from "../components/RegisteredVotersList";
-import VotingEquipmentTypeChoropleth from "../components/VotingEquipmentTypeChoropleth";
 import DropboxBubbleChart from "../charts/DropboxBubbleChart";
 import GinglesChart from "../charts/GinglesChart";
 import EIEquipmentChart from "../charts/EIEquipmentChart";
 import EIRejectedBallotsChart from "../charts/EIRejectedBallotsChart";
-import EquipmentQualityVsRejectionsChart from "../charts/EquipmentQualityVsRejectionsChart";
 // Types
 import type {
 	ActiveVotersRow,
@@ -72,6 +67,7 @@ import type {
 } from "../data/types";
 import PollbookDeletionsTab from "./PollbookDeletionsTab";
 import MailRejectionsTab from "./MailRejectionsTab";
+import VotingEquipmentTab from "./VotingEquipmentTab";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -197,11 +193,6 @@ const StateDetailPage: React.FC = () => {
 	const [dropboxBubbleData, setDropboxBubbleData] = React.useState<any[]>([]);
 	const [dropboxBubbleLoading, setDropboxBubbleLoading] = React.useState(false);
 
-	// State for GUI-10: Equipment Types
-	const [equipmentTypesData, setEquipmentTypesData] = React.useState<any[]>([]);
-	const [equipmentTypesLoading, setEquipmentTypesLoading] = React.useState(false);
-	const [equipmentTypesError, setEquipmentTypesError] = React.useState<string | null>(null);
-
 	// State for GUI-17: Voter Registration Data
 	const [voterRegistrationData, setVoterRegistrationData] = React.useState<any[]>([]);
 
@@ -223,14 +214,9 @@ const StateDetailPage: React.FC = () => {
 		setRegTrends(null);
 		setBlockBubbles(null);
 		setShowBubbles(false);
-		setDropboxBubbleData([]);
-		setDropboxBubbleLoading(true);
-		setEquipmentTypesData([]);
-		setEquipmentTypesLoading(true);
-		setEquipmentTypesError(null);
-		setVoterRegistrationData([]);
-
-		let alive = true;
+			setDropboxBubbleData([]);
+			setDropboxBubbleLoading(true);
+			setVoterRegistrationData([]);		let alive = true;
 		(async () => {
 			try {
 				const rows = await fetchPollbookDeletions(decodedStateName);
@@ -282,25 +268,6 @@ const StateDetailPage: React.FC = () => {
 				}
 			} else {
 				if (alive) setDropboxBubbleLoading(false);
-			}
-
-			// GUI-10: Fetch equipment types data (for detailed states)
-			if (isDetail) {
-				try {
-					const equipmentTypes = await fetchEquipmentTypes(decodedStateName);
-					if (alive) {
-						setEquipmentTypesData(equipmentTypes);
-						setEquipmentTypesLoading(false);
-					}
-				} catch (e: any) {
-					if (alive) {
-						setEquipmentTypesError(e?.message || "Failed to fetch equipment types.");
-						setEquipmentTypesData([]);
-						setEquipmentTypesLoading(false);
-					}
-				}
-			} else {
-				if (alive) setEquipmentTypesLoading(false);
 			}
 
 			// GUI-17: Fetch voter registration data (for detailed states)
@@ -356,8 +323,6 @@ const StateDetailPage: React.FC = () => {
 	const IDX_POLLBOOK = isDetail ? idx++ : -1;
 	const IDX_MAIL = isDetail ? idx++ : -1;
 	const IDX_EQUIPMENT = idx++;
-	const IDX_EQUIPMENT_TYPES = isDetail ? idx++ : -1; // NEW - GUI-10
-	const IDX_EQUIPMENT_QUALITY = isDetail ? idx++ : -1; // NEW - GUI-25
 	const IDX_REG = isDetail ? idx++ : -1;
 	const IDX_DROPBOX = isPartyState ? idx++ : -1; // NEW - GUI-24
 	const IDX_GINGLES = isPreclearance ? idx++ : -1; // NEW - GUI-27
@@ -372,8 +337,6 @@ const StateDetailPage: React.FC = () => {
 	if (isDetail) tabOptions.push({ index: IDX_POLLBOOK, label: "Pollbook Deletions" });
 	if (isDetail) tabOptions.push({ index: IDX_MAIL, label: "Mail Rejections" });
 	tabOptions.push({ index: IDX_EQUIPMENT, label: "Voting Equipment" });
-	if (isDetail) tabOptions.push({ index: IDX_EQUIPMENT_TYPES, label: "Equipment Types" });
-	if (isDetail) tabOptions.push({ index: IDX_EQUIPMENT_QUALITY, label: "Equipment Quality" });
 	if (isDetail) tabOptions.push({ index: IDX_REG, label: "Voter Registration" });
 	if (isPartyState) tabOptions.push({ index: IDX_DROPBOX, label: "Drop Box Analysis" });
 	if (isPreclearance) tabOptions.push({ index: IDX_GINGLES, label: "Gingles Analysis" });
@@ -774,11 +737,9 @@ const StateDetailPage: React.FC = () => {
 				)}
 				*/}
 
-				{/* Voting Equipment Tab */}
+				{/* Voting Equipment Tab (GUI-6) */}
 				<TabPanel value={tabValue} index={IDX_EQUIPMENT}>
-					<Box sx={{ p: 0 }}>
-						<StateVotingEquipmentTable stateName={stateName ? stateName : ""} />
-					</Box>
+					<VotingEquipmentTab stateName={decodedStateName} />
 				</TabPanel>
 
 				{/* Voter Registration Data Tab (GUI-17) - Matching other tabs layout */}
@@ -875,37 +836,6 @@ const StateDetailPage: React.FC = () => {
 									/>
 								</Box>
 							)}
-						</Box>
-					</TabPanel>
-				)}
-
-				{/* NEW: Equipment Types Tab - GUI-10 */}
-				{isDetail && IDX_EQUIPMENT_TYPES >= 0 && (
-					<TabPanel value={tabValue} index={IDX_EQUIPMENT_TYPES}>
-						<Box sx={{ p: 3 }}>
-							{equipmentTypesLoading ? (
-								<Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-									<CircularProgress />
-								</Box>
-							) : equipmentTypesError ? (
-								<Alert severity="error">{equipmentTypesError}</Alert>
-							) : (
-								<VotingEquipmentTypeChoropleth
-									stateName={decodedStateName}
-									data={equipmentTypesData}
-								/>
-							)}
-						</Box>
-					</TabPanel>
-				)}
-
-				{/* NEW: Equipment Quality vs Rejections Tab - GUI-25 & GUI-26 */}
-				{isDetail && IDX_EQUIPMENT_QUALITY >= 0 && (
-					<TabPanel value={tabValue} index={IDX_EQUIPMENT_QUALITY}>
-						<Box sx={{ p: 3 }}>
-							<EquipmentQualityVsRejectionsChart
-								stateName={decodedStateName}
-							/>
 						</Box>
 					</TabPanel>
 				)}

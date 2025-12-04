@@ -77,18 +77,10 @@ export default function MailRejectionsBarChart({ stateName, data }: Props) {
     }
 
     return (
-        <Paper sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
+        <Paper sx={{ p: 0.5, height: "100%", display: "flex", flexDirection: "column" }}>
             <Box mb={1}>
-                <Typography variant="h6" gutterBottom fontWeight={600}>
-                    Mail Ballot Rejections by Category — {stateName}
-                </Typography>
-                <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                    fontSize="0.7rem"
-                >
-                    Mail ballot rejections across different categories. Hover over bars for detailed information.
+                <Typography variant="h6" gutterBottom fontWeight={600} sx={{ fontSize: "0.95rem" }}>
+                    Mail Ballot Rejections by Category
                 </Typography>
             </Box>
 
@@ -96,7 +88,7 @@ export default function MailRejectionsBarChart({ stateName, data }: Props) {
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                         data={chartData}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                        margin={{ top: 10, right: 10, left: 20, bottom: 30 }}
                     >
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                         <XAxis
@@ -105,6 +97,7 @@ export default function MailRejectionsBarChart({ stateName, data }: Props) {
                             textAnchor="end"
                             height={80}
                             tick={{ fontSize: 11 }}
+                            style={{ fontSize: 12, fontWeight: 600 }}
                         />
                         <YAxis
                             tick={{ fontSize: 11 }}
@@ -113,7 +106,8 @@ export default function MailRejectionsBarChart({ stateName, data }: Props) {
                                 value: "Number of Rejections",
                                 angle: -90,
                                 position: "insideLeft",
-                                style: { fontSize: 11 },
+                                dy: 60,
+                                style: { fontSize: 12, fontWeight: 600 },
                             }}
                         />
                         <Tooltip content={<CustomTooltip />} />

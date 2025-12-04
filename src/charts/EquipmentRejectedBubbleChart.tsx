@@ -89,7 +89,7 @@ const EquipmentRejectedBubbleChart: React.FC<Props> = ({ data, regressionLines =
             dataKey="equipmentQuality"
             name="Equipment Quality Score"
             domain={[0, 100]}
-            label={{ value: "Equipment Quality Score (0-100)", position: "insideBottom", offset: -10 }}
+            label={{ value: "Equipment Quality Score (0-100)", position: "insideBottom", offset: -10, style: { fontSize: 12, fontWeight: 600 } }}
             tick={{ fontSize: 12 }}
           />
 
@@ -98,7 +98,7 @@ const EquipmentRejectedBubbleChart: React.FC<Props> = ({ data, regressionLines =
             dataKey="rejectedPct"
             name="Rejected Ballot %"
             domain={[0, "auto"]}
-            label={{ value: "Rejected Ballots (%)", angle: -90, position: "insideLeft" }}
+            label={{ value: "Rejected Ballots (%)", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 600 } }}
             tick={{ fontSize: 12 }}
           />
 

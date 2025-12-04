@@ -136,6 +136,7 @@ const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 							textAnchor="end"
 							height={65}
 							tick={{ fontSize: 11 }}
+							style={{ fontSize: 12, fontWeight: 600 }}
 						/>
 						<YAxis
 							tick={{ fontSize: 11 }}
@@ -145,7 +146,7 @@ const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 								angle: -90,
 								position: "insideLeft",
 								offset: -10,
-								style: { fontSize: 11, textAnchor: "middle" },
+								style: { fontSize: 12, fontWeight: 600, textAnchor: 'middle' }
 							}}
 						/>
 						<RechartsTooltip content={<CustomTooltip />} />

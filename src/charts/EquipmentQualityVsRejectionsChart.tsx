@@ -33,26 +33,35 @@ interface Props {
 
 const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length > 0) {
-        const data = payload[0].payload as EquipmentQualityDataPoint;
+        // Get the data from the first payload entry
+        const dataPoint = payload[0]?.payload;
+        
+        // Only show tooltip if we have actual scatter point data (must have county and party)
+        if (!dataPoint || !dataPoint.county || !dataPoint.party) {
+            return null;
+        }
+        
+        const party = dataPoint.party;
+        
         return (
             <Paper sx={{ p: 1.5, bgcolor: "rgba(255, 255, 255, 0.95)" }}>
                 <Typography variant="subtitle2" fontWeight="bold">
-                    {data.county}
+                    {dataPoint.county}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                    Equipment Quality: {data.equipmentQuality.toFixed(1)}
+                    Equipment Quality: {dataPoint.equipmentQuality.toFixed(1)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                    Rejection Rate: {data.rejectionRate.toFixed(2)}%
+                    Rejection Rate: {dataPoint.rejectionRate.toFixed(2)}%
                 </Typography>
                 <Typography
                     variant="body2"
                     sx={{
-                        color: data.party === "R" ? "#d32f2f" : "#1976d2",
+                        color: party === "R" ? "#d32f2f" : "#1976d2",
                         fontWeight: "bold",
                     }}
                 >
-                    {data.party === "R" ? "Republican" : "Democratic"} Majority
+                    {party === "R" ? "Republican" : "Democratic"} Majority
                 </Typography>
             </Paper>
         );
@@ -188,16 +197,22 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
         : [];
 
     return (
-        <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom fontWeight="bold">
+        // The line below is the key to getting huge cut off components to fit in
+        // grid views without expanding their size and cutting off content
+        <Paper sx={{ p: 0.5, height: "100%", display: "flex", flexDirection: "column" }}>
+            <Typography variant="h6" gutterBottom fontWeight={600} sx={{ fontSize: "0.95rem" }}>
                 Equipment Quality vs Ballot Rejection Rate
             </Typography>
+
+            {/*  
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 Each bubble represents a county, colored by political party majority
             </Typography>
+            */}
 
-            <ResponsiveContainer width="100%" height={500}>
-                <ScatterChart margin={{ top: 20, right: 30, bottom: 60, left: 80 }}>
+            <Box sx={{ flex: 1, minHeight: 0 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                <ScatterChart margin={{ top: 20, right: 20, bottom: 35, left: 15 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                     <XAxis
                         type="number"
@@ -208,7 +223,7 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
                             value: "Equipment Quality Score",
                             position: "insideBottom",
                             offset: -15,
-                            style: { fontSize: 14, fontWeight: 600 }
+                            style: { fontSize: 12, fontWeight: 600 }
                         }}
                         tickFormatter={(value) => `${value}`}
                         ticks={[0, 20, 40, 60, 80, 100]}
@@ -223,7 +238,7 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
                             angle: -90,
                             position: "insideLeft",
                             offset: 0,
-                            style: { fontSize: 14, fontWeight: 600, textAnchor: 'middle' }
+                            style: { fontSize: 12, fontWeight: 600, textAnchor: 'middle' }
                         }}
                         tickFormatter={(value) => value.toFixed(1)}
                         width={75}
@@ -237,17 +252,6 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
                         iconSize={10}
                     />
 
-                    {/* Republican counties - uniform bubble size */}
-                    {republicanData.length > 0 && (
-                        <Scatter
-                            name="Republican Counties"
-                            data={republicanData}
-                            fill="#d32f2f"
-                            fillOpacity={0.75}
-                            shape="circle"
-                        />
-                    )}
-
                     {/* Democratic counties - uniform bubble size */}
                     {democraticData.length > 0 && (
                         <Scatter
@@ -256,6 +260,19 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
                             fill="#1976d2"
                             fillOpacity={0.75}
                             shape="circle"
+                            isAnimationActive={false}
+                        />
+                    )}
+
+                    {/* Republican counties - uniform bubble size */}
+                    {republicanData.length > 0 && (
+                        <Scatter
+                            name="Republican Counties"
+                            data={republicanData}
+                            fill="#d32f2f"
+                            fillOpacity={0.75}
+                            shape="circle"
+                            isAnimationActive={false}
                         />
                     )}
 
@@ -284,8 +301,10 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
                         />
                     )}
                 </ScatterChart>
-            </ResponsiveContainer>
-
+                </ResponsiveContainer>
+            </Box>
+            
+            {/*  
             <Box sx={{ mt: 2 }}>
                 <Typography variant="caption" color="text.secondary">
                     <strong>Note:</strong> Equipment quality is measured on a 0-100 scale
@@ -294,6 +313,7 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
                     ballots.
                 </Typography>
             </Box>
+            */}
         </Paper>
     );
 };

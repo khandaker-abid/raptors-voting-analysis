@@ -50,6 +50,7 @@ const PollbookDeletionsTab = ({ stateName }: PollbookDeletionsTabProps) => {
 		}}>
             <Box sx={{ gridColumn: "1", gridRow: "1 / 3", overflow: "hidden" }}>
                 <PercentChoropleth
+                    key={stateName}
                     stateName={stateName}
                     data={data || []}
                 />

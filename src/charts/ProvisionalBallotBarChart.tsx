@@ -115,6 +115,7 @@ const ProvisionalBallotBarChart: React.FC<ProvisionalBallotBarChartProps> = ({
 							textAnchor="end"
 							height={80}
 							tick={{ fontSize: 11 }}
+							style={{ fontSize: 12, fontWeight: 600 }}
 						/>
 						<YAxis
 							tick={{ fontSize: 11 }}
@@ -122,7 +123,8 @@ const ProvisionalBallotBarChart: React.FC<ProvisionalBallotBarChartProps> = ({
 								value: "Number of Ballots",
 								angle: -90,
 								position: "insideLeft",
-								style: { fontSize: 11 },
+								dy: 40,
+								style: { fontSize: 12, fontWeight: 600 },
 							}}
 						/>
 						<RechartsTooltip content={<CustomTooltip />} />

@@ -153,7 +153,7 @@ const VoterRegistrationBarChart: React.FC<VoterRegistrationBarChartProps> = ({
                                 value: "Number of Voters",
                                 angle: -90,
                                 position: "insideLeft",
-                                style: { fontSize: 11 },
+                                style: { fontSize: 12, fontWeight: 600 },
                             }}
                         />
                         <RechartsTooltip content={<CustomTooltip />} />

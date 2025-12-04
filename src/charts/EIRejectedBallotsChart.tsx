@@ -218,10 +218,10 @@ const EIRejectedBallotsChart: React.FC<Props> = ({ stateName }) => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
                         dataKey="rejectionProbability"
-                        label={{ value: "Ballot Rejection Probability (%)", position: "insideBottom", offset: -5 }}
+                        label={{ value: "Ballot Rejection Probability (%)", position: "insideBottom", offset: -5, style: { fontSize: 12, fontWeight: 600 } }}
                     />
                     <YAxis
-                        label={{ value: "Probability Density", angle: -90, position: "insideLeft" }}
+                        label={{ value: "Probability Density", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 600 } }}
                     />
                     <Tooltip
                         formatter={(value: number) => value.toFixed(4)}
