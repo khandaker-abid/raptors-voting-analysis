@@ -126,14 +126,14 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 	}
 
 	return (
-		<Paper sx={{ p: 2, display: "flex", flexDirection: "column", width: "100%" }}>
-			<Box mb={1.5} display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
-				<Typography variant="h6" fontWeight={600}>
-					Active Voters by County/Town
+		<Paper sx={{ pt: 0.5, px: 0.5, pb: 0, display: "flex", flexDirection: "column", width: "100%" }}>
+			<Box mb={0.5} display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={0.75}>
+				<Typography variant="subtitle1" fontWeight={600} sx={{ fontSize: "0.95rem" }}>
+					Active Voters by County
 				</Typography>
 				<TextField
 					size="small"
-					placeholder="Search county/town..."
+					placeholder="Search county..."
 					value={searchTerm}
 					onChange={(e) => setSearchTerm(e.target.value)}
 					InputProps={{
@@ -142,25 +142,29 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 								<SearchIcon fontSize="small" />
 							</InputAdornment>
 						),
+						sx: { fontSize: "0.85rem", height: "32px" }
 					}}
-					sx={{ minWidth: 200 }}
+					sx={{ minWidth: 180 }}
 				/>
 			</Box>
-
-			<TableContainer sx={{ position: "relative", overflow: "visible" }}>
-				<Table size="small">
+			
+			{/* These two lines below are the key to getting the table to stay 
+                in its grid spot and not increase in width, causing the lower 
+                few table cells to be hidden from view */}
+			<TableContainer sx={{ mb: 0, overflowX: "auto", overflowY: "hidden" }}>
+				<Table size="small" sx={{ width: "max-content", minWidth: "100%" }}>
 					<TableHead>
 						<TableRow>
-							<TableCell
-								sx={{
-									fontWeight: "bold",
-									backgroundColor: "#616161",
-									color: "white",
-									py: 1.5,
-									cursor: "pointer",
-								}}>
-								<TableSortLabel
-									active={sortColumn === 'geographicUnit'}
+						<TableCell
+							sx={{
+								fontWeight: "bold",
+								backgroundColor: "#616161",
+								color: "white",
+								py: 0.75,
+								cursor: "pointer",
+							}}>
+							<TableSortLabel
+								active={sortColumn === 'geographicUnit'}
 									direction={sortColumn === 'geographicUnit' ? sortOrder : 'asc'}
 									onClick={() => handleSort('geographicUnit')}
 									sx={{
@@ -170,20 +174,20 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 										'&.Mui-active': { color: 'white !important' },
 										'&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
 									}}>
-									County/Town
+									County
 								</TableSortLabel>
 							</TableCell>
-							<TableCell
-								align="right"
-								sx={{
-									fontWeight: "bold",
-									backgroundColor: "#616161",
-									color: "white",
-									py: 1.5,
-									cursor: "pointer",
-								}}>
-								<TableSortLabel
-									active={sortColumn === 'activeVoters'}
+						<TableCell
+							align="right"
+							sx={{
+								fontWeight: "bold",
+								backgroundColor: "#616161",
+								color: "white",
+								py: 0.75,
+								cursor: "pointer",
+							}}>
+							<TableSortLabel
+								active={sortColumn === 'activeVoters'}
 									direction={sortColumn === 'activeVoters' ? sortOrder : 'asc'}
 									onClick={() => handleSort('activeVoters')}
 									sx={{
@@ -196,17 +200,17 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 									Active Voters
 								</TableSortLabel>
 							</TableCell>
-							<TableCell
-								align="right"
-								sx={{
-									fontWeight: "bold",
-									backgroundColor: "#616161",
-									color: "white",
-									py: 1.5,
-									cursor: "pointer",
-								}}>
-								<TableSortLabel
-									active={sortColumn === 'inactiveVoters'}
+						<TableCell
+							align="right"
+							sx={{
+								fontWeight: "bold",
+								backgroundColor: "#616161",
+								color: "white",
+								py: 0.75,
+								cursor: "pointer",
+							}}>
+							<TableSortLabel
+								active={sortColumn === 'inactiveVoters'}
 									direction={sortColumn === 'inactiveVoters' ? sortOrder : 'asc'}
 									onClick={() => handleSort('inactiveVoters')}
 									sx={{
@@ -219,17 +223,17 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 									Inactive Voters
 								</TableSortLabel>
 							</TableCell>
-							<TableCell
-								align="right"
-								sx={{
-									fontWeight: "bold",
-									backgroundColor: "#616161",
-									color: "white",
-									py: 1.5,
-									cursor: "pointer",
-								}}>
-								<TableSortLabel
-									active={sortColumn === 'activePercentage'}
+						<TableCell
+							align="right"
+							sx={{
+								fontWeight: "bold",
+								backgroundColor: "#616161",
+								color: "white",
+								py: 0.75,
+								cursor: "pointer",
+							}}>
+							<TableSortLabel
+								active={sortColumn === 'activePercentage'}
 									direction={sortColumn === 'activePercentage' ? sortOrder : 'asc'}
 									onClick={() => handleSort('activePercentage')}
 									sx={{
@@ -242,17 +246,17 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 									Active %
 								</TableSortLabel>
 							</TableCell>
-							<TableCell
-								align="right"
-								sx={{
-									fontWeight: "bold",
-									backgroundColor: "#616161",
-									color: "white",
-									py: 1.5,
-									cursor: "pointer",
-								}}>
-								<TableSortLabel
-									active={sortColumn === 'inactivePercentage'}
+						<TableCell
+							align="right"
+							sx={{
+								fontWeight: "bold",
+								backgroundColor: "#616161",
+								color: "white",
+								py: 0.75,
+								cursor: "pointer",
+							}}>
+							<TableSortLabel
+								active={sortColumn === 'inactivePercentage'}
 									direction={sortColumn === 'inactivePercentage' ? sortOrder : 'asc'}
 									onClick={() => handleSort('inactivePercentage')}
 									sx={{
@@ -265,17 +269,17 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 									Inactive %
 								</TableSortLabel>
 							</TableCell>
-							<TableCell
-								align="right"
-								sx={{
-									fontWeight: "bold",
-									backgroundColor: "#616161",
-									color: "white",
-									py: 1.5,
-									cursor: "pointer",
-								}}>
-								<TableSortLabel
-									active={sortColumn === 'totalVoters'}
+						<TableCell
+							align="right"
+							sx={{
+								fontWeight: "bold",
+								backgroundColor: "#616161",
+								color: "white",
+								py: 0.75,
+								cursor: "pointer",
+							}}>
+							<TableSortLabel
+								active={sortColumn === 'totalVoters'}
 									direction={sortColumn === 'totalVoters' ? sortOrder : 'asc'}
 									onClick={() => handleSort('totalVoters')}
 									sx={{
@@ -370,7 +374,7 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 					rowsPerPage={rowsPerPage}
 					rowsPerPageOptions={[]}
 					labelDisplayedRows={({ from, to, count }) => `${from}–${to} of ${count}`}
-					sx={{ minHeight: 52 }}
+					sx={{ minHeight: 0, height: 36, p: 0, overflow: "hidden", '& .MuiToolbar-root': { minHeight: 36, height: 36, padding: '0 8px' } }}
 				/>
 			</Box>
 		</Paper>

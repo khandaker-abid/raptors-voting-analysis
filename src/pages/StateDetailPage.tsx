@@ -25,24 +25,17 @@ import { getCountyCount } from "../data/stateShapes";
 // Existing datasets/components
 import {
 	getProvisionalBallotData,
-	getProvisionalBallotCategories,
 	getChoroplethData,
 } from "../data/provisionalBallotData";
 import StateMap from "../components/StateMap";
 import ProvisionalBallotTab from "./ProvisionalBallotTab";
-import ProvisionalBallotBarChart from "../charts/ProvisionalBallotBarChart";
-import ProvisionalBallotTable from "../tables/ProvisionalBallotTable";
-import ProvisionalBallotChoroplethMap from "../components/ProvisionalBallotChoroplethMap";
-import ActiveVotersBarChart from "../charts/ActiveVotersBarChart";
-import ActiveVotersTable from "../tables/ActiveVotersTable";
-import ActiveVotersChoroplethMap from "../components/ActiveVotersChoroplethMap";
+import ActiveVoterTab from "./ActiveVoterTab";
 import StateVotingEquipmentTable from "../tables/StateVotingEquipmentTable";
 import StateVoterRegistrationTable from "../tables/StateVoterRegistrationTable";
 import VoterRegistrationChloroplethMap from "../components/VoterRegistrationChloroplethMap";
 
 // NEW (GUI-8/9/16/18)
 import {
-	fetchActiveVoters,
 	fetchPollbookDeletions,
 	fetchMailRejections,
 	fetchRegistrationTrends,
@@ -77,7 +70,8 @@ import type {
 	RegistrationTrendPayload,
 	BlockBubblePayload,
 } from "../data/types";
-
+import PollbookDeletionsTab from "./PollbookDeletionsTab";
+import MailRejectionsTab from "./MailRejectionsTab";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -159,11 +153,6 @@ const StateDetailPage: React.FC = () => {
 		return getProvisionalBallotData(decodedStateName);
 	}, [decodedStateName]);
 
-	// Get choropleth data (shared with Registration tab)
-	const choroplethData = useMemo(() => {
-		return getChoroplethData(decodedStateName);
-	}, [decodedStateName]);
-
 	// State for active voters data - will be fetched from API
 	const [activeVotersData, setActiveVotersData] = React.useState<
 		ActiveVotersRow[] | undefined
@@ -243,19 +232,6 @@ const StateDetailPage: React.FC = () => {
 
 		let alive = true;
 		(async () => {
-			// Fetch active voters data for detail states
-			if (isDetail) {
-				try {
-					const rows = await fetchActiveVoters(decodedStateName);
-					if (alive) setActiveVotersData(rows);
-				} catch (e: any) {
-					if (alive) {
-						setActiveVotersErr(e?.message || "Failed to fetch active voters.");
-						setActiveVotersData([]); // stop infinite loading
-					}
-				}
-			}
-
 			try {
 				const rows = await fetchPollbookDeletions(decodedStateName);
 				if (alive) setPollbookRows(rows);
@@ -408,44 +384,46 @@ const StateDetailPage: React.FC = () => {
 		<Box sx={{ py: 0, px: 0, width: "100%", margin: 0, height: "100%" }}>
 			{/* Organized Content with Category Groups */}
 			<Paper sx={{ width: "100%", mb: 0, height: "100%" }}>
-				<Box sx={{ borderBottom: 1, borderColor: "divider", display: "flex", alignItems: "center", justifyContent: "space-between", p: 1.5 }}>
-					<Typography variant="h6" sx={{ fontWeight: 600, fontSize: "1rem" }}>
+				<Box sx={{ borderBottom: 1, borderColor: "divider", display: "flex", alignItems: "center", justifyContent: "space-between", p: 0.75 }}>
+					<Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: "1.2rem" }}>
 						{decodedStateName}
 					</Typography>
-					<Box sx={{ pr: 2, display: "flex", alignItems: "center", gap: 1.5 }}>
+					<Box sx={{ pr: 1, display: "flex", alignItems: "center", gap: 1 }}>
 						<Button
 							variant="outlined"
-							startIcon={<ArrowBackIcon />}
+							startIcon={<ArrowBackIcon fontSize="small" />}
 							onClick={() => navigate("/")}
 							sx={{
-								minWidth: 100,
+								minWidth: 80,
 								textTransform: "none",
 								fontWeight: 600,
+								fontSize: "0.85rem",
+								py: 0.5,
 							}}
 						>
 							Home
 						</Button>
-						<FormControl size="small" sx={{ minWidth: 180 }}>
+						<FormControl size="small" sx={{ minWidth: 160, '& .MuiInputBase-root': { height: 32 } }}>
 							<Select
 								value={tabValue}
 								onChange={(e) => handleTabChange({} as React.SyntheticEvent, e.target.value as number)}
-								sx={{ fontWeight: 700 }}
+								sx={{ fontWeight: 700, fontSize: "0.85rem" }}
 							>
 								{tabOptions.map((tab) => (
-									<MenuItem key={tab.index} value={tab.index}>
+									<MenuItem key={tab.index} value={tab.index} sx={{ fontSize: "0.85rem" }}>
 										{tab.label}
 									</MenuItem>
 								))}
 							</Select>
 						</FormControl>
-						<FormControl size="small" sx={{ minWidth: 160 }}>
+						<FormControl size="small" sx={{ minWidth: 140, '& .MuiInputBase-root': { height: 32 } }}>
 							<Select
 								value={decodedStateName}
 								onChange={(e) => navigate(`/state/${encodeURIComponent(e.target.value)}?tab=0`)}
-								sx={{ fontWeight: 700 }}
+								sx={{ fontWeight: 700, fontSize: "0.85rem" }}
 							>
 								{DETAILED_STATES.map((state) => (
-									<MenuItem key={state} value={state}>
+									<MenuItem key={state} value={state} sx={{ fontSize: "0.85rem" }}>
 										{state}
 									</MenuItem>
 								))}
@@ -621,123 +599,28 @@ const StateDetailPage: React.FC = () => {
 					</Box>
 				</TabPanel>
 
-			<TabPanel value={tabValue} index={IDX_PROVISIONAL}>
-				<ProvisionalBallotTab stateName={decodedStateName} />
-			</TabPanel>
+			{/* Provisional Ballots Tab */}
+			{isDetail && (
+				<TabPanel value={tabValue} index={IDX_PROVISIONAL}>
+					<ProvisionalBallotTab stateName={decodedStateName} />
+				</TabPanel>
+			)}
 
-			{/* Provisional Ballots Tab
-				{isDetail && (
-					<TabPanel value={tabValue} index={IDX_PROVISIONAL}>
-						<Box sx={{
-							p: 0,
-							display: "flex",
-							flexDirection: "column",
-							gap: 1.5,
-							minHeight: "calc(100vh - 280px)",
-						}}>
-							<Box
-								sx={{
-									display: "flex",
-									gap: 1.5,
-									flexDirection: { xs: "column", md: "row" },
-									alignItems: "stretch",
-									justifyContent: "space-between",
-									height: { xs: "auto", md: "420px" },
-									flexShrink: 0,
-								}}
-							>
-								<Box
-									sx={{
-										flex: 1,
-										minWidth: { xs: "100%", md: "calc(50% - 8px)" },
-										maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
-										height: "100%",
-									}}
-								>
-									<ProvisionalBallotBarChart
-										data={provisionalData || []}
-										categories={getProvisionalBallotCategories()}
-									/>
-								</Box>
-								<Box
-									sx={{
-										flex: 1,
-										minWidth: { xs: "100%", md: "calc(50% - 8px)" },
-										maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
-										height: "100%",
-									}}
-								>
-									<ProvisionalBallotChoroplethMap
-										stateName={decodedStateName}
-										data={choroplethData || []}
-									/>
-								</Box>
-							</Box>
+			{/* Active Voters Tab */}
+			{isDetail && (
+				<TabPanel value={tabValue} index={IDX_ACTIVE}>
+					<ActiveVoterTab stateName={decodedStateName} />
+				</TabPanel>
+			)}
 
-							<Box sx={{ flex: 1, display: "flex" }}>
-								<ProvisionalBallotTable data={provisionalData || []} />
-							</Box>
-						</Box>
-					</TabPanel>
-				)}
-			*/}
-				{/* Active Voters Tab - Matching Provisional Ballot layout */}
-				{isDetail && (
-					<TabPanel value={tabValue} index={IDX_ACTIVE}>
-						<Box sx={{
-							p: 0,
-							display: "flex",
-							flexDirection: "column",
-							gap: 1.5,
-							minHeight: "calc(100vh - 280px)",
-						}}>
-							<Box
-								sx={{
-									display: "flex",
-									gap: 1.5,
-									flexDirection: { xs: "column", md: "row" },
-									alignItems: "stretch",
-									justifyContent: "space-between",
-									height: { xs: "auto", md: "420px" },
-									flexShrink: 0,
-								}}
-							>
-								<Box
-									sx={{
-										flex: 1,
-										minWidth: { xs: "100%", md: "calc(50% - 8px)" },
-										maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
-										height: "100%",
-									}}
-								>
-									<ActiveVotersBarChart
-										data={activeVotersData || []}
-										stateName={decodedStateName}
-									/>
-								</Box>
-								<Box
-									sx={{
-										flex: 1,
-										minWidth: { xs: "100%", md: "calc(50% - 8px)" },
-										maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
-										height: "100%",
-									}}
-								>
-									<ActiveVotersChoroplethMap
-										stateName={decodedStateName}
-										data={activeVotersData || []}
-									/>
-								</Box>
-							</Box>
+			{/* Pollbook Deletion Tab (GUI-8) */}
+			{isDetail && (
+				<TabPanel value={tabValue} index={IDX_POLLBOOK}>
+					<PollbookDeletionsTab stateName={decodedStateName} />
+				</TabPanel>
+			)}
 
-							<Box sx={{ flex: 1, display: "flex" }}>
-								<ActiveVotersTable data={activeVotersData || []} stateName={decodedStateName} />
-							</Box>
-						</Box>
-					</TabPanel>
-				)}
-
-				{/* Pollbook Deletions Tab (GUI-8) - Matching Active Voters layout */}
+			{/* Pollbook Deletions Tab (GUI-8) - Matching Active Voters layout 
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_POLLBOOK}>
 						{pollbookRows === undefined ? (
@@ -797,10 +680,7 @@ const StateDetailPage: React.FC = () => {
 									>
 										<PercentChoropleth
 											stateName={decodedStateName}
-											data={pollbookRows.map((r) => ({
-												geographicUnit: r.geographicUnit,
-												percentOfTotal: r.deletionPercentage ?? 0,
-											}))}
+											data={pollbookRows}
 										/>
 									</Box>
 								</Box>
@@ -812,8 +692,15 @@ const StateDetailPage: React.FC = () => {
 						)}
 					</TabPanel>
 				)}
+				*/}
+			{/* Mail Rejections Tab (GUI-9) */}
+			{isDetail && (
+				<TabPanel value={tabValue} index={IDX_MAIL}>
+					<MailRejectionsTab stateName={decodedStateName} />
+				</TabPanel>
+			)}
 
-				{/* Mail Rejections Tab (GUI-9) - Matching Active Voters layout */}
+				{/* Mail Rejections Tab (GUI-9) - Matching Active Voters layout 
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_MAIL}>
 						{mailRows === undefined ? (
@@ -871,10 +758,7 @@ const StateDetailPage: React.FC = () => {
 									>
 										<PercentChoropleth
 											stateName={decodedStateName}
-											data={mailRows.map((r) => ({
-												geographicUnit: r.geographicUnit,
-												percentOfTotal: r.rejectionPercentage,
-											}))}
+											data={mailRows}
 											title="Mail Ballot Rejections Distribution"
 											description="Interactive choropleth map showing mail ballot rejection distribution across counties. Hover over counties for detailed information."
 										/>
@@ -888,6 +772,7 @@ const StateDetailPage: React.FC = () => {
 						)}
 					</TabPanel>
 				)}
+				*/}
 
 				{/* Voting Equipment Tab */}
 				<TabPanel value={tabValue} index={IDX_EQUIPMENT}>

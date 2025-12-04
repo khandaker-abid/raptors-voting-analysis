@@ -10,8 +10,9 @@ import { createCountyLookupMap, normalizeCountyName } from "../utils/countyNameN
 
 interface Props {
     stateName: string;
-    // [{ geographicUnit, percentOfTotal }]
-    data: { geographicUnit: string; percentOfTotal: number }[];
+    // Accept either simplified format or full row data (PollbookDeletionRow or MailRejectionRow)
+    data: Array<{ geographicUnit: string; percentOfTotal: number }>
+        | Array<{ geographicUnit: string; deletionPercentage?: number; rejectionPercentage?: number; [key: string]: any }>;
     title?: string;
     description?: string;
 }
@@ -48,14 +49,56 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, descriptio
     };
 
 
-    // Uses centralized normalization to handle apostrophes, periods, etc.
-    const lookup = useMemo(() => {
-        return createCountyLookupMap(
-            data,
-            (item) => item.geographicUnit,
-            (item) => item.percentOfTotal
-        );
+    // Calculate percentages early so we can use them in the lookup
+    const calculatedPercentages = useMemo(() => {
+        const percentages = data.map((d) => {
+            if ('percentOfTotal' in d && d.percentOfTotal !== undefined) return d.percentOfTotal;
+            if ('deletionPercentage' in d && d.deletionPercentage !== undefined) return d.deletionPercentage;
+            if ('rejectionPercentage' in d && d.rejectionPercentage !== undefined) {
+                const hasTotal = 'total' in d && typeof d.total === 'number';
+                if (d.rejectionPercentage === 0 && hasTotal) {
+                    return -1; // marker for recalculation
+                }
+                return d.rejectionPercentage;
+            }
+            return 0;
+        });
+        
+        // Recalculate if all are 0 but totals exist
+        const needsRecalc = percentages.every(p => p === 0 || p === -1) && 
+                            data.every(d => 'total' in d);
+        
+        if (needsRecalc) {
+            const stateTotal = data.reduce((sum, d) => {
+                const total = 'total' in d && typeof d.total === 'number' ? d.total : 0;
+                return sum + total;
+            }, 0);
+            
+            if (stateTotal > 0) {
+                return data.map(d => {
+                    const total = 'total' in d && typeof d.total === 'number' ? d.total : 0;
+                    return Math.round((total / stateTotal) * 1000) / 10;
+                });
+            }
+        }
+        
+        return percentages;
     }, [data]);
+
+    // Uses centralized normalization to handle apostrophes, periods, etc.
+    // Create enriched data with calculated percentages for lookup
+    const lookup = useMemo(() => {
+        const enrichedData = data.map((item, index) => ({
+            ...item,
+            _calculatedPercentage: calculatedPercentages[index]
+        }));
+        
+        return createCountyLookupMap<any, number>(
+            enrichedData,
+            (item) => item.geographicUnit,
+            (item) => item._calculatedPercentage
+        );
+    }, [data, calculatedPercentages]);
 
 
     // Gray color palette for visual consistency
@@ -71,15 +114,14 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, descriptio
         ];
     }, []);
 
-    // Calculate min and max percentages from the data
+    // Calculate min and max from calculatedPercentages (not original data)
     const { minPercent, maxPercent } = useMemo(() => {
-        if (data.length === 0) return { minPercent: 0, maxPercent: 100 };
-        const percentages = data.map(d => d.percentOfTotal);
+        if (calculatedPercentages.length === 0) return { minPercent: 0, maxPercent: 100 };
         return {
-            minPercent: Math.min(...percentages),
-            maxPercent: Math.max(...percentages)
+            minPercent: Math.min(...calculatedPercentages),
+            maxPercent: Math.max(...calculatedPercentages)
         };
-    }, [data]);
+    }, [calculatedPercentages]);
 
     // Color function that maps actual data range to color palette
     const color = (p: number) => {
@@ -194,6 +236,9 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, descriptio
             }
         })();
     }, [stateName]);
+    
+    // Force GeoJSON to re-render when data changes by adding a key based on data length
+    const geoJsonKey = useMemo(() => `geojson-${stateName}-${data.length}`, [stateName, data.length]);
 
     // Clear hover when cursor leaves the map container
     useEffect(() => {
@@ -219,34 +264,34 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, descriptio
         );
     }
 
-    const percentages = data.map((d) => d.percentOfTotal);
-    const maxPercentage = percentages.length > 0 ? Math.max(...percentages) : 0;
-    const minPercentage = percentages.length > 0 ? Math.min(...percentages) : 0;
-    const avgPercentage = percentages.length > 0 ? data.reduce((sum, d) => sum + d.percentOfTotal, 0) / data.length : 0;
+    const maxPercentage = calculatedPercentages.length > 0 ? Math.max(...calculatedPercentages) : 0;
+    const minPercentage = calculatedPercentages.length > 0 ? Math.min(...calculatedPercentages) : 0;
+    const avgPercentage = calculatedPercentages.length > 0 ? calculatedPercentages.reduce((sum, p) => sum + p, 0) / calculatedPercentages.length : 0;
 
-    // Check if all data is zero (no data reported)
-    const allZero = percentages.every(p => p === 0);
+    // Check if all data is zero (no data reported) - but only if we have data
+    const allZero = calculatedPercentages.length > 0 && calculatedPercentages.every(p => p === 0);
 
     // Note: Rhode Island data is now aggregated to county level by the backend,
     // so we no longer need to show the town-level warning
     const isRhodeIslandTownData = false;
 
+    // Detect data type and set appropriate title
+    const dataType = data.length > 0 
+        ? ('deletionPercentage' in data[0] ? 'pollbook' : 'rejection')
+        : 'pollbook';
+    
     // Use custom title/description or defaults (without state name suffix - user already knows the state)
-    const displayTitle = title || `Pollbook Deletions Distribution`;
-    const displayDescription = description || "Interactive choropleth map showing pollbook deletion distribution across counties. Hover over counties for detailed information.";
+    const displayTitle = title || (dataType === 'pollbook' 
+        ? `Pollbook Deletions Distribution`
+        : `Mail Rejections Distribution`);
 
     return (
-        <Paper sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
+        <Paper sx={{ pb: 0.5, px: 2, height: "100%", display: "flex", flexDirection: "column" }}>
             <Box mb={1}>
-                <Typography variant="h6" gutterBottom fontWeight={600}>
+                <Typography variant="h6" gutterBottom fontWeight={600} sx={{ fontSize: "0.95rem" }}>
                     {displayTitle}
                 </Typography>
                 <Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
-                    <Chip label={`Average: ${isNaN(avgPercentage) ? '0.0' : avgPercentage.toFixed(1)}%`} size="small" />
-                    <Chip
-                        label={`Range: ${isNaN(minPercentage) ? '0.0' : minPercentage.toFixed(1)}% – ${isNaN(maxPercentage) ? '0.0' : maxPercentage.toFixed(1)}%`}
-                        size="small"
-                    />
                     {allZero && (
                         <Chip
                             label="⚠️ No data reported for 2024"
@@ -294,6 +339,7 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, descriptio
                         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
                     />
                     <GeoJSON
+                        key={geoJsonKey}
                         ref={geoRef as any}
                         data={geoData}
                         style={styleFor}
@@ -357,9 +403,6 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, descriptio
                         })}
                     </Box>
                 </Box>
-                <Typography variant="caption" color="text.secondary" display="block" mt={0.5} fontSize="0.7rem">
-                    {displayDescription}
-                </Typography>
                 {/* Note for states that use town-level data */}
                 {(stateName === "Rhode Island" || stateName === "Vermont" || stateName === "Connecticut" || stateName === "Massachusetts") && (
                     <Typography variant="caption" color="primary.main" display="block" mt={0.5} fontSize="0.7rem" fontStyle="italic">

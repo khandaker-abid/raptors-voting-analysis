@@ -128,21 +128,21 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
     }
 
     return (
-        <Paper sx={{ p: 2, display: "flex", flexDirection: "column", width: "100%" }}>
+        <Paper sx={{ pt: 0.5, px: 0.5, pb: 0, display: "flex", flexDirection: "column", width: "100%" }}>
             <Box
-                mb={1.5}
+                mb={0.5}
                 display="flex"
                 justifyContent="space-between"
                 alignItems="center"
                 flexWrap="wrap"
                 gap={1}
             >
-                <Typography variant="h6" fontWeight={600}>
-                    Pollbook Deletions by County/Town
+                <Typography variant="h6" fontWeight={600} sx={{ fontSize: "0.95rem" }}>
+                    Pollbook Deletions by County
                 </Typography>
                 <TextField
                     size="small"
-                    placeholder="Search county/town..."
+                    placeholder="Search county..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     InputProps={{
@@ -151,13 +151,17 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                 <SearchIcon fontSize="small" />
                             </InputAdornment>
                         ),
+                        sx: { fontSize: "0.85rem", height: "32px" }
                     }}
-                    sx={{ minWidth: 200 }}
+                    sx={{ minWidth: 180 }}
                 />
             </Box>
-
-            <TableContainer sx={{ position: "relative", overflow: "visible" }}>
-                <Table size="small">
+            
+            {/* These two lines below are the key to getting the table to stay 
+                in its grid spot and not increase in width, causing the lower 
+                few table cells to be hidden from view */}
+            <TableContainer sx={{ mb: 0, overflowX: "auto", overflowY: "hidden" }}>
+                <Table size="small" sx={{ width: "max-content", minWidth: "100%" }}>
                     <TableHead>
                         <TableRow>
                             <TableCell
@@ -165,7 +169,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}
                             >
@@ -180,7 +184,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                         '&.Mui-active': { color: 'white !important' },
                                         '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
                                     }}>
-                                    Region
+                                    County
                                 </TableSortLabel>
                             </TableCell>
                             <TableCell
@@ -189,7 +193,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}
                             >
@@ -213,7 +217,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}
                             >
@@ -237,7 +241,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}
                             >
@@ -261,7 +265,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}
                             >
@@ -285,7 +289,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}
                             >
@@ -309,7 +313,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}
                             >
@@ -333,7 +337,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}
                             >
@@ -357,7 +361,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}
                             >
@@ -480,7 +484,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                     rowsPerPage={rowsPerPage}
                     rowsPerPageOptions={[]}
                     labelDisplayedRows={({ from, to, count }) => `${from}–${to} of ${count}`}
-                    sx={{ minHeight: 52 }}
+                    sx={{ minHeight: 0, height: 36, p: 0, overflow: "hidden", '& .MuiToolbar-root': { minHeight: 36, height: 36, padding: '0 8px' } }}
                 />
             </Box>
         </Paper>

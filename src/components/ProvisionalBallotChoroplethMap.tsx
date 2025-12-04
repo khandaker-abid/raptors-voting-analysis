@@ -325,9 +325,9 @@ const ProvisionalBallotChoroplethMap: React.FC<
 	const isRhodeIslandTownData = false;
 
 	return (
-		<Paper sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
+		<Paper sx={{ p: 0.5, px: 1.5, height: "100%", display: "flex", flexDirection: "column" }}>
 			<Box mb={1}>
-				<Typography variant="h6" gutterBottom fontWeight={600}>
+				<Typography variant="h6" gutterBottom fontWeight={600} sx={{ fontSize: "0.95rem" }}>
 					Provisional Ballots Distribution
 				</Typography>
 				<Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
@@ -361,7 +361,7 @@ const ProvisionalBallotChoroplethMap: React.FC<
 					backgroundColor: "#fafafa",
 					width: "100%",
 					margin: "0 auto",
-					mb: 1,
+					mb: 0.5,
 					minHeight: 0,
 				}}
 			>

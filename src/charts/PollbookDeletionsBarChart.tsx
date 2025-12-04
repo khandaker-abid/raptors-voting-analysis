@@ -98,20 +98,11 @@ export default function PollbookDeletionsBarChart({ stateName, data }: Props) {
 
     return (
         <Paper
-            sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}
+            sx={{ p: 0.5, height: "100%", display: "flex", flexDirection: "column" }}
         >
             <Box mb={1}>
-                <Typography variant="h6" gutterBottom fontWeight={600}>
-                    Pollbook Deletions by Category — {stateName}
-                </Typography>
-                <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                    fontSize="0.7rem"
-                >
-                    Voter registration deletions across different categories. Hover over
-                    bars for detailed information.
+                <Typography variant="h6" gutterBottom fontWeight={600} sx={{ fontSize: "0.95rem" }}>
+                    Pollbook Deletions by Category
                 </Typography>
             </Box>
 
@@ -119,7 +110,7 @@ export default function PollbookDeletionsBarChart({ stateName, data }: Props) {
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                         data={chartData}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                        margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
                     >
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                         <XAxis
@@ -136,7 +127,8 @@ export default function PollbookDeletionsBarChart({ stateName, data }: Props) {
                                 value: "Number of Deletions",
                                 angle: -90,
                                 position: "insideLeft",
-                                style: { fontSize: 11 },
+                                dy: 15,
+                                style: { fontSize: 11, textAnchor: "middle" },
                             }}
                         />
                         <RechartsTooltip content={<CustomTooltip />} />

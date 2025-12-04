@@ -116,13 +116,10 @@ const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 	}
 
 	return (
-		<Paper sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
+		<Paper sx={{ p: 0.5, height: "100%", display: "flex", flexDirection: "column" }}>
 			<Box mb={1}>
-				<Typography variant="h6" gutterBottom fontWeight={600}>
+				<Typography variant="h6" gutterBottom fontWeight={600} sx={{ fontSize: "0.95rem" }}>
 					Active Voter Categories Analysis
-				</Typography>
-				<Typography variant="caption" color="text.secondary" display="block" fontSize="0.7rem">
-					Active, Inactive, and Total registered voters. Hover over bars for detailed information.
 				</Typography>
 			</Box>
 
@@ -130,14 +127,14 @@ const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 				<ResponsiveContainer width="100%" height="100%">
 					<BarChart
 						data={orderedChartData}
-						margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+						margin={{ top: 10, right: 20, left: 20, bottom: 0 }}
 					>
 						<CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
 						<XAxis
 							dataKey="category"
 							angle={-45}
 							textAnchor="end"
-							height={80}
+							height={65}
 							tick={{ fontSize: 11 }}
 						/>
 						<YAxis
@@ -147,7 +144,8 @@ const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 								value: "Number of Voters",
 								angle: -90,
 								position: "insideLeft",
-								style: { fontSize: 11 },
+								offset: -10,
+								style: { fontSize: 11, textAnchor: "middle" },
 							}}
 						/>
 						<RechartsTooltip content={<CustomTooltip />} />

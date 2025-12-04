@@ -335,9 +335,9 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 	const isRhodeIslandTownData = false;
 
 	return (
-		<Paper sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
+		<Paper sx={{ p: 0.5, px: 2, height: "100%", display: "flex", flexDirection: "column" }}>
 			<Box mb={1}>
-				<Typography variant="h6" gutterBottom fontWeight={600}>
+				<Typography variant="h6" gutterBottom fontWeight={600} sx={{ fontSize: "0.95rem" }}>
 					Active Voters Distribution
 				</Typography>
 				<Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
@@ -368,7 +368,8 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 					borderRadius: 2,
 					overflow: "hidden",
 					minHeight: 0,
-					mb: 1,
+					mb: 0.5,
+					padding: 0,
 				}}
 			>
 				<MapContainer

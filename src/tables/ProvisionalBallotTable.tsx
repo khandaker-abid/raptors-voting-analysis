@@ -151,14 +151,14 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 	}
 
 	return (
-		<Paper sx={{ p: 2, display: "flex", flexDirection: "column", width: "100%" }}>
-			<Box mb={1.5} display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
-				<Typography variant="h6" fontWeight={600}>
-					Provisional Ballots by County/Town
+		<Paper sx={{ pt: 0.5, px: 0.5, pb: 0, width: "100%" }}>
+			<Box mb={0.5} display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
+				<Typography variant="subtitle1" fontWeight={600} sx={{ fontSize: "0.95rem" }}>
+					Provisional Ballots by County
 				</Typography>
 				<TextField
 					size="small"
-					placeholder="Search county/town..."
+					placeholder="Search county..."
 					value={searchTerm}
 					onChange={(e) => setSearchTerm(e.target.value)}
 					InputProps={{
@@ -167,27 +167,31 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 								<SearchIcon fontSize="small" />
 							</InputAdornment>
 						),
+						sx: { fontSize: "0.85rem", height: "32px" }
 					}}
-					sx={{ minWidth: 200 }}
+					sx={{ minWidth: 180 }}
 				/>
 			</Box>
-
-			<TableContainer sx={{ position: "relative", overflow: "visible" }}>
-				<Table size="small">
+			
+			{/* These two lines below are the key to getting the table to stay 
+                in its grid spot and not increase in width, causing the lower 
+                few table cells to be hidden from view */}
+			<TableContainer sx={{ mb: 0, overflowX: "auto", overflowY: "hidden" }}>
+				<Table size="small" sx={{ width: "max-content", minWidth: "100%" }}>
 					<TableHead>
-						<TableRow>
-							<TableCell
-								sx={{
-									fontWeight: "bold",
-									backgroundColor: "#616161",
-									color: "white",
-									py: 1.5,
-									cursor: "pointer",
-								}}>
-								<TableSortLabel
-									active={sortColumn === 'county'}
-									direction={sortColumn === 'county' ? sortOrder : 'asc'}
-									onClick={() => handleSort('county')}
+					<TableRow>
+						<TableCell
+							sx={{
+								fontWeight: "bold",
+								backgroundColor: "#616161",
+								color: "white",
+								py: 0.85,
+								cursor: "pointer",
+							}}>
+							<TableSortLabel
+								active={sortColumn === 'county'}
+								direction={sortColumn === 'county' ? sortOrder : 'asc'}
+								onClick={() => handleSort('county')}
 									sx={{
 										color: 'white !important',
 										'&:hover': { color: 'white !important' },
@@ -195,7 +199,7 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 										'&.Mui-active': { color: 'white !important' },
 										'&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
 									}}>
-									County/Town
+									County
 								</TableSortLabel>
 							</TableCell>
 							{[
@@ -208,21 +212,21 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 								"E2g",
 								"E2h",
 								"E2i",
-							].map((cat) => (
-								<TableCell
-									key={cat}
-									align="right"
-									sx={{
-										fontWeight: "bold",
-										backgroundColor: "#616161",
-										color: "white",
-										py: 1.5,
-										cursor: "pointer",
-									}}>
-									<TableSortLabel
-										active={sortColumn === cat}
-										direction={sortColumn === cat ? sortOrder : 'asc'}
-										onClick={() => handleSort(cat as SortableColumn)}
+					].map((cat) => (
+							<TableCell
+								key={cat}
+								align="right"
+								sx={{
+									fontWeight: "bold",
+									backgroundColor: "#616161",
+									color: "white",
+									py: 0.85,
+									cursor: "pointer",
+								}}>
+								<TableSortLabel
+									active={sortColumn === cat}
+									direction={sortColumn === cat ? sortOrder : 'asc'}
+									onClick={() => handleSort(cat as SortableColumn)}
 										sx={{
 											color: 'white !important',
 											'&:hover': { color: 'white !important' },
@@ -233,20 +237,20 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 										{categoryMap[cat] || cat}
 									</TableSortLabel>
 								</TableCell>
-							))}
-							<TableCell
-								align="right"
-								sx={{
-									fontWeight: "bold",
-									backgroundColor: "#616161",
-									color: "white",
-									py: 1.5,
-									cursor: "pointer",
-								}}>
-								<TableSortLabel
-									active={sortColumn === 'E1a'}
-									direction={sortColumn === 'E1a' ? sortOrder : 'asc'}
-									onClick={() => handleSort('E1a')}
+						))}
+						<TableCell
+							align="right"
+							sx={{
+								fontWeight: "bold",
+								backgroundColor: "#616161",
+								color: "white",
+								py: 0.85,
+								cursor: "pointer",
+							}}>
+							<TableSortLabel
+								active={sortColumn === 'E1a'}
+								direction={sortColumn === 'E1a' ? sortOrder : 'asc'}
+								onClick={() => handleSort('E1a')}
 									sx={{
 										color: 'white !important',
 										'&:hover': { color: 'white !important' },
@@ -350,7 +354,7 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 					rowsPerPage={rowsPerPage}
 					rowsPerPageOptions={[]} // Hide rows per page selector
 					labelDisplayedRows={({ from, to, count }) => `${from}–${to} of ${count}`}
-					sx={{ minHeight: 52 }}
+					sx={{ overflow: "hidden", minHeight: 0, height: 36, p: 0, '& .MuiToolbar-root': { minHeight: 36, height: 36, padding: '0 8px' } }}
 				/>
 			</Box>
 		</Paper>

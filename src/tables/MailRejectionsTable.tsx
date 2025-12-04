@@ -126,9 +126,9 @@ const MailRejectionsTable: React.FC<Props> = ({ data }) => {
     }
 
     return (
-        <Paper sx={{ p: 2, display: "flex", flexDirection: "column", width: "100%" }}>
-            <Box mb={1.5} display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
-                <Typography variant="h6" fontWeight={600}>
+        <Paper sx={{ pt: 0.5, px: 0.5, pb: 0, display: "flex", flexDirection: "column", width: "100%" }}>
+            <Box mb={0.5} display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={0.75}>
+                <Typography variant="subtitle1" fontWeight={600} sx={{ fontSize: "0.95rem" }}>
                     Mail Ballot Rejections by County/Town
                 </Typography>
                 <TextField
@@ -142,12 +142,13 @@ const MailRejectionsTable: React.FC<Props> = ({ data }) => {
                                 <SearchIcon fontSize="small" />
                             </InputAdornment>
                         ),
+                        sx: { fontSize: "0.85rem", height: "32px" }
                     }}
-                    sx={{ minWidth: 200 }}
+                    sx={{ minWidth: 180 }}
                 />
             </Box>
 
-            <TableContainer sx={{ position: "relative", overflow: "visible" }}>
+            <TableContainer sx={{ mb: 0, position: "relative", overflow: "visible" }}>
                 <Table size="small">
                     <TableHead>
                         <TableRow>
@@ -156,7 +157,7 @@ const MailRejectionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}>
                                 <TableSortLabel
@@ -179,7 +180,7 @@ const MailRejectionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}>
                                 <TableSortLabel
@@ -202,7 +203,7 @@ const MailRejectionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}>
                                 <TableSortLabel
@@ -225,7 +226,7 @@ const MailRejectionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}>
                                 <TableSortLabel
@@ -248,7 +249,7 @@ const MailRejectionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}>
                                 <TableSortLabel
@@ -271,7 +272,7 @@ const MailRejectionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}>
                                 <TableSortLabel
@@ -294,7 +295,7 @@ const MailRejectionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}>
                                 <TableSortLabel
@@ -317,7 +318,7 @@ const MailRejectionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}>
                                 <TableSortLabel
@@ -340,7 +341,7 @@ const MailRejectionsTable: React.FC<Props> = ({ data }) => {
                                     fontWeight: "bold",
                                     backgroundColor: "#616161",
                                     color: "white",
-                                    py: 1.5,
+                                    py: 0.85,
                                     cursor: "pointer",
                                 }}>
                                 <TableSortLabel
@@ -456,7 +457,7 @@ const MailRejectionsTable: React.FC<Props> = ({ data }) => {
                     rowsPerPage={rowsPerPage}
                     rowsPerPageOptions={[]}
                     labelDisplayedRows={({ from, to, count }) => `${from}–${to} of ${count}`}
-                    sx={{ minHeight: 52 }}
+                    sx={{ minHeight: 0, height: 36, p: 0, '& .MuiToolbar-root': { minHeight: 36, height: 36, padding: '0 8px' } }}
                 />
             </Box>
         </Paper>

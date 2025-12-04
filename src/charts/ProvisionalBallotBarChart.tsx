@@ -96,9 +96,9 @@ const ProvisionalBallotBarChart: React.FC<ProvisionalBallotBarChartProps> = ({
 	}
 
 	return (
-		<Paper sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
-			<Box mb={1}>
-				<Typography variant="h6" gutterBottom fontWeight={600}>
+		<Paper sx={{ p: 0.5, height: "100%", display: "flex", flexDirection: "column" }}>
+			<Box>
+				<Typography variant="h6" gutterBottom fontWeight={600} sx={{ fontSize: "0.95rem" }}>
 					Provisional Ballot Categories Analysis
 				</Typography>
 			</Box>
@@ -107,7 +107,7 @@ const ProvisionalBallotBarChart: React.FC<ProvisionalBallotBarChartProps> = ({
 				<ResponsiveContainer width="100%" height="100%">
 					<BarChart
 						data={aggregatedData}
-						margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+						margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
 						<CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
 						<XAxis
 							dataKey="label"

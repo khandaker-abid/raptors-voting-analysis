@@ -195,6 +195,7 @@ public class EAVSController {
         return results.stream().map(doc -> {
             Map<String, Object> row = new HashMap<>();
             row.put("geographicUnit", doc.get("jurisdictionName"));
+            // Total provisional ballots (E1a)
             row.put("totalProvisionalBallots", doc.getOrDefault("E1a", 0));
 
             // Reasons for provisional ballots (E2a-E2i)
