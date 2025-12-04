@@ -892,31 +892,14 @@ const StateDetailPage: React.FC = () => {
 				{/* NEW: EI Equipment Tab - GUI-28 (Maryland only) */}
 				{isPreclearance && IDX_EI_EQUIPMENT >= 0 && (
 					<TabPanel value={tabValue} index={IDX_EI_EQUIPMENT}>
-						<Box sx={{ p: 3 }}>
-							<Alert severity="info" sx={{ mb: 3 }}>
-								<strong>Ecological Inference - Equipment Quality</strong> - This
-								analysis examines whether different demographic groups have equal
-								access to high-quality voting equipment. The probability curves
-								show the distribution of equipment quality scores across
-								demographics.
-							</Alert>
-							<EIEquipmentChart stateName={decodedStateName} />
-						</Box>
+						<EIEquipmentChart stateName={decodedStateName} />
 					</TabPanel>
 				)}
 
 				{/* NEW: EI Rejected Ballots Tab - GUI-29 (Maryland only) */}
 				{isPreclearance && IDX_EI_REJECTED >= 0 && (
 					<TabPanel value={tabValue} index={IDX_EI_REJECTED}>
-						<Box sx={{ p: 3 }}>
-							<Alert severity="warning" sx={{ mb: 3 }}>
-								<strong>Ecological Inference - Ballot Rejections</strong> - This
-								analysis examines whether ballot rejection rates differ across
-								demographic groups. Higher rejection rates for certain groups may
-								indicate barriers to voting.
-							</Alert>
 							<EIRejectedBallotsChart stateName={decodedStateName} />
-						</Box>
 					</TabPanel>
 				)}
 

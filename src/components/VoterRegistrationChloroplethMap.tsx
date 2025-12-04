@@ -409,17 +409,12 @@ const VoterRegistrationChloroplethMap: React.FC<
 	const isRhodeIslandTownData = false;
 
 	return (
-		<Paper sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
+		<Paper sx={{ p: 0.5, height: "100%", display: "flex", flexDirection: "column" }}>
 			<Box mb={1}>
-				<Typography variant="h6" gutterBottom fontWeight={600}>
+				<Typography variant="h6" gutterBottom fontWeight={600} sx={{ fontSize: "0.95rem" }}>
 					Registered Voters Distribution
 				</Typography>
 				<Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
-					<Chip label={`Average: ${Math.round(avgValue).toLocaleString()}`} size="small" />
-					<Chip
-						label={`Range: ${minValue.toLocaleString()} – ${maxValue.toLocaleString()}`}
-						size="small"
-					/>
 					{allZero && (
 						<Chip
 							label="⚠️ No data reported for 2024"
@@ -512,9 +507,11 @@ const VoterRegistrationChloroplethMap: React.FC<
 						{maxValue.toLocaleString()}
 					</Typography>
 				</Box>
+				{/*
 				<Typography variant="caption" color="text.secondary" display="block" mt={0.5} fontSize="0.7rem">
 					Interactive choropleth map showing voter registration distribution across counties. Hover over counties for detailed information.
 				</Typography>
+				*/}
 				{/* Note for states that use town-level data */}
 				{(stateName === "Rhode Island" || stateName === "Vermont" || stateName === "Connecticut" || stateName === "Massachusetts") && (
 					<Typography variant="caption" color="primary.main" display="block" mt={0.5} fontSize="0.7rem" fontStyle="italic">

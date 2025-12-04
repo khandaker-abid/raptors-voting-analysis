@@ -19,14 +19,11 @@ import {
     Paper,
     Typography,
     Box,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
+    FormControlLabel,
+    Checkbox,
     Alert,
     CircularProgress,
 } from "@mui/material";
-import type { SelectChangeEvent } from "@mui/material";
 import { ExportButton } from "../components/ExportButton";
 
 interface ProbabilityCurvePoint {
@@ -58,12 +55,17 @@ const DEMOGRAPHICS = [
 ];
 
 const DEMOGRAPHIC_COLORS: Record<string, string> = {
-    "White": "#212121", // Very dark gray
-    "African American": "#424242", // Dark gray
-    "Hispanic": "#616161", // Medium dark gray
-    "Asian": "#757575", // Medium gray
-    "Native American": "#9e9e9e", // Light gray
-    "Other": "#bdbdbd", // Very light gray
+    "White": "#1976d2", // Blue
+    "African American": "#d32f2f", // Red
+    "Hispanic": "#388e3c", // Green
+    "Asian": "#f57c00", // Orange
+    "Native American": "#7b1fa2", // Purple
+    "Other": "#c2185b", // Pink
+};
+
+// Map display names to backend format
+const toBackendFormat = (demographic: string): string => {
+    return demographic.toLowerCase().replace(/ /g, '_');
 };
 
 const EIRejectedBallotsChart: React.FC<Props> = ({ stateName }) => {
@@ -108,9 +110,14 @@ const EIRejectedBallotsChart: React.FC<Props> = ({ stateName }) => {
         fetchData();
     }, [stateName]);
 
-    const handleDemographicChange = (event: SelectChangeEvent<string[]>) => {
-        const value = event.target.value;
-        setSelectedDemographics(typeof value === 'string' ? value.split(',') : value);
+    const handleDemographicToggle = (demographic: string) => {
+        setSelectedDemographics(prev => {
+            if (prev.includes(demographic)) {
+                return prev.filter(d => d !== demographic);
+            } else {
+                return [...prev, demographic];
+            }
+        });
     };
 
     // Combine data for all selected demographics
@@ -131,7 +138,8 @@ const EIRejectedBallotsChart: React.FC<Props> = ({ stateName }) => {
             const point: any = { rejectionProbability: prob };
 
             selectedDemographics.forEach(demographic => {
-                const curve = data.curves.find(c => c.demographic === demographic);
+                const backendName = toBackendFormat(demographic);
+                const curve = data.curves.find(c => c.demographic === backendName);
                 if (curve) {
                     const dataPoint = curve.data.find(d =>
                         Math.abs(d.rejectionProbability - prob) < 0.01
@@ -159,8 +167,8 @@ const EIRejectedBallotsChart: React.FC<Props> = ({ stateName }) => {
     }
 
     return (
-        <Paper sx={{ p: 3 }}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+        <Paper sx={{ p: 0.5, height: "100%", display: "flex", flexDirection: "column" }}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0 }}>
                 <Typography variant="h6" gutterBottom>
                     Ecological Inference: Ballot Rejection Probability by Demographic
                 </Typography>
@@ -179,41 +187,14 @@ const EIRejectedBallotsChart: React.FC<Props> = ({ stateName }) => {
                 />
             </Box>
 
-            <Alert severity="warning" sx={{ mb: 2 }}>
-                This chart shows the probability distribution of ballot rejection rates across different
-                demographic groups. Higher rejection probabilities indicate that ballots from voters in
-                that demographic group are more likely to be rejected. Significant disparities may
-                suggest systemic issues requiring investigation.
+            <Alert severity="info" sx={{ mb: 2 }}>
+                <strong>Ecological Inference - Ballot Rejections:</strong> This analysis examines whether ballot rejection rates differ across demographic groups. The probability curves show the distribution of ballot rejection rates across demographics. Higher rejection probabilities indicate that ballots from voters in that demographic group are more likely to be rejected, and significant disparities may suggest systemic issues requiring investigation.
+                <br /><br />
+                <strong>Analysis Method:</strong> Ecological Inference uses statistical modeling to estimate ballot rejection patterns across demographic groups. The curves show the probability distribution of rejection rates for each demographic in {stateName}. Higher peaks indicate more common rejection rates for that group.
             </Alert>
 
-            <Box sx={{ mb: 3 }}>
-                <FormControl fullWidth>
-                    <InputLabel>Select Demographics to Compare</InputLabel>
-                    <Select
-                        multiple
-                        value={selectedDemographics}
-                        onChange={handleDemographicChange}
-                        renderValue={(selected) => selected.join(", ")}
-                    >
-                        {DEMOGRAPHICS.map((demographic) => (
-                            <MenuItem key={demographic} value={demographic}>
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                    <Box
-                                        sx={{
-                                            width: 16,
-                                            height: 16,
-                                            bgcolor: DEMOGRAPHIC_COLORS[demographic],
-                                        }}
-                                    />
-                                    {demographic}
-                                </Box>
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-            </Box>
-
-            <ResponsiveContainer width="100%" height={400} id="ei-rejected-chart">
+            <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+                <ResponsiveContainer width="75%" height={450} id="ei-rejected-chart">
                 <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
@@ -242,13 +223,40 @@ const EIRejectedBallotsChart: React.FC<Props> = ({ stateName }) => {
                 </LineChart>
             </ResponsiveContainer>
 
-            <Box sx={{ mt: 2 }}>
-                <Typography variant="caption" color="text.secondary">
-                    <strong>Analysis Method:</strong> Ecological Inference uses statistical modeling
-                    to estimate ballot rejection patterns across demographic groups. The curves show the
-                    probability distribution of rejection rates for each demographic in {stateName}.
-                    Higher peaks indicate more common rejection rates for that group.
-                </Typography>
+                <Box sx={{ width: "25%", display: "flex", flexDirection: "column", gap: 0.5 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                        Select Demographics
+                    </Typography>
+                    {DEMOGRAPHICS.map((demographic) => (
+                        <FormControlLabel
+                            key={demographic}
+                            control={
+                                <Checkbox
+                                    checked={selectedDemographics.includes(demographic)}
+                                    onChange={() => handleDemographicToggle(demographic)}
+                                    sx={{
+                                        color: DEMOGRAPHIC_COLORS[demographic],
+                                        '&.Mui-checked': {
+                                            color: DEMOGRAPHIC_COLORS[demographic],
+                                        },
+                                    }}
+                                />
+                            }
+                            label={
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                    <Box
+                                        sx={{
+                                            width: 16,
+                                            height: 16,
+                                            bgcolor: DEMOGRAPHIC_COLORS[demographic],
+                                        }}
+                                    />
+                                    <Typography variant="body2">{demographic}</Typography>
+                                </Box>
+                            }
+                        />
+                    ))}
+                </Box>
             </Box>
         </Paper>
     );
