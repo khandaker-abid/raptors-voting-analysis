@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
 	Typography,
 	Box,
@@ -32,21 +32,14 @@ import ActiveVoterTab from "./ActiveVoterTab";
 import StateVoterRegistrationTable from "../tables/StateVoterRegistrationTable";
 import VoterRegistrationChloroplethMap from "../components/VoterRegistrationChloroplethMap";
 
-// NEW (GUI-8/9/16/18)
+// NEW (GUI-8/9/16/18) - Note: pollbook/mail fetches handled by Tab components
 import {
-	fetchPollbookDeletions,
-	fetchMailRejections,
 	fetchRegistrationTrends,
 	fetchBlockBubbles,
 	fetchDropboxBubbles,
 	fetchStateRegisteredVoters,
 	fetchGinglesData,
 } from "../data/api";
-import PollbookDeletionsBarChart from "../charts/PollbookDeletionsBarChart";
-import PollbookDeletionsTable from "../tables/PollbookDeletionsTable";
-import MailRejectionsBarChart from "../charts/MailRejectionsBarChart";
-import MailRejectionsTable from "../tables/MailRejectionsTable";
-import PercentChoropleth from "../components/PercentChoropleth";
 import VoterRegistrationTrendChart from "../charts/VoterRegistrationTrendChart";
 import VoterRegistrationBarChart from "../charts/VoterRegistrationBarChart";
 import VoterRegistrationBubbleOverlay from "../components/VoterRegistrationBubbleOverlay";
@@ -57,11 +50,9 @@ import DropboxBubbleChart from "../charts/DropboxBubbleChart";
 import GinglesChart from "../charts/GinglesChart";
 import EIEquipmentChart from "../charts/EIEquipmentChart";
 import EIRejectedBallotsChart from "../charts/EIRejectedBallotsChart";
-// Types
+// Types - Note: PollbookDeletionRow/MailRejectionRow used by Tab components
 import type {
 	ActiveVotersRow,
-	PollbookDeletionRow,
-	MailRejectionRow,
 	RegistrationTrendPayload,
 	BlockBubblePayload,
 } from "../data/types";
@@ -95,24 +86,16 @@ function TabPanel(props: TabPanelProps) {
 const StateDetailPage: React.FC = () => {
 	const { stateName } = useParams<{ stateName: string }>();
 	const navigate = useNavigate();
+	const [searchParams, setSearchParams] = useSearchParams();
 
 	// List of all three detailed states
 	const DETAILED_STATES = ["Arkansas", "Maryland", "Rhode Island"];
 
-	// Get initial tab from URL search params
-	const [searchParams, setSearchParams] = React.useState(() => {
-		if (typeof window !== 'undefined') {
-			return new URLSearchParams(window.location.search);
-		}
-		return new URLSearchParams();
-	});
-
-	const initialTab = React.useMemo(() => {
+	// Get tab value from URL search params - reacts to URL changes
+	const tabValue = useMemo(() => {
 		const tabParam = searchParams.get('tab');
 		return tabParam ? parseInt(tabParam, 10) : 0;
-	}, []);
-
-	const [tabValue, setTabValue] = React.useState(initialTab);
+	}, [searchParams]);
 
 	// Decode the state name from URL
 	const decodedStateName = decodeURIComponent(stateName || "");
@@ -156,28 +139,15 @@ const StateDetailPage: React.FC = () => {
 	const [activeVotersErr, setActiveVotersErr] = React.useState<string | null>(null);
 
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-		setTabValue(newValue);
-		// Update URL with new tab value
-		const newSearchParams = new URLSearchParams(window.location.search);
-		newSearchParams.set('tab', newValue.toString());
-		setSearchParams(newSearchParams);
-		// Update browser URL without triggering navigation
-		window.history.replaceState(null, '', `?${newSearchParams.toString()}`);
+		// Update URL with new tab value - tabValue is derived from searchParams
+		setSearchParams({ tab: newValue.toString() });
 	};
 
 	// -------------------------------
 	// GUI-8/9/16/18: data state + fetches
 	// Use `undefined` = loading, `[]` = loaded but empty/error, plus error strings for alerts.
+	// Note: pollbook/mail data now fetched directly by their Tab components
 	// -------------------------------
-	const [pollbookRows, setPollbookRows] = React.useState<
-		PollbookDeletionRow[] | undefined
-	>(undefined);
-	const [pollbookErr, setPollbookErr] = React.useState<string | null>(null);
-
-	const [mailRows, setMailRows] = React.useState<MailRejectionRow[] | undefined>(
-		undefined
-	);
-	const [mailErr, setMailErr] = React.useState<string | null>(null);
 
 	const [regTrends, setRegTrends] =
 		React.useState<RegistrationTrendPayload | null>(null);
@@ -207,36 +177,15 @@ const StateDetailPage: React.FC = () => {
 		// reset to loading on state change
 		setActiveVotersData(undefined);
 		setActiveVotersErr(null);
-		setPollbookRows(undefined);
-		setMailRows(undefined);
-		setPollbookErr(null);
-		setMailErr(null);
+		// Note: pollbook/mail data reset handled by their respective Tab components
 		setRegTrends(null);
 		setBlockBubbles(null);
 		setShowBubbles(false);
-			setDropboxBubbleData([]);
-			setDropboxBubbleLoading(true);
-			setVoterRegistrationData([]);		let alive = true;
+		setDropboxBubbleData([]);
+		setDropboxBubbleLoading(true);
+		setVoterRegistrationData([]); let alive = true;
 		(async () => {
-			try {
-				const rows = await fetchPollbookDeletions(decodedStateName);
-				if (alive) setPollbookRows(rows);
-			} catch (e: any) {
-				if (alive) {
-					setPollbookErr(e?.message || "Failed to fetch pollbook deletions.");
-					setPollbookRows([]); // stop infinite loading
-				}
-			}
-
-			try {
-				const rows = await fetchMailRejections(decodedStateName);
-				if (alive) setMailRows(rows);
-			} catch (e: any) {
-				if (alive) {
-					setMailErr(e?.message || "Failed to fetch mail rejections.");
-					setMailRows([]); // stop infinite loading
-				}
-			}
+			// Note: pollbook/mail data fetched by their respective Tab components
 
 			try {
 				const trends = await fetchRegistrationTrends(decodedStateName);
@@ -260,7 +209,7 @@ const StateDetailPage: React.FC = () => {
 						setDropboxBubbleData(dropboxData);
 						setDropboxBubbleLoading(false);
 					}
-				} catch (e) {
+				} catch {
 					if (alive) {
 						setDropboxBubbleData([]);
 						setDropboxBubbleLoading(false);
@@ -275,7 +224,7 @@ const StateDetailPage: React.FC = () => {
 				try {
 					const regData = await fetchStateRegisteredVoters(decodedStateName);
 					if (alive) setVoterRegistrationData(regData);
-				} catch (e) {
+				} catch {
 					if (alive) setVoterRegistrationData([]);
 				}
 			}
@@ -290,9 +239,10 @@ const StateDetailPage: React.FC = () => {
 						setGinglesLoading(false);
 						setGinglesError(null);
 					}
-				} catch (e: any) {
+				} catch (err: unknown) {
 					if (alive) {
-						setGinglesError(e?.message || "Failed to fetch Gingles data.");
+						const message = err instanceof Error ? err.message : "Failed to fetch Gingles data.";
+						setGinglesError(message);
 						setGinglesData(null);
 						setGinglesLoading(false);
 					}
@@ -348,10 +298,32 @@ const StateDetailPage: React.FC = () => {
 			{/* Organized Content with Category Groups */}
 			<Paper sx={{ width: "100%", mb: 0, height: "100%" }}>
 				<Box sx={{ borderBottom: 1, borderColor: "divider", display: "flex", alignItems: "center", justifyContent: "space-between", p: 0.75 }}>
-					<Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: "1.2rem" }}>
-						{decodedStateName}
-					</Typography>
-					<Box sx={{ pr: 1, display: "flex", alignItems: "center", gap: 1 }}>
+					{/* Left side: State selector dropdown */}
+					<FormControl size="small" sx={{ minWidth: 160, '& .MuiInputBase-root': { height: 32 } }}>
+						<Select
+							value={decodedStateName}
+							onChange={(e) => {
+								const newState = e.target.value;
+								// Check if current tab is Maryland-only (EI Equipment/Rejected, Gingles)
+								// If switching to non-Maryland state, redirect to Overview tab
+								if (newState !== "Maryland" && (tabValue === IDX_EI_EQUIPMENT || tabValue === IDX_EI_REJECTED || tabValue === IDX_GINGLES)) {
+									navigate(`/state/${encodeURIComponent(newState)}?tab=0`);
+								} else {
+									navigate(`/state/${encodeURIComponent(newState)}?tab=${tabValue}`);
+								}
+							}}
+							sx={{ fontWeight: 700, fontSize: "0.95rem" }}
+						>
+							{DETAILED_STATES.map((state) => (
+								<MenuItem key={state} value={state} sx={{ fontSize: "0.95rem" }}>
+									{state}
+								</MenuItem>
+							))}
+						</Select>
+					</FormControl>
+
+					{/* Right side: Home button, Tab dropdown, Reset button */}
+					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 						<Button
 							variant="outlined"
 							startIcon={<ArrowBackIcon fontSize="small" />}
@@ -375,19 +347,6 @@ const StateDetailPage: React.FC = () => {
 								{tabOptions.map((tab) => (
 									<MenuItem key={tab.index} value={tab.index} sx={{ fontSize: "0.85rem" }}>
 										{tab.label}
-									</MenuItem>
-								))}
-							</Select>
-						</FormControl>
-						<FormControl size="small" sx={{ minWidth: 140, '& .MuiInputBase-root': { height: 32 } }}>
-							<Select
-								value={decodedStateName}
-								onChange={(e) => navigate(`/state/${encodeURIComponent(e.target.value)}?tab=0`)}
-								sx={{ fontWeight: 700, fontSize: "0.85rem" }}
-							>
-								{DETAILED_STATES.map((state) => (
-									<MenuItem key={state} value={state} sx={{ fontSize: "0.85rem" }}>
-										{state}
 									</MenuItem>
 								))}
 							</Select>
@@ -562,28 +521,28 @@ const StateDetailPage: React.FC = () => {
 					</Box>
 				</TabPanel>
 
-			{/* Provisional Ballots Tab */}
-			{isDetail && (
-				<TabPanel value={tabValue} index={IDX_PROVISIONAL}>
-					<ProvisionalBallotTab stateName={decodedStateName} />
-				</TabPanel>
-			)}
+				{/* Provisional Ballots Tab */}
+				{isDetail && (
+					<TabPanel value={tabValue} index={IDX_PROVISIONAL}>
+						<ProvisionalBallotTab stateName={decodedStateName} />
+					</TabPanel>
+				)}
 
-			{/* Active Voters Tab */}
-			{isDetail && (
-				<TabPanel value={tabValue} index={IDX_ACTIVE}>
-					<ActiveVoterTab stateName={decodedStateName} />
-				</TabPanel>
-			)}
+				{/* Active Voters Tab */}
+				{isDetail && (
+					<TabPanel value={tabValue} index={IDX_ACTIVE}>
+						<ActiveVoterTab stateName={decodedStateName} />
+					</TabPanel>
+				)}
 
-			{/* Pollbook Deletion Tab (GUI-8) */}
-			{isDetail && (
-				<TabPanel value={tabValue} index={IDX_POLLBOOK}>
-					<PollbookDeletionsTab stateName={decodedStateName} />
-				</TabPanel>
-			)}
+				{/* Pollbook Deletion Tab (GUI-8) */}
+				{isDetail && (
+					<TabPanel value={tabValue} index={IDX_POLLBOOK}>
+						<PollbookDeletionsTab stateName={decodedStateName} />
+					</TabPanel>
+				)}
 
-			{/* Pollbook Deletions Tab (GUI-8) - Matching Active Voters layout 
+				{/* Pollbook Deletions Tab (GUI-8) - Matching Active Voters layout 
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_POLLBOOK}>
 						{pollbookRows === undefined ? (
@@ -629,7 +588,6 @@ const StateDetailPage: React.FC = () => {
 										}}
 									>
 										<PollbookDeletionsBarChart
-											stateName={decodedStateName}
 											data={pollbookRows}
 										/>
 									</Box>
@@ -656,12 +614,12 @@ const StateDetailPage: React.FC = () => {
 					</TabPanel>
 				)}
 				*/}
-			{/* Mail Rejections Tab (GUI-9) */}
-			{isDetail && (
-				<TabPanel value={tabValue} index={IDX_MAIL}>
-					<MailRejectionsTab stateName={decodedStateName} />
-				</TabPanel>
-			)}
+				{/* Mail Rejections Tab (GUI-9) */}
+				{isDetail && (
+					<TabPanel value={tabValue} index={IDX_MAIL}>
+						<MailRejectionsTab stateName={decodedStateName} />
+					</TabPanel>
+				)}
 
 				{/* Mail Rejections Tab (GUI-9) - Matching Active Voters layout 
 				{isDetail && (
@@ -899,7 +857,7 @@ const StateDetailPage: React.FC = () => {
 				{/* NEW: EI Rejected Ballots Tab - GUI-29 (Maryland only) */}
 				{isPreclearance && IDX_EI_REJECTED >= 0 && (
 					<TabPanel value={tabValue} index={IDX_EI_REJECTED}>
-							<EIRejectedBallotsChart stateName={decodedStateName} />
+						<EIRejectedBallotsChart stateName={decodedStateName} />
 					</TabPanel>
 				)}
 

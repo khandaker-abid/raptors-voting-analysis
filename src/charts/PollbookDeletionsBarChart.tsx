@@ -14,7 +14,7 @@ import {
 import type { PollbookDeletionRow } from "../data/types";
 import theme from "../theme";
 
-type Props = { stateName: string; data: PollbookDeletionRow[] };
+type Props = { data: PollbookDeletionRow[] };
 
 const LABELS: Record<string, string> = {
     A12b_Death: "A12b Death",
@@ -26,7 +26,7 @@ const LABELS: Record<string, string> = {
     A12h_Other: "A12h Other",
 };
 
-export default function PollbookDeletionsBarChart({ stateName, data }: Props) {
+export default function PollbookDeletionsBarChart({ data }: Props) {
     const chartData = useMemo(() => {
         const sum = (key: keyof PollbookDeletionRow) =>
             data.reduce((acc, r) => {

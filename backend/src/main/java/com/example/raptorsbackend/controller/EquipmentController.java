@@ -492,22 +492,27 @@ public class EquipmentController {
      */
     @GetMapping("/age/all-states")
     public List<Map<String, Object>> getAllStatesEquipmentAge() {
-        List<Map<String, Object>> allEquipment = (List<Map<String, Object>>) (List<?>) mongoTemplate.findAll(Map.class,
-                "votingEquipmentData");
+        // Query votingEquipmentDetails which has actual age data
+        Query query = new Query();
+        query.addCriteria(Criteria.where("recordType").is("equipment_detail")
+                .and("age").exists(true));
+        List<Map> allEquipment = mongoTemplate.find(query, Map.class, "votingEquipmentDetails");
 
+        // Aggregate ages by state
         Map<String, List<Integer>> stateAges = new HashMap<>();
 
-        for (Map<String, Object> doc : allEquipment) {
-            String state = (String) doc.get("state");
-            List<Map<String, Object>> equipments = (List<Map<String, Object>>) doc.getOrDefault("equipments",
-                    new ArrayList<>());
+        for (Map doc : allEquipment) {
+            String stateAbbr = (String) doc.get("stateAbbr");
+            if (stateAbbr == null)
+                continue;
 
-            for (Map<String, Object> equip : equipments) {
-                Object ageObj = equip.get("age");
-                if (ageObj != null) {
-                    int age = ((Number) ageObj).intValue();
-                    stateAges.computeIfAbsent(state, k -> new ArrayList<>()).add(age);
-                }
+            // Convert abbreviation to full state name
+            String stateName = getStateName(stateAbbr);
+
+            Object ageObj = doc.get("age");
+            if (ageObj != null) {
+                int age = ((Number) ageObj).intValue();
+                stateAges.computeIfAbsent(stateName, k -> new ArrayList<>()).add(age);
             }
         }
 
@@ -576,25 +581,59 @@ public class EquipmentController {
      */
     @GetMapping("/all-states")
     public List<Map<String, Object>> getAllStatesEquipment() {
+        // Query votingEquipmentDetails which has the actual equipment records from
+        // VerifiedVoting
         Query query = new Query();
-        query.addCriteria(Criteria.where("year").is(2024));
-        List<Map> allEquipment = mongoTemplate.find(query, Map.class, "votingEquipmentData");
+        query.addCriteria(Criteria.where("recordType").is("equipment_detail"));
+        List<Map> allEquipment = mongoTemplate.find(query, Map.class, "votingEquipmentDetails");
 
-        // Process each state
-        return allEquipment.stream().map(doc -> {
-            Map<String, Object> row = new HashMap<>();
-            String state = (String) doc.get("state");
-            row.put("state", state);
+        // Aggregate equipment by state
+        Map<String, Map<String, Integer>> stateEquipmentCounts = new HashMap<>();
 
-            // Get equipment summary
-            Map equipmentSummary = (Map) doc.getOrDefault("equipmentSummary", new HashMap<>());
-            row.put("dre_no_vvpat", equipmentSummary.getOrDefault("dreNoVVPAT", 0));
-            row.put("dre_with_vvpat", equipmentSummary.getOrDefault("dreWithVVPAT", 0));
-            row.put("ballot_marking", equipmentSummary.getOrDefault("ballotMarkingDevice", 0));
-            row.put("scanner", equipmentSummary.getOrDefault("scanner", 0));
+        for (Map doc : allEquipment) {
+            String stateAbbr = (String) doc.get("stateAbbr");
+            if (stateAbbr == null)
+                continue;
 
-            return row;
-        }).filter(row -> row.get("state") != null)
+            // Convert abbreviation to full state name for display
+            String stateFull = getStateName(stateAbbr);
+
+            stateEquipmentCounts.putIfAbsent(stateFull, new HashMap<>());
+            Map<String, Integer> counts = stateEquipmentCounts.get(stateFull);
+
+            // Get equipment type from the equipmentType field
+            String equipmentType = (String) doc.get("equipmentType");
+            if (equipmentType == null)
+                equipmentType = "";
+
+            String type = equipmentType.toUpperCase();
+
+            // Categorize equipment
+            if (type.contains("DRE") && !type.contains("VVPAT") && !type.contains("PAPER")) {
+                counts.put("dreNoVVPAT", counts.getOrDefault("dreNoVVPAT", 0) + 1);
+            } else if (type.contains("DRE") && (type.contains("VVPAT") || type.contains("PAPER"))) {
+                counts.put("dreWithVVPAT", counts.getOrDefault("dreWithVVPAT", 0) + 1);
+            } else if (type.contains("BALLOT MARKING") || type.contains("BMD")) {
+                counts.put("ballotMarkingDevice", counts.getOrDefault("ballotMarkingDevice", 0) + 1);
+            } else if (type.contains("SCANNER") || type.contains("OPTICAL")) {
+                counts.put("scanner", counts.getOrDefault("scanner", 0) + 1);
+            }
+            // Skip poll books and other non-voting equipment
+        }
+
+        // Convert to response format
+        return stateEquipmentCounts.entrySet().stream()
+                .map(entry -> {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("state", entry.getKey());
+                    Map<String, Integer> counts = entry.getValue();
+                    row.put("dre_no_vvpat", counts.getOrDefault("dreNoVVPAT", 0));
+                    row.put("dre_with_vvpat", counts.getOrDefault("dreWithVVPAT", 0));
+                    row.put("ballot_marking", counts.getOrDefault("ballotMarkingDevice", 0));
+                    row.put("scanner", counts.getOrDefault("scanner", 0));
+                    return row;
+                })
+                .filter(row -> row.get("state") != null)
                 .sorted((a, b) -> ((String) a.get("state")).compareTo((String) b.get("state")))
                 .toList();
     }
@@ -1316,10 +1355,244 @@ public class EquipmentController {
     }
 
     /**
+     * GUI-26: Get equipment quality vs rejected ballots with regression lines
+     * GET /api/equipment/vs-rejected-with-regression/{state}
+     * Returns county-level data plus calculated regression coefficients for each
+     * party
+     */
+    @GetMapping("/vs-rejected-with-regression/{state}")
+    public Map<String, Object> getEquipmentVsRejectedWithRegression(@PathVariable String state) {
+        // Get the base data points
+        List<Map<String, Object>> dataPoints = getEquipmentVsRejected(state);
+
+        // Separate data by party
+        List<double[]> republicanPoints = new ArrayList<>();
+        List<double[]> democraticPoints = new ArrayList<>();
+
+        for (Map<String, Object> point : dataPoints) {
+            double x = ((Number) point.get("equipmentQuality")).doubleValue();
+            double y = ((Number) point.get("rejectedPct")).doubleValue();
+            String party = (String) point.get("party");
+
+            if ("R".equals(party)) {
+                republicanPoints.add(new double[] { x, y });
+            } else {
+                democraticPoints.add(new double[] { x, y });
+            }
+        }
+
+        // Calculate power regression (y = a * x^b) for each party
+        // Using log transformation: log(y) = log(a) + b*log(x)
+        Map<String, Object> republicanRegression = calculatePowerRegression(republicanPoints, "R");
+        Map<String, Object> democraticRegression = calculatePowerRegression(democraticPoints, "D");
+
+        // Build response
+        Map<String, Object> response = new HashMap<>();
+        response.put("dataPoints", dataPoints);
+
+        List<Map<String, Object>> regressionLines = new ArrayList<>();
+        if (republicanRegression != null) {
+            regressionLines.add(republicanRegression);
+        }
+        if (democraticRegression != null) {
+            regressionLines.add(democraticRegression);
+        }
+        response.put("regressionLines", regressionLines);
+
+        return response;
+    }
+
+    /**
+     * Calculate power regression coefficients (y = a * x^b)
+     * Using log-linear transformation for non-linear regression
+     */
+    private Map<String, Object> calculatePowerRegression(List<double[]> points, String party) {
+        if (points.size() < 3) {
+            return null; // Not enough points for regression
+        }
+
+        // Filter out zero/negative values for log transformation
+        List<double[]> validPoints = new ArrayList<>();
+        for (double[] p : points) {
+            if (p[0] > 0 && p[1] > 0) {
+                validPoints.add(p);
+            }
+        }
+
+        if (validPoints.size() < 3) {
+            // Fall back to linear regression if not enough valid points for power
+            // regression
+            return calculateLinearRegression(points, party);
+        }
+
+        // Transform to log space
+        int n = validPoints.size();
+        double sumLogX = 0, sumLogY = 0, sumLogXY = 0, sumLogX2 = 0;
+
+        for (double[] p : validPoints) {
+            double logX = Math.log(p[0]);
+            double logY = Math.log(p[1]);
+            sumLogX += logX;
+            sumLogY += logY;
+            sumLogXY += logX * logY;
+            sumLogX2 += logX * logX;
+        }
+
+        // Linear regression in log space: log(y) = log(a) + b*log(x)
+        double b = (n * sumLogXY - sumLogX * sumLogY) / (n * sumLogX2 - sumLogX * sumLogX);
+        double logA = (sumLogY - b * sumLogX) / n;
+        double a = Math.exp(logA);
+
+        // Calculate R-squared
+        double meanLogY = sumLogY / n;
+        double ssTot = 0, ssRes = 0;
+
+        for (double[] p : validPoints) {
+            double logX = Math.log(p[0]);
+            double logY = Math.log(p[1]);
+            double predictedLogY = logA + b * logX;
+            ssTot += (logY - meanLogY) * (logY - meanLogY);
+            ssRes += (logY - predictedLogY) * (logY - predictedLogY);
+        }
+
+        double r2 = (ssTot > 0) ? 1 - (ssRes / ssTot) : 0;
+
+        // Build regression result
+        Map<String, Object> result = new HashMap<>();
+        result.put("party", party);
+        result.put("type", "power");
+
+        Map<String, Double> coefficients = new HashMap<>();
+        coefficients.put("a", Math.round(a * 10000) / 10000.0);
+        coefficients.put("b", Math.round(b * 10000) / 10000.0);
+        result.put("coefficients", coefficients);
+
+        result.put("r2", Math.round(r2 * 1000) / 1000.0);
+
+        return result;
+    }
+
+    /**
+     * Calculate linear regression as fallback (y = mx + c)
+     */
+    private Map<String, Object> calculateLinearRegression(List<double[]> points, String party) {
+        if (points.size() < 2) {
+            return null;
+        }
+
+        int n = points.size();
+        double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+
+        for (double[] p : points) {
+            sumX += p[0];
+            sumY += p[1];
+            sumXY += p[0] * p[1];
+            sumX2 += p[0] * p[0];
+        }
+
+        double denominator = n * sumX2 - sumX * sumX;
+        if (Math.abs(denominator) < 0.0001) {
+            return null; // Avoid division by zero
+        }
+
+        double m = (n * sumXY - sumX * sumY) / denominator;
+        double c = (sumY - m * sumX) / n;
+
+        // Calculate R-squared
+        double meanY = sumY / n;
+        double ssTot = 0, ssRes = 0;
+
+        for (double[] p : points) {
+            double predictedY = m * p[0] + c;
+            ssTot += (p[1] - meanY) * (p[1] - meanY);
+            ssRes += (p[1] - predictedY) * (p[1] - predictedY);
+        }
+
+        double r2 = (ssTot > 0) ? 1 - (ssRes / ssTot) : 0;
+
+        // Build regression result - convert to power form for consistency
+        // Linear y = mx + c can be approximated as y = a * x^1 where a ≈ m (when c is
+        // small)
+        Map<String, Object> result = new HashMap<>();
+        result.put("party", party);
+        result.put("type", "linear");
+
+        Map<String, Double> coefficients = new HashMap<>();
+        coefficients.put("a", Math.round(c * 10000) / 10000.0); // intercept
+        coefficients.put("b", Math.round(m * 10000) / 10000.0); // slope
+        result.put("coefficients", coefficients);
+
+        result.put("r2", Math.round(Math.max(0, r2) * 1000) / 1000.0);
+
+        return result;
+    }
+
+    /**
      * Health check
      */
     @GetMapping("/health")
     public Map<String, String> health() {
         return Map.of("status", "ok", "service", "equipment-controller");
+    }
+
+    /**
+     * Convert state abbreviation to full state name
+     */
+    private String getStateName(String abbr) {
+        if (abbr == null)
+            return null;
+        Map<String, String> abbrToName = new HashMap<>();
+        abbrToName.put("AL", "Alabama");
+        abbrToName.put("AK", "Alaska");
+        abbrToName.put("AZ", "Arizona");
+        abbrToName.put("AR", "Arkansas");
+        abbrToName.put("CA", "California");
+        abbrToName.put("CO", "Colorado");
+        abbrToName.put("CT", "Connecticut");
+        abbrToName.put("DE", "Delaware");
+        abbrToName.put("FL", "Florida");
+        abbrToName.put("GA", "Georgia");
+        abbrToName.put("HI", "Hawaii");
+        abbrToName.put("ID", "Idaho");
+        abbrToName.put("IL", "Illinois");
+        abbrToName.put("IN", "Indiana");
+        abbrToName.put("IA", "Iowa");
+        abbrToName.put("KS", "Kansas");
+        abbrToName.put("KY", "Kentucky");
+        abbrToName.put("LA", "Louisiana");
+        abbrToName.put("ME", "Maine");
+        abbrToName.put("MD", "Maryland");
+        abbrToName.put("MA", "Massachusetts");
+        abbrToName.put("MI", "Michigan");
+        abbrToName.put("MN", "Minnesota");
+        abbrToName.put("MS", "Mississippi");
+        abbrToName.put("MO", "Missouri");
+        abbrToName.put("MT", "Montana");
+        abbrToName.put("NE", "Nebraska");
+        abbrToName.put("NV", "Nevada");
+        abbrToName.put("NH", "New Hampshire");
+        abbrToName.put("NJ", "New Jersey");
+        abbrToName.put("NM", "New Mexico");
+        abbrToName.put("NY", "New York");
+        abbrToName.put("NC", "North Carolina");
+        abbrToName.put("ND", "North Dakota");
+        abbrToName.put("OH", "Ohio");
+        abbrToName.put("OK", "Oklahoma");
+        abbrToName.put("OR", "Oregon");
+        abbrToName.put("PA", "Pennsylvania");
+        abbrToName.put("RI", "Rhode Island");
+        abbrToName.put("SC", "South Carolina");
+        abbrToName.put("SD", "South Dakota");
+        abbrToName.put("TN", "Tennessee");
+        abbrToName.put("TX", "Texas");
+        abbrToName.put("UT", "Utah");
+        abbrToName.put("VT", "Vermont");
+        abbrToName.put("VA", "Virginia");
+        abbrToName.put("WA", "Washington");
+        abbrToName.put("WV", "West Virginia");
+        abbrToName.put("WI", "Wisconsin");
+        abbrToName.put("WY", "Wyoming");
+        abbrToName.put("DC", "District of Columbia");
+        return abbrToName.getOrDefault(abbr.toUpperCase(), abbr);
     }
 }

@@ -436,3 +436,36 @@ export async function fetchEIRejectedData(state: string, demographic?: string): 
 
     return tryUrls(urls, `ei-rejected (${state})`);
 }
+
+/**
+ * GUI-11: Fetch equipment age data for all states
+ * Returns average equipment age for choropleth map on splash page
+ */
+export async function fetchEquipmentAgeAllStates(): Promise<any[]> {
+    const urls = [
+        `${base}/equipment/age/all-states`,
+    ];
+
+    return tryUrls(urls, `equipment-age-all-states`);
+}
+
+/**
+ * GUI-25 & GUI-26: Fetch equipment quality vs rejected ballots with regression lines
+ * Returns county-level data points plus calculated regression coefficients for each party
+ */
+export async function fetchEquipmentVsRejectedWithRegression(state: string): Promise<{
+    dataPoints: any[];
+    regressionLines: Array<{
+        party: "R" | "D";
+        coefficients: { a: number; b: number };
+        r2: number;
+        type: "power" | "linear";
+    }>;
+}> {
+    const s = encodeURIComponent(state);
+    const urls = [
+        `${base}/equipment/vs-rejected-with-regression/${s}`,
+    ];
+
+    return tryUrls(urls, `equipment-vs-rejected-regression (${state})`);
+}

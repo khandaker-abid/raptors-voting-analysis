@@ -216,7 +216,7 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
                     sx={{
                         position: "absolute",
                         top: 16,
-                        right: 16,
+                        right: 180,
                         zIndex: 1000,
                     }}
                 >

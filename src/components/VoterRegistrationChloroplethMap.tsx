@@ -398,8 +398,6 @@ const VoterRegistrationChloroplethMap: React.FC<
 
 	const maxValue = Math.max(...data.map((d) => d.registeredVoterCount));
 	const minValue = Math.min(...data.map((d) => d.registeredVoterCount));
-	const totalVotes = data.reduce((sum, d) => sum + d.registeredVoterCount, 0);
-	const avgValue = totalVotes / data.length;
 
 	// Check if all data is zero (no data reported)
 	const allZero = data.every((d) => d.registeredVoterCount === 0);

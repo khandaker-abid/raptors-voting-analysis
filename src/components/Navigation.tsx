@@ -8,7 +8,6 @@ import {
 } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
 import theme from "../theme";
-import ResetButton from "./ResetButton";
 
 const Navigation: React.FC = () => {
 	const location = useLocation();

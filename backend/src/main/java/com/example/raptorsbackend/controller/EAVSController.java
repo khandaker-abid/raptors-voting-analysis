@@ -194,20 +194,25 @@ public class EAVSController {
 
         return results.stream().map(doc -> {
             Map<String, Object> row = new HashMap<>();
+            // Use 'county' field name to match frontend expectations
+            row.put("county", doc.get("jurisdictionName"));
             row.put("geographicUnit", doc.get("jurisdictionName"));
+
             // Total provisional ballots (E1a)
+            row.put("E1a", doc.getOrDefault("E1a", 0));
             row.put("totalProvisionalBallots", doc.getOrDefault("E1a", 0));
 
-            // Reasons for provisional ballots (E2a-E2i)
-            row.put("E2a_NotOnList", doc.getOrDefault("E2a", 0));
-            row.put("E2b_LackedID", doc.getOrDefault("E2b", 0));
-            row.put("E2c_OfficialChallenged", doc.getOrDefault("E2c", 0));
-            row.put("E2d_PersonChallenged", doc.getOrDefault("E2d", 0));
-            row.put("E2e_NotResident", doc.getOrDefault("E2e", 0));
-            row.put("E2f_RegNotUpdated", doc.getOrDefault("E2f", 0));
-            row.put("E2g_NoMailBallot", doc.getOrDefault("E2g", 0));
-            row.put("E2h_ExtendedHours", doc.getOrDefault("E2h", 0));
-            row.put("E2i_UsedSDR", doc.getOrDefault("E2i", 0));
+            // Reasons for provisional ballots (E2a-E2i) - use simple field names for chart
+            // compatibility
+            row.put("E2a", doc.getOrDefault("E2a", 0));
+            row.put("E2b", doc.getOrDefault("E2b", 0));
+            row.put("E2c", doc.getOrDefault("E2c", 0));
+            row.put("E2d", doc.getOrDefault("E2d", 0));
+            row.put("E2e", doc.getOrDefault("E2e", 0));
+            row.put("E2f", doc.getOrDefault("E2f", 0));
+            row.put("E2g", doc.getOrDefault("E2g", 0));
+            row.put("E2h", doc.getOrDefault("E2h", 0));
+            row.put("E2i", doc.getOrDefault("E2i", 0));
 
             return row;
         }).toList();

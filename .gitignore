@@ -131,3 +131,8 @@ backend/.settings/
 *.swo
 *~
 nohup.out
+
+temp/
+
+# Mermaid diagrams
+mermaid/

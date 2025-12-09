@@ -5,7 +5,7 @@ export interface PartyComparisonData {
     democraticData: string;
 }
 
-const data: PartyComparisonData[] =  [
+const data: PartyComparisonData[] = [
     {
         "id": 0,
         "metric": "Felony Voting Rights",
@@ -32,10 +32,6 @@ const data: PartyComparisonData[] =  [
     }
 ]
 
-export function getPartyComparisonData() {
-    try {
-        return data;
-    } catch (error) {
-        console.log(error);
-    }
+export function getPartyComparisonData(): PartyComparisonData[] {
+    return data;
 }

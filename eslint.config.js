@@ -19,5 +19,14 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Allow unused variables that start with underscore (common pattern for intentionally unused params)
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      }],
+      // Downgrade no-explicit-any to warning - many uses are intentional for external data (GeoJSON, API responses)
+      '@typescript-eslint/no-explicit-any': 'warn',
+    },
   },
 ])

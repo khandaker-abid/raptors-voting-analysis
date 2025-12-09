@@ -27,7 +27,6 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 		const fetchData = async () => {
 			try {
 				const response = await fetchStateEquipmentDetails(stateName);
-				console.log(`Equipment data for ${stateName}:`, response);
 				setData(response || []);
 			} catch (err) {
 				console.error(`Failed to fetch equipment data for ${stateName}:`, err);

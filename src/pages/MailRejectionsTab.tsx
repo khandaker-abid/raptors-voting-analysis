@@ -25,7 +25,7 @@ const MailRejectionsTab = ({ stateName }: MailRejectionsTabProps) => {
             try {
                 const rows = await fetchMailRejections(stateName);
                 if (alive) setData(rows);
-            } catch (e: any) {
+            } catch {
                 if (alive) {
                     setData([]); // stop loading spinner
                 }
@@ -38,9 +38,9 @@ const MailRejectionsTab = ({ stateName }: MailRejectionsTabProps) => {
     }, [stateName]);
 
     return (
-        <Box sx={{ 
-            p: 0, 
-            height: "calc(100vh - 60px)", 
+        <Box sx={{
+            p: 0,
+            height: "calc(100vh - 60px)",
             display: "grid",
             gridTemplateColumns: "40% 60%",
             gridTemplateRows: "1fr 1fr",

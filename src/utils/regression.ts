@@ -38,14 +38,12 @@ export function calculateLinearRegression(
     let sumY = 0;
     let sumXY = 0;
     let sumX2 = 0;
-    let sumY2 = 0;
 
     for (const point of points) {
         sumX += point.x;
         sumY += point.y;
         sumXY += point.x * point.y;
         sumX2 += point.x * point.x;
-        sumY2 += point.y * point.y;
     }
 
     // Calculate slope (m) and intercept (b)

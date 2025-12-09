@@ -172,26 +172,26 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 					sx={{ minWidth: 180 }}
 				/>
 			</Box>
-			
+
 			{/* These two lines below are the key to getting the table to stay 
                 in its grid spot and not increase in width, causing the lower 
                 few table cells to be hidden from view */}
 			<TableContainer sx={{ mb: 0, overflowX: "auto", overflowY: "hidden" }}>
 				<Table size="small" sx={{ width: "max-content", minWidth: "100%" }}>
 					<TableHead>
-					<TableRow>
-						<TableCell
-							sx={{
-								fontWeight: "bold",
-								backgroundColor: "#616161",
-								color: "white",
-								py: 0.85,
-								cursor: "pointer",
-							}}>
-							<TableSortLabel
-								active={sortColumn === 'county'}
-								direction={sortColumn === 'county' ? sortOrder : 'asc'}
-								onClick={() => handleSort('county')}
+						<TableRow>
+							<TableCell
+								sx={{
+									fontWeight: "bold",
+									backgroundColor: "#616161",
+									color: "white",
+									py: 0.85,
+									cursor: "pointer",
+								}}>
+								<TableSortLabel
+									active={sortColumn === 'county'}
+									direction={sortColumn === 'county' ? sortOrder : 'asc'}
+									onClick={() => handleSort('county')}
 									sx={{
 										color: 'white !important',
 										'&:hover': { color: 'white !important' },
@@ -212,21 +212,21 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 								"E2g",
 								"E2h",
 								"E2i",
-					].map((cat) => (
-							<TableCell
-								key={cat}
-								align="right"
-								sx={{
-									fontWeight: "bold",
-									backgroundColor: "#616161",
-									color: "white",
-									py: 0.85,
-									cursor: "pointer",
-								}}>
-								<TableSortLabel
-									active={sortColumn === cat}
-									direction={sortColumn === cat ? sortOrder : 'asc'}
-									onClick={() => handleSort(cat as SortableColumn)}
+							].map((cat) => (
+								<TableCell
+									key={cat}
+									align="right"
+									sx={{
+										fontWeight: "bold",
+										backgroundColor: "#616161",
+										color: "white",
+										py: 0.85,
+										cursor: "pointer",
+									}}>
+									<TableSortLabel
+										active={sortColumn === cat}
+										direction={sortColumn === cat ? sortOrder : 'asc'}
+										onClick={() => handleSort(cat as SortableColumn)}
 										sx={{
 											color: 'white !important',
 											'&:hover': { color: 'white !important' },
@@ -237,20 +237,20 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 										{categoryMap[cat] || cat}
 									</TableSortLabel>
 								</TableCell>
-						))}
-						<TableCell
-							align="right"
-							sx={{
-								fontWeight: "bold",
-								backgroundColor: "#616161",
-								color: "white",
-								py: 0.85,
-								cursor: "pointer",
-							}}>
-							<TableSortLabel
-								active={sortColumn === 'E1a'}
-								direction={sortColumn === 'E1a' ? sortOrder : 'asc'}
-								onClick={() => handleSort('E1a')}
+							))}
+							<TableCell
+								align="right"
+								sx={{
+									fontWeight: "bold",
+									backgroundColor: "#616161",
+									color: "white",
+									py: 0.85,
+									cursor: "pointer",
+								}}>
+								<TableSortLabel
+									active={sortColumn === 'E1a'}
+									direction={sortColumn === 'E1a' ? sortOrder : 'asc'}
+									onClick={() => handleSort('E1a')}
 									sx={{
 										color: 'white !important',
 										'&:hover': { color: 'white !important' },
@@ -298,7 +298,7 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 													backgroundColor: rowBg,
 												}}>
 												{(
-													row[cat as keyof typeof row] as number
+													(row[cat as keyof typeof row] as number) ?? 0
 												).toLocaleString()}
 											</TableCell>
 										))}
@@ -308,7 +308,7 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 												fontWeight: "bold",
 												backgroundColor: rowBg,
 											}}>
-											{row.E1a.toLocaleString()}
+											{(row.E1a ?? 0).toLocaleString()}
 										</TableCell>
 									</TableRow>
 								);

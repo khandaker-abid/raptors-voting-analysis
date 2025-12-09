@@ -22,7 +22,7 @@ const LABELS: Record<keyof MailRejectionRow, string> = {
     rejectionPercentage: "Rejection %",
 };
 
-export default function MailRejectionsBarChart({ stateName, data }: Props) {
+export default function MailRejectionsBarChart({ data }: Props) {
     const chartData = useMemo(() => {
         const sum = (key: keyof MailRejectionRow) =>
             data.reduce((acc, r) => acc + (r[key] as number), 0);

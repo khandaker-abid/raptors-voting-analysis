@@ -42,8 +42,8 @@ const EveryStateEquipmentTable: React.FC = () => {
 				}));
 				setData(mappedData);
 			} catch (err) {
-				console.log(err)
-				console.error(err);
+				// Error handled silently in production - data remains empty
+				console.error("Failed to fetch equipment data:", err);
 			}
 		};
 		fetchData();

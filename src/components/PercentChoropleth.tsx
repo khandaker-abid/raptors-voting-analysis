@@ -12,8 +12,9 @@ interface Props {
     stateName: string;
     // Accept either simplified format or full row data (PollbookDeletionRow or MailRejectionRow)
     data: Array<{ geographicUnit: string; percentOfTotal: number }>
-        | Array<{ geographicUnit: string; deletionPercentage?: number; rejectionPercentage?: number; [key: string]: any }>;
+    | Array<{ geographicUnit: string; deletionPercentage?: number; rejectionPercentage?: number;[key: string]: any }>;
     title?: string;
+    /** Optional description - reserved for future use */
     description?: string;
 }
 
@@ -24,7 +25,7 @@ type CountyFeature = Feature<Geometry, { ste_name: string[]; coty_name: string[]
 type CountyGeoJSONData = FeatureCollection<Geometry, { ste_name: string[]; coty_name: string[]; coty_name_long: string[]; }>
 
 
-const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, description }) => {
+const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
     const [geoData, setGeoData] = useState<FeatureCollection | null>(null);
     const [bounds, setBounds] = useState<L.LatLngBounds | null>(null);
 
@@ -63,17 +64,17 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, descriptio
             }
             return 0;
         });
-        
+
         // Recalculate if all are 0 but totals exist
-        const needsRecalc = percentages.every(p => p === 0 || p === -1) && 
-                            data.every(d => 'total' in d);
-        
+        const needsRecalc = percentages.every(p => p === 0 || p === -1) &&
+            data.every(d => 'total' in d);
+
         if (needsRecalc) {
             const stateTotal = data.reduce((sum, d) => {
                 const total = 'total' in d && typeof d.total === 'number' ? d.total : 0;
                 return sum + total;
             }, 0);
-            
+
             if (stateTotal > 0) {
                 return data.map(d => {
                     const total = 'total' in d && typeof d.total === 'number' ? d.total : 0;
@@ -81,7 +82,7 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, descriptio
                 });
             }
         }
-        
+
         return percentages;
     }, [data]);
 
@@ -92,7 +93,7 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, descriptio
             ...item,
             _calculatedPercentage: calculatedPercentages[index]
         }));
-        
+
         return createCountyLookupMap<any, number>(
             enrichedData,
             (item) => item.geographicUnit,
@@ -236,7 +237,7 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, descriptio
             }
         })();
     }, [stateName]);
-    
+
     // Force GeoJSON to re-render when data changes by adding a key based on data length
     const geoJsonKey = useMemo(() => `geojson-${stateName}-${data.length}`, [stateName, data.length]);
 
@@ -266,7 +267,6 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, descriptio
 
     const maxPercentage = calculatedPercentages.length > 0 ? Math.max(...calculatedPercentages) : 0;
     const minPercentage = calculatedPercentages.length > 0 ? Math.min(...calculatedPercentages) : 0;
-    const avgPercentage = calculatedPercentages.length > 0 ? calculatedPercentages.reduce((sum, p) => sum + p, 0) / calculatedPercentages.length : 0;
 
     // Check if all data is zero (no data reported) - but only if we have data
     const allZero = calculatedPercentages.length > 0 && calculatedPercentages.every(p => p === 0);
@@ -276,12 +276,12 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title, descriptio
     const isRhodeIslandTownData = false;
 
     // Detect data type and set appropriate title
-    const dataType = data.length > 0 
+    const dataType = data.length > 0
         ? ('deletionPercentage' in data[0] ? 'pollbook' : 'rejection')
         : 'pollbook';
-    
+
     // Use custom title/description or defaults (without state name suffix - user already knows the state)
-    const displayTitle = title || (dataType === 'pollbook' 
+    const displayTitle = title || (dataType === 'pollbook'
         ? `Pollbook Deletions Distribution`
         : `Mail Rejections Distribution`);
 
