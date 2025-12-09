@@ -13,7 +13,6 @@ import {
 	CartesianGrid,
 	Tooltip as RechartsTooltip,
 	ResponsiveContainer,
-	Cell,
 } from "recharts";
 import type { ActiveVotersRow } from "../data/types";
 import theme from "../theme";
@@ -153,11 +152,11 @@ const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 							}}
 						/>
 						<RechartsTooltip content={<CustomTooltip />} />
-						<Bar dataKey="count" radius={[8, 8, 0, 0]}>
-							{orderedChartData.map((_entry, index) => (
-								<Cell key={`cell-${index}`} fill={theme.palette.primary.main} />
-							))}
-						</Bar>
+						<Bar 
+							dataKey="count" 
+							radius={[8, 8, 0, 0]} 
+							fill={theme.palette.primary.main} 
+						/>
 					</BarChart>
 				</ResponsiveContainer>
 			</Box>

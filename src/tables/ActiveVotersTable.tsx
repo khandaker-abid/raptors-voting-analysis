@@ -373,6 +373,7 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 					count={filteredData.length}
 					page={page}
 					onPageChange={handleChangePage}
+					rowsPerPageOptions={[]}
 					rowsPerPage={rowsPerPage}
 					labelDisplayedRows={({ from, to, count }) => `${from}–${to} of ${count}`}
 					sx={{ minHeight: 0, height: 36, p: 0, overflow: "hidden", '& .MuiToolbar-root': { minHeight: 36, height: 36, padding: '0 8px' } }}
