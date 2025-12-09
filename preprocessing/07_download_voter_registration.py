@@ -10,7 +10,6 @@ import logging
 from pathlib import Path
 import csv
 
-# Add utils to path
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import DatabaseManager, load_config, get_state_fips_mapping
@@ -30,7 +29,6 @@ class VoterRegistrationDownloader:
         self.cache_dir = Path(self.config['processing']['cacheDir']) / 'voter_registration'
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         
-        # Get detailed states
         self.detailed_states = self.config['detailedStates']['stateAbbrs']
         self.state_fips = get_state_fips_mapping()
         
@@ -59,7 +57,6 @@ class VoterRegistrationDownloader:
                     downloaded += len(chunk)
                     f.write(chunk)
                     
-                    # Progress
                     if total_size > 0:
                         pct = (downloaded / total_size) * 100
                         logger.info(f"  Progress: {pct:.1f}%")
@@ -79,10 +76,8 @@ class VoterRegistrationDownloader:
         
         voters = []
         
-        # Try comma-delimited first
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
-                # Detect delimiter
                 sample = f.read(1024)
                 f.seek(0)
                 
@@ -91,7 +86,6 @@ class VoterRegistrationDownloader:
                 reader = csv.DictReader(f, delimiter=delimiter)
                 
                 for row in reader:
-                    # Extract relevant fields
                     voter = {
                         'stateAbbr': 'MD',
                         'stateFips': self.state_fips['MD'],
@@ -134,13 +128,10 @@ class VoterRegistrationDownloader:
             logger.info("Skipping Maryland - aggregate data available in EAVS records")
             return 0
         
-        # Download
         filepath = self.download_file(url, 'maryland_voters.csv')
         
-        # Parse
         voters = self.parse_maryland_data(filepath)
         
-        # Store in database
         if voters:
             logger.info(f"Storing {len(voters):,} voters in database...")
             self.db.bulk_upsert('voterRegistration', voters, key_field='voterId')

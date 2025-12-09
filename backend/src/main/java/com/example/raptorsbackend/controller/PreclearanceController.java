@@ -8,17 +8,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
-/**
- * REST Controller for preclearance state analysis.
- * 
- * Provides endpoints for Voting Rights Act analysis:
- * - Gingles precondition charts for racially polarized voting
- * - Ecological inference for equipment quality by demographic
- * - Ecological inference for ballot rejection by demographic
- * 
- * Supports GUI use cases: GUI-10, GUI-11
- * Focus: Maryland (preclearance state) VRA analysis
- */
 @RestController
 @RequestMapping("/api/preclearance")
 @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:5173" })
@@ -28,20 +17,11 @@ public class PreclearanceController {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    /**
-     * Get Gingles chart data for racially polarized voting analysis.
-     * Returns precinct-level demographic and voting data.
-     * 
-     * @param state       State name (case-sensitive)
-     * @param demographic Demographic group to analyze (default: white)
-     * @return Map with precinct data and regression coefficients
-     */
     @GetMapping("/gingles/{state}")
     public Map<String, Object> getGinglesData(
             @PathVariable String state,
             @RequestParam(required = false, defaultValue = "white") String demographic) {
 
-        // Fetch precinct-level voting and demographic data
         Query query = new Query();
 
         query.addCriteria(Criteria.where("state").is(state));
@@ -49,7 +29,6 @@ public class PreclearanceController {
         List<Map<String, Object>> precincts = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
                 "precinct_demographics");
 
-        // Transform data for frontend
         List<Map<String, Object>> data = precincts.stream().map(precinct -> {
             Map<String, Object> row = new HashMap<>();
             row.put("precinct", precinct.get("precinct"));
@@ -62,7 +41,6 @@ public class PreclearanceController {
             return row;
         }).toList();
 
-        // Fetch regression coefficients from database
         Query regressionQuery = new Query();
         regressionQuery.addCriteria(Criteria.where("state").is(state));
         Map<String, Object> regressionDoc = mongoTemplate.findOne(
@@ -73,11 +51,9 @@ public class PreclearanceController {
         result.put("data", data);
         result.put("totalPrecincts", data.size());
 
-        // Add regression coefficients for the selected demographic
         if (regressionDoc != null && regressionDoc.containsKey("regressions")) {
             Map<String, Object> regressions = (Map<String, Object>) regressionDoc.get("regressions");
 
-            // Map demographic parameter to DB key
             String demographicKey = switch (demographic.toLowerCase()) {
                 case "hispanic" -> "hispanic";
                 case "africanamerican", "african_american" -> "africanAmerican";
@@ -95,14 +71,6 @@ public class PreclearanceController {
         return result;
     }
 
-    /**
-     * Get Ecological Inference data for equipment quality analysis.
-     * Returns probability curves for equipment quality by demographic.
-     * 
-     * @param state       State name (case-sensitive)
-     * @param demographic Demographic group filter (optional)
-     * @return Map with probability curves and statistics
-     */
     @GetMapping("/ei-equipment/{state}")
     public Map<String, Object> getEIEquipmentData(
             @PathVariable String state,
@@ -124,7 +92,6 @@ public class PreclearanceController {
         result.put("state", state);
         result.put("demographic", demographic);
 
-        // Probability curves: quality score (0-100) -> probability density
         List<Map<String, Object>> curves = new ArrayList<>();
 
         for (Map<String, Object> doc : results) {
@@ -140,14 +107,6 @@ public class PreclearanceController {
         return result;
     }
 
-    /**
-     * Get Ecological Inference data for rejected ballot analysis.
-     * Returns probability curves for ballot rejection by demographic.
-     * 
-     * @param state       State name (case-sensitive)
-     * @param demographic Demographic group filter (optional)
-     * @return Map with probability curves and statistics
-     */
     @GetMapping("/ei-rejected/{state}")
     public Map<String, Object> getEIRejectedData(
             @PathVariable String state,
@@ -169,7 +128,6 @@ public class PreclearanceController {
         result.put("state", state);
         result.put("demographic", demographic);
 
-        // Probability curves: rejection probability -> probability density
         List<Map<String, Object>> curves = new ArrayList<>();
 
         for (Map<String, Object> doc : results) {
@@ -185,17 +143,11 @@ public class PreclearanceController {
         return result;
     }
 
-    /**
-     * Health check
-     */
     @GetMapping("/health")
     public Map<String, String> health() {
         return Map.of("status", "ok", "service", "preclearance-controller");
     }
 
-    /**
-     * Debug endpoint to check EI data
-     */
     @GetMapping("/debug/ei-equipment")
     public Map<String, Object> debugEIEquipment() {
         long count = mongoTemplate.count(new Query(), "ei_equipment_analysis");

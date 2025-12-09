@@ -12,7 +12,6 @@ import time
 import base64
 import json
 
-# Add utils to path
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import DatabaseManager, load_config
@@ -29,18 +28,15 @@ class USPSAddressValidator:
         self.db = DatabaseManager(config_path)
         self.config = load_config(config_path)
         
-        # USPS API credentials
         self.consumer_key = self.config['apiKeys'].get('uspsConsumerKey')
         self.consumer_secret = self.config['apiKeys'].get('uspsConsumerSecret')
         
         if not self.consumer_key or not self.consumer_secret:
             raise ValueError("USPS API credentials not found in config.json")
         
-        # USPS API endpoints
         self.oauth_url = "https://api.usps.com/oauth2/v3/token"
         self.validate_url = "https://api.usps.com/addresses/v3/address"
         
-        # Access token (will be obtained)
         self.access_token = None
         self.token_expires_at = 0
         
@@ -51,13 +47,11 @@ class USPSAddressValidator:
         Get OAuth2 access token from USPS
         Tokens are valid for a certain period, so we cache and reuse
         """
-        # Check if we have a valid token
         if self.access_token and time.time() < self.token_expires_at:
             return self.access_token
         
         logger.info("Requesting new USPS access token...")
         
-        # Create authorization header
         credentials = f"{self.consumer_key}:{self.consumer_secret}"
         encoded_credentials = base64.b64encode(credentials.encode()).decode()
         
@@ -76,7 +70,6 @@ class USPSAddressValidator:
             
             token_data = response.json()
             self.access_token = token_data['access_token']
-            # Token typically expires in 3600 seconds, we'll refresh 5 min before
             self.token_expires_at = time.time() + token_data.get('expires_in', 3600) - 300
             
             logger.info("✓ Access token obtained")
@@ -104,7 +97,6 @@ class USPSAddressValidator:
         state = address_dict.get('state', '').strip()
         zipcode = address_dict.get('zipCode', '').strip()
         
-        # Basic pre-validation
         if not all([street, city, state]):
             return {
                 'isValid': False,
@@ -114,7 +106,6 @@ class USPSAddressValidator:
                 'errorMessage': 'Missing required address fields'
             }
         
-        # Get access token
         try:
             token = self.get_access_token()
         except Exception as e:
@@ -127,13 +118,11 @@ class USPSAddressValidator:
                 'errorMessage': str(e)
             }
         
-        # Prepare request
         headers = {
             'Authorization': f'Bearer {token}',
             'Content-Type': 'application/json'
         }
         
-        # USPS API payload
         payload = {
             "streetAddress": street,
             "city": city,
@@ -152,14 +141,11 @@ class USPSAddressValidator:
             if response.status_code == 200:
                 result = response.json()
                 
-                # Extract validated address
                 validated_address = result.get('address', {})
                 
-                # Check if address is deliverable
                 dpv_confirmation = validated_address.get('deliveryPoint', {}).get('confirmationIndicator', 'N')
                 is_valid = dpv_confirmation in ['Y', 'S', 'D']  # Y=confirmed, S=secondary, D=dual
                 
-                # Build corrected address
                 corrected = None
                 if is_valid:
                     corrected = {
@@ -208,7 +194,6 @@ class USPSAddressValidator:
         """
         logger.info(f"Validating addresses for up to {limit:,} voters...")
         
-        # Get voters without validation
         voters = list(self.db.find_many('voterRegistration', {
             '$or': [
                 {'addressValidation': None},
@@ -233,13 +218,10 @@ class USPSAddressValidator:
             if not address.get('street'):
                 continue
             
-            # Add state to address dict
             address['state'] = voter.get('stateAbbr', '')
             
-            # Validate
             validation = self.validate_address(address)
             
-            # Track stats
             if validation['isValid']:
                 valid_count += 1
                 if validation['correctedAddress']:
@@ -247,7 +229,6 @@ class USPSAddressValidator:
             else:
                 invalid_count += 1
             
-            # Update voter record
             self.db.upsert_one(
                 'voterRegistration',
                 {'_id': voter['_id']},
@@ -256,18 +237,15 @@ class USPSAddressValidator:
             
             validated += 1
             
-            # Progress and rate limiting
             if (i + 1) % 10 == 0:
                 logger.info(f"  Validated {i + 1:,}/{len(voters):,} voters (valid: {valid_count}, invalid: {invalid_count}, corrected: {corrected_count})")
             
-            # Pause every batch to respect rate limits
             if (i + 1) % batch_size == 0:
                 logger.info(f"  Pausing 2 seconds...")
                 time.sleep(2)
             else:
                 time.sleep(0.1)  # Small delay between requests
         
-        # Summary
         logger.info("\n" + "="*70)
         logger.info("ADDRESS VALIDATION SUMMARY")
         logger.info("="*70)
@@ -283,7 +261,6 @@ class USPSAddressValidator:
 def main():
     """Main execution"""
     try:
-        # First, check if there are any voter records to validate
         db = DatabaseManager()
         voter_count = db.count_documents('voterRegistration')
         

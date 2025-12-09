@@ -132,7 +132,7 @@ backend/.settings/
 *~
 nohup.out
 
-temp/
+# temp/
 
 # Mermaid diagrams
 mermaid/

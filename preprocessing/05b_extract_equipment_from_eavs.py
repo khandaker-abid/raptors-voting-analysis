@@ -14,7 +14,6 @@ import logging
 from pathlib import Path
 from collections import defaultdict
 
-# Add utils to path
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import DatabaseManager
@@ -44,7 +43,6 @@ class EquipmentExtractor:
         """
         logger.info("Extracting equipment data from EAVS records...")
         
-        # Get all EAVS records
         eavs_records = self.db.find_many('eavsData')
         total = len(eavs_records)
         
@@ -54,7 +52,6 @@ class EquipmentExtractor:
         
         logger.info(f"Processing {total:,} EAVS records...")
         
-        # Group by state and year
         state_equipment = defaultdict(lambda: defaultdict(lambda: {
             'dreNoVVPAT': 0,
             'dreWithVVPAT': 0,
@@ -70,7 +67,6 @@ class EquipmentExtractor:
             jurisdiction = record.get('jurisdictionName', 'Unknown')
             fips = record.get('fipsCode', '')
             
-            # Count equipment types
             if record.get('F3a'):  # DRE no VVPAT
                 state_equipment[(state_full, state_abbr)][year]['dreNoVVPAT'] += 1
             if record.get('F4a'):  # DRE with VVPAT
@@ -80,7 +76,6 @@ class EquipmentExtractor:
             if record.get('F6a'):  # Scanner
                 state_equipment[(state_full, state_abbr)][year]['scanner'] += 1
             
-            # Track jurisdictions
             state_equipment[(state_full, state_abbr)][year]['jurisdictions'].append({
                 'name': jurisdiction,
                 'fips': fips,
@@ -92,12 +87,10 @@ class EquipmentExtractor:
                 }
             })
         
-        # Create equipment records
         equipment_records = []
         
         for (state_full, state_abbr), years in state_equipment.items():
             for year, data in years.items():
-                # Create summary record for this state-year
                 record = {
                     'state': state_full,
                     'stateAbbr': state_abbr,
@@ -109,7 +102,6 @@ class EquipmentExtractor:
                         'scanner': data['scanner']
                     },
                     'jurisdictions': data['jurisdictions'],
-                    # Default equipment details (would need external source for real data)
                     'equipmentDetails': self._create_default_equipment_details(data),
                     'dataSource': 'EAVS',
                     'dataNote': 'Equipment presence only; detailed specs would require Verified Voting data'
@@ -117,18 +109,15 @@ class EquipmentExtractor:
                 
                 equipment_records.append(record)
         
-        # Store in database
         if equipment_records:
             logger.info(f"\nStoring {len(equipment_records):,} equipment records...")
             
-            # Check if data already exists
             existing_count = self.db.count_documents('votingEquipmentData')
             
             if existing_count > 0:
                 logger.info(f"Found {existing_count:,} existing equipment records")
                 logger.info("Checking if update is needed...")
                 
-                # Sample check
                 sample = equipment_records[0]
                 existing = self.db.find_one(
                     'votingEquipmentData',
@@ -139,7 +128,6 @@ class EquipmentExtractor:
                     logger.info("✓ Equipment data is up-to-date - skipping upsert")
                     return existing_count
             
-            # Bulk upsert - need to create composite key for state+year
             from pymongo import UpdateOne
             collection = self.db.get_collection('votingEquipmentData')
             
@@ -158,7 +146,6 @@ class EquipmentExtractor:
                 logger.info(f"Bulk upserted {modified_count} documents into votingEquipmentData")
             logger.info(f"✓ Stored {len(equipment_records):,} equipment records")
         
-        # Summary
         logger.info("\n" + "="*70)
         logger.info("EQUIPMENT EXTRACTION SUMMARY")
         logger.info("="*70)
@@ -182,7 +169,6 @@ class EquipmentExtractor:
         """
         details = []
         
-        # Create placeholder entries for each equipment type present
         if data['dreNoVVPAT'] > 0:
             details.append({
                 'equipmentType': 'DRE no VVPAT',

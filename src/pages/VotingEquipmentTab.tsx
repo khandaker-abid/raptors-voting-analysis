@@ -24,7 +24,7 @@ const VotingEquipmentTab = ({ stateName }: VotingEquipmentTabProps) => {
             try {
                 const equipmentTypes = await fetchEquipmentTypes(stateName);
                 if (alive) setEquipmentTypesData(equipmentTypes);
-            } catch (e: any) {
+            } catch {
                 if (alive) {
                     setEquipmentTypesData([]); // stop loading spinner
                 }
@@ -38,7 +38,7 @@ const VotingEquipmentTab = ({ stateName }: VotingEquipmentTabProps) => {
                     const result = await response.json();
                     if (alive) setEquipmentQualityData(result);
                 }
-            } catch (e: any) {
+            } catch {
                 if (alive) {
                     setEquipmentQualityData([]); // stop loading spinner
                 }
@@ -61,7 +61,6 @@ const VotingEquipmentTab = ({ stateName }: VotingEquipmentTabProps) => {
                 gap: 0,
             }}
         >
-            {/* Choropleth - Top Left */}
             <Box sx={{ gridColumn: "1", gridRow: "1", overflow: "hidden" }}>
                 <VotingEquipmentTypeChoropleth
                     key={stateName}
@@ -70,10 +69,9 @@ const VotingEquipmentTab = ({ stateName }: VotingEquipmentTabProps) => {
                 />
             </Box>
 
-            {/* Equipment Quality Chart - Top Right */}
             <Box sx={{ gridColumn: "2", gridRow: "1", overflow: "hidden" }}>
-                <EquipmentQualityVsRejectionsChart 
-                    stateName={stateName} 
+                <EquipmentQualityVsRejectionsChart
+                    stateName={stateName}
                     data={equipmentQualityData.length > 0 ? equipmentQualityData.map((item: any) => ({
                         county: item.county,
                         equipmentQuality: item.equipmentQuality,
@@ -83,7 +81,6 @@ const VotingEquipmentTab = ({ stateName }: VotingEquipmentTabProps) => {
                 />
             </Box>
 
-            {/* Equipment Table - Bottom Spanning Both Columns */}
             <Box
                 sx={{
                     gridColumn: "1 / 3",

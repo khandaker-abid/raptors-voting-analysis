@@ -15,11 +15,9 @@ const ActiveVoterTab = ({ stateName }: ActiveVoterTabProps) => {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Fetch active voter data when stateName changes
     useEffect(() => {
         if (!stateName) return;
 
-        // Reset state when stateName changes
         setData(undefined);
         setError(null);
         setLoading(true);
@@ -42,11 +40,10 @@ const ActiveVoterTab = ({ stateName }: ActiveVoterTabProps) => {
         })();
 
         return () => {
-            alive = false; // cleanup on unmount
+            alive = false;
         };
     }, [stateName]);
 
-    // Show loading state
     if (loading) {
         return (
             <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "calc(100vh - 60px)" }}>
@@ -55,7 +52,6 @@ const ActiveVoterTab = ({ stateName }: ActiveVoterTabProps) => {
         );
     }
 
-    // Show error state
     if (error) {
         return (
             <Box sx={{ p: 2 }}>

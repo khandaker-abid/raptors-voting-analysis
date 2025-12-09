@@ -54,13 +54,11 @@ import type {
 import PollbookDeletionsTab from "./PollbookDeletionsTab";
 import MailRejectionsTab from "./MailRejectionsTab";
 import VotingEquipmentTab from "./VotingEquipmentTab";
-
 interface TabPanelProps {
 	children?: React.ReactNode;
 	index: number;
 	value: number;
 }
-
 function TabPanel(props: TabPanelProps) {
 	const { children, value, index, ...other } = props;
 
@@ -77,7 +75,6 @@ function TabPanel(props: TabPanelProps) {
 		</Box>
 	);
 }
-
 const StateDetailPage: React.FC = () => {
 	const { stateName } = useParams<{ stateName: string }>();
 	const navigate = useNavigate();
@@ -110,7 +107,7 @@ const StateDetailPage: React.FC = () => {
 
 	const isPartyState = useMemo(() => {
 		return isDetail && stateInfo?.party !== undefined;
-	}, [decodedStateName, isDetail, stateInfo]);
+	}, [isDetail, stateInfo]);
 
 	const provisionalData = useMemo(() => {
 		return getProvisionalBallotData(decodedStateName);
@@ -354,7 +351,6 @@ const StateDetailPage: React.FC = () => {
 							)}
 						</Box>
 
-						{/* Main Layout: Map + Data Visualization */}
 						<Box
 							sx={{
 								display: "flex",
@@ -369,7 +365,6 @@ const StateDetailPage: React.FC = () => {
 								pb: 0.5,
 							}}
 						>
-							{/* Left Side: Map - Give it MUCH more space */}
 							<Box sx={{
 								flex: 7,
 								minWidth: { xs: "100%", lg: "70%" },
@@ -384,7 +379,6 @@ const StateDetailPage: React.FC = () => {
 								/>
 							</Box>
 
-							{/* Right Side: EAVS Data Visualization - Smaller sidebar */}
 							<Box sx={{ flex: 3, minWidth: { xs: "100%", lg: "28%" }, display: "flex", minHeight: 0 }}>
 								{isDetail ? (
 									<Paper elevation={2} sx={{ p: 2, height: "100%", width: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -478,37 +472,34 @@ const StateDetailPage: React.FC = () => {
 					</Box>
 				</TabPanel>
 
-				{/* Provisional Ballots Tab */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_PROVISIONAL}>
 						<ProvisionalBallotTab stateName={decodedStateName} />
 					</TabPanel>
 				)}
 
-				{/* Active Voters Tab */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_ACTIVE}>
 						<ActiveVoterTab stateName={decodedStateName} />
 					</TabPanel>
 				)}
 
-				{/* Pollbook Deletion Tab */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_POLLBOOK}>
 						<PollbookDeletionsTab stateName={decodedStateName} />
 					</TabPanel>
 				)}
 
-				{/* Mail Rejections Tab */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_MAIL}>
 						<MailRejectionsTab stateName={decodedStateName} />
 			</TabPanel>
 		)}
 
-		<TabPanel value={tabValue} index={IDX_EQUIPMENT}>
-			<VotingEquipmentTab stateName={decodedStateName} />
-		</TabPanel>				{/* Voter Registration Data Tab */}
+				<TabPanel value={tabValue} index={IDX_EQUIPMENT}>
+					<VotingEquipmentTab stateName={decodedStateName} />
+				</TabPanel>
+
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_REG}>
 						<Box sx={{
@@ -518,7 +509,6 @@ const StateDetailPage: React.FC = () => {
 							gap: 1.5,
 							minHeight: "calc(100vh - 280px)",
 						}}>
-							{/* Bar Chart and Map - top section */}
 							<Box
 								sx={{
 									display: "flex",

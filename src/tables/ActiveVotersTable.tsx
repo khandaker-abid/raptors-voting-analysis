@@ -1,8 +1,3 @@
-/**
- * Sortable, searchable table displaying active voter statistics.
- * Shows voter counts and percentages by geographic unit.
- */
-
 import React, { useState, useMemo } from "react";
 import {
 	Box,
@@ -338,7 +333,6 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 								);
 							})}
 
-						{/* Totals Row */}
 						<TableRow sx={{ backgroundColor: "#f5f5f5", fontWeight: "bold" }}>
 							<TableCell
 								sx={{

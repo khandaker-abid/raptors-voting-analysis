@@ -54,7 +54,6 @@ public class PreclearanceRepository {
         return (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class, "ei_rejection_analysis");
     }
 
-    // Debug methods
     public long countEiEquipmentAnalysis(Query query) {
         return mongoTemplate.count(query, "ei_equipment_analysis");
     }

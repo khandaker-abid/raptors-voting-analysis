@@ -1,8 +1,3 @@
-/**
- * Ecological Inference - Equipment Quality Access
- * Shows probability curves for equipment quality by demographic group.
- */
-
 import React, { useState, useMemo, useEffect } from "react";
 import {
     ResponsiveContainer,
@@ -24,26 +19,21 @@ import {
     CircularProgress,
 } from "@mui/material";
 import { ExportButton } from "../components/ExportButton";
-
 interface ProbabilityCurvePoint {
-    qualityScore: number; // 0-100
-    probability: number; // 0-1
+    qualityScore: number;
+    probability: number;
 }
-
 interface DemographicCurve {
     demographic: string;
     data: ProbabilityCurvePoint[];
 }
-
 interface EIEquipmentData {
     state: string;
     curves: DemographicCurve[];
 }
-
 interface Props {
     stateName: string;
 }
-
 const DEMOGRAPHICS = [
     "White",
     "African American",
@@ -59,7 +49,7 @@ const DEMOGRAPHIC_COLORS: Record<string, string> = {
     "Hispanic": "#388e3c", // Green
     "Asian": "#f57c00", // Orange
     "Native American": "#7b1fa2", // Purple
-    "Other": "#c2185b", // Pink
+    "Other": "#c2185b",
 };
 
 const toBackendFormat = (demographic: string): string => {
@@ -166,16 +156,24 @@ const EIEquipmentChart: React.FC<Props> = ({ stateName }) => {
     };
 
     const chartData = useMemo(() => {
-        if (!data) return [];
+        if (!data || !data.curves || data.curves.length === 0) return [];
 
-        const qualityScores = Array.from({ length: 51 }, (_, i) => i * 2);
+        // Get all unique quality scores from the data
+        const allQualityScores = new Set<number>();
+        data.curves.forEach(curve => {
+            curve.data.forEach(point => {
+                allQualityScores.add(point.qualityScore);
+            });
+        });
 
-        return qualityScores.map(score => {
+        const sortedScores = Array.from(allQualityScores).sort((a, b) => a - b);
+
+        return sortedScores.map(score => {
             const point: any = { qualityScore: score };
 
             selectedDemographics.forEach(demographic => {
-                const backendName = toBackendFormat(demographic);
-                const curve = data.curves.find(c => c.demographic === backendName);
+                // Find curve by matching the UI demographic name (already normalized in transform)
+                const curve = data.curves.find(c => c.demographic === demographic);
                 if (curve) {
                     const dataPoint = curve.data.find(d => d.qualityScore === score);
                     if (dataPoint) {

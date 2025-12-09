@@ -12,17 +12,6 @@ import org.springframework.cache.annotation.Cacheable;
 import java.util.List;
 import java.util.Map;
 
-/**
- * REST Controller for static JSON data files.
- * 
- * Provides cached endpoints for pre-processed data:
- * - Per-state voting equipment models
- * - Every-state equipment summaries
- * - Party comparison statistics
- * - Voter registration data by state and region
- * 
- * Uses Spring caching to optimize repeated requests
- */
 @RestController
 @RequestMapping("/api/data")
 @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:5173" })

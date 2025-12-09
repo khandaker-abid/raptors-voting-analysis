@@ -1,8 +1,3 @@
-/**
- * Test suite for county name normalization utilities
- * Ensures consistent matching across Maryland, Arkansas, and Rhode Island
- */
-
 import { describe, it, expect } from 'vitest';
 import { normalizeCountyName, normalizeCountyNameWithVariants, createCountyLookupMap } from '../countyNameNormalizer';
 

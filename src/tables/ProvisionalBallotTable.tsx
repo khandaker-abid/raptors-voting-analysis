@@ -310,7 +310,6 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 									</TableRow>
 								);
 							})}
-						{/* Totals Row */}
 						<TableRow sx={{ backgroundColor: "#f5f5f5", fontWeight: "bold" }}>
 							<TableCell
 								sx={{

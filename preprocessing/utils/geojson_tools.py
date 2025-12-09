@@ -90,12 +90,9 @@ def calculate_zoom_level(geometry: Dict, map_width_px: int = 800,
     bounds = calculate_bounds(geometry)
     minx, miny, maxx, maxy = bounds
     
-    # Calculate longitude and latitude spans
     lon_span = maxx - minx
     lat_span = maxy - miny
     
-    # Calculate zoom based on spans
-    # This is a simplified calculation - adjust as needed
     if lon_span > 50 or lat_span > 30:
         zoom = 4
     elif lon_span > 20 or lat_span > 15:
@@ -223,7 +220,6 @@ def filter_geojson_by_state(geojson: Dict, state_fips: str) -> Dict:
     for feature in geojson.get('features', []):
         props = feature.get('properties', {})
         
-        # Try different common property names for state FIPS
         feature_state = (
             props.get('STATEFP') or 
             props.get('STATE') or 

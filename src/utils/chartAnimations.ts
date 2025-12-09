@@ -1,34 +1,17 @@
-/**
- * Animation configurations for Recharts components
- * 
- * Usage:
- * import { chartAnimationProps } from '../utils/chartAnimations';
- * 
- * <BarChart {...chartAnimationProps}>
- *   <Bar dataKey="value" animationBegin={0} animationDuration={800} />
- * </BarChart>
- */
-
-// Standard animation duration in milliseconds
 export const ANIMATION_DURATION = 800;
 export const ANIMATION_BEGIN = 0;
-
-// Easing functions
 export type EasingFunction =
     | 'ease'
     | 'ease-in'
     | 'ease-out'
     | 'ease-in-out'
     | 'linear';
-
-// Default animation props for Recharts charts
 export const chartAnimationProps = {
     animationDuration: ANIMATION_DURATION,
     animationBegin: ANIMATION_BEGIN,
     animationEasing: 'ease-in-out' as EasingFunction,
 };
 
-// Animation props for individual chart elements
 export const barAnimationProps = {
     animationBegin: 0,
     animationDuration: 800,
@@ -53,9 +36,8 @@ export const scatterAnimationProps = {
     animationEasing: 'ease-out' as EasingFunction,
 };
 
-// Staggered animation for multiple series
 export const getStaggeredAnimationProps = (index: number) => {
-    const staggerDelay = 100; // milliseconds between each series
+    const staggerDelay = 100;
     return {
         animationBegin: index * staggerDelay,
         animationDuration: ANIMATION_DURATION,
@@ -63,7 +45,6 @@ export const getStaggeredAnimationProps = (index: number) => {
     };
 };
 
-// CSS transition utilities for smooth state changes
 export const transitionStyle = {
     default: {
         transition: 'all 0.3s ease-in-out',
@@ -76,7 +57,6 @@ export const transitionStyle = {
     },
 };
 
-// Hover effect styles for interactive elements
 export const hoverEffectStyle = {
     cursor: 'pointer',
     transition: 'all 0.2s ease-in-out',
@@ -86,7 +66,6 @@ export const hoverEffectStyle = {
     },
 };
 
-// Fade-in animation for components
 export const fadeInAnimation = {
     '@keyframes fadeIn': {
         from: { opacity: 0, transform: 'translateY(20px)' },
@@ -95,7 +74,6 @@ export const fadeInAnimation = {
     animation: 'fadeIn 0.5s ease-in-out',
 };
 
-// Slide-in animation for side panels
 export const slideInAnimation = (direction: 'left' | 'right' | 'top' | 'bottom') => {
     const transforms = {
         left: 'translateX(-20px)',
@@ -113,7 +91,6 @@ export const slideInAnimation = (direction: 'left' | 'right' | 'top' | 'bottom')
     };
 };
 
-// Pulse animation for loading indicators
 export const pulseAnimation = {
     '@keyframes pulse': {
         '0%, 100%': { opacity: 1 },
@@ -122,7 +99,6 @@ export const pulseAnimation = {
     animation: 'pulse 1.5s ease-in-out infinite',
 };
 
-// Smooth scroll behavior
 export const smoothScrollToElement = (elementId: string, offset: number = 0) => {
     const element = document.getElementById(elementId);
     if (element) {

@@ -1,8 +1,3 @@
-/**
- * Stacked bar chart showing mail ballot rejection reasons.
- * Displays breakdown by rejection category (no signature, mismatch, late, etc.)
- */
-
 import { useMemo } from "react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from "recharts";
 import { Box, Typography, Paper } from "@mui/material";

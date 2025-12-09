@@ -1,8 +1,3 @@
-/**
- * Choropleth map showing voting equipment types by geographic unit.
- * Categories: DRE no VVPAT, DRE with VVPAT, Ballot marking device, Scanner, Mixed
- */
-
 import React, { useMemo, useRef, useEffect, useState } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { Box, Paper, Typography, CircularProgress, Alert } from "@mui/material";
@@ -341,7 +336,6 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                 Voting Equipment Types by Region
             </Typography>
 
-            {/* Legend */}
             <Box sx={{ mb: 0.5, display: "flex", gap: 2, flexWrap: "wrap" }}>
                 {Object.entries(EQUIPMENT_LABELS).map(([key, label]) => (
                     <Box key={key} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -358,7 +352,6 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                 ))}
             </Box>
 
-            {/* Map */}
             <Box sx={{ flex: 1, minHeight: 0, border: "1px solid #ccc", borderRadius: 1 }}>
                 <MapContainer
                     key={stateName}

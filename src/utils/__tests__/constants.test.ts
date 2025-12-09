@@ -1,10 +1,3 @@
-/**
- * Test suite for constants
- * Validates that constants are properly defined and consistent
- * 
- * Note: This file uses Vitest. Run with: npx vitest run
- */
-
 import { describe, it, expect } from 'vitest';
 
 import {

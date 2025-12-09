@@ -16,7 +16,6 @@ import zipfile
 import logging
 from pathlib import Path
 
-# Add utils to path
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import DatabaseManager, get_all_mainland_states, get_state_fips_mapping
@@ -74,7 +73,6 @@ class BoundaryDataProcessor:
     
     def process_state_boundaries(self):
         """Process all mainland state boundaries"""
-        # Download and extract state boundaries
         zip_file = self.download_census_boundaries(
             CENSUS_BOUNDARIES['states_2024'],
             'cb_2024_us_state_20m.zip'
@@ -83,11 +81,9 @@ class BoundaryDataProcessor:
         extract_dir = self.extract_shapefile(zip_file)
         shapefile = list(extract_dir.glob('*.shp'))[0]
         
-        # Convert to GeoJSON
         logger.info("Converting shapefile to GeoJSON...")
         geojson = shapefile_to_geojson(str(shapefile))
         
-        # Process each mainland state
         state_fips = get_state_fips_mapping()
         mainland_states = get_all_mainland_states()
         
@@ -98,7 +94,6 @@ class BoundaryDataProcessor:
             
             logger.info(f"Processing {state_abbr} (FIPS: {fips_code})...")
             
-            # Filter GeoJSON for this state
             state_geojson = filter_geojson_by_state(geojson, fips_code)
             
             if not state_geojson.get('features'):
@@ -109,16 +104,12 @@ class BoundaryDataProcessor:
             geometry = feature['geometry']
             properties = feature['properties']
             
-            # Calculate center point
             centroid = calculate_centroid(geometry)
             
-            # Calculate appropriate zoom level
             zoom = calculate_zoom_level(geometry)
             
-            # Get state name
             state_name = properties.get('NAME') or properties.get('STUSPS') or state_abbr
             
-            # Create document
             document = {
                 'fipsCode': fips_code,
                 'jurisdiction': state_name,
@@ -136,11 +127,9 @@ class BoundaryDataProcessor:
             documents.append(document)
             logger.info(f"  Center: ({centroid[0]:.4f}, {centroid[1]:.4f}), Zoom: {zoom}")
         
-        # Store in database
         if documents:
             logger.info(f"Storing {len(documents)} state boundaries in database...")
             
-            # Check if data already exists
             collection = self.db.get_collection('boundaryData')
             existing_count = collection.count_documents({'boundaryType': 'state'})
             
@@ -148,7 +137,6 @@ class BoundaryDataProcessor:
                 logger.info(f"Database already contains {existing_count} state boundaries")
                 logger.info("Checking if update is needed...")
                 
-                # Sample check - verify a few random states
                 sample_states = ['06', '48', '36']  # CA, TX, NY
                 needs_update = False
                 for fips in sample_states:
@@ -163,7 +151,6 @@ class BoundaryDataProcessor:
                 else:
                     logger.info("State boundaries need updating...")
             
-            # Upsert the data
             upserted = self.db.bulk_upsert('boundaryData', documents, key_field='fipsCode')
             logger.info(f"State boundaries stored successfully! (upserted: {upserted})")
         

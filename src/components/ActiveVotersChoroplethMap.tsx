@@ -384,7 +384,7 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 						})}
 					</Box>
 				</Box>
-				{(stateName === "Rhode Island" ) && (
+				{(stateName === "Rhode Island" || stateName === "Vermont" || stateName === "Connecticut" || stateName === "Massachusetts") && (
 					<Typography variant="caption" color="primary.main" display="block" mt={0.5} fontSize="0.7rem" fontStyle="italic">
 						Note: {stateName} reports data at the town level. Values shown have been aggregated to county level for map display consistency.
 					</Typography>

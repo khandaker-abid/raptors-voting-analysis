@@ -21,7 +21,6 @@ from pathlib import Path
 from datetime import datetime, timezone
 from typing import List, Dict
 
-# Add utils to path
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import DatabaseManager, load_config
@@ -81,12 +80,10 @@ class EquipmentDetailsImporter:
             with open(filepath, 'r', encoding='utf-8') as f:
                 reader = csv.reader(f)
                 
-                # Skip to the equipment details section
                 for row in reader:
                     if not row or not any(row):
                         continue
                     
-                    # Look for the equipment details header
                     if 'Equipment Type' in str(row) or 'Manufacturer' in str(row):
                         columns = [col.strip() for col in row if col]
                         in_equipment_section = True
@@ -96,18 +93,15 @@ class EquipmentDetailsImporter:
                 if not in_equipment_section:
                     return records
                 
-                # Now parse the equipment details
                 for row in reader:
                     if not row or not any(row):
                         continue
                     
-                    # Create dictionary from row
                     row_dict = {}
                     for i, value in enumerate(row):
                         if i < len(columns):
                             row_dict[columns[i]] = value.strip() if value else ''
                     
-                    # Skip if no manufacturer or equipment type
                     equipment_type_val = row_dict.get('Equipment Type', '')
                     manufacturer = row_dict.get('Manufacturer', '')
                     model = row_dict.get('Model', '')
@@ -115,15 +109,12 @@ class EquipmentDetailsImporter:
                     if not equipment_type_val and not manufacturer:
                         continue
                     
-                    # Filter out non-voting equipment
                     if any(term in equipment_type_val for term in ['Internet Voting', 'Electronic Poll Book']):
                         continue  # Skip internet voting and poll books
                     
-                    # Get jurisdiction info
                     jurisdiction = row_dict.get('Jurisdiction', '')
                     fips_code = row_dict.get('FIPS code', '')
                     
-                    # Create the record
                     record = {
                         'stateAbbr': state_abbr,
                         'year': year,
@@ -137,7 +128,6 @@ class EquipmentDetailsImporter:
                     if fips_code:
                         record['fipsCode'] = fips_code
                     
-                    # Equipment details
                     if equipment_type_val:
                         record['equipmentType'] = equipment_type_val
                     if manufacturer:
@@ -145,14 +135,11 @@ class EquipmentDetailsImporter:
                     if model:
                         record['model'] = model
                     
-                    # Additional fields
                     first_year = row_dict.get('First Year in Use', '')
                     if first_year and first_year.isdigit():
                         record['firstYearInUse'] = int(first_year)
-                        # Calculate age
                         record['age'] = year - int(first_year)
                     
-                    # Usage details
                     usage_details = {}
                     for field in ['Election Day Standard', 'Election Day Accessible', 
                                   'Early Voting Standard', 'Early Voting Accessible',
@@ -163,7 +150,6 @@ class EquipmentDetailsImporter:
                     if usage_details:
                         record['usageDetails'] = usage_details
                     
-                    # Store all additional details
                     details = {}
                     for key, value in row_dict.items():
                         if key not in ['FIPS code', 'State', 'Jurisdiction', 'Equipment Type', 
@@ -183,7 +169,6 @@ class EquipmentDetailsImporter:
     def store_equipment_details(self, records: List[Dict]):
         """Store equipment detail records in database"""
         for record in records:
-            # Upsert based on state, year, manufacturer, model, and jurisdiction
             query = {
                 'stateAbbr': record['stateAbbr'],
                 'year': record['year'],
@@ -213,7 +198,6 @@ def main():
     
     importer = EquipmentDetailsImporter()
     
-    # Import all equipment details
     total_records = importer.import_all_equipment_details()
     
     logger.info("")

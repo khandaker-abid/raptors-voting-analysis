@@ -6,9 +6,6 @@ interface ResponsiveChartWrapperProps {
     minHeight?: number | string;
 }
 
-/**
- * Responsive wrapper for charts that adjusts height and spacing based on screen size
- */
 export const ResponsiveChartWrapper: React.FC<ResponsiveChartWrapperProps> = ({
     children,
     minHeight = 300,

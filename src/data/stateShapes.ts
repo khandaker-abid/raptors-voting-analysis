@@ -1,7 +1,3 @@
-// Enhanced state boundary data with more realistic shapes
-// These are stylized representations of state shapes
-
-// Helper function to get county count for a state
 export const getCountyCount = (stateName: string): number => {
 	const stateShape = stateShapes[stateName];
 	return stateShape?.counties?.length || 0;
@@ -673,7 +669,6 @@ export const stateShapes: Record<
 	},
 };
 
-// Default shape for states without specific data
 export const defaultStateShape = {
 	viewBox: "0 0 500 350",
 	path: "M 50,50 L 450,50 L 450,300 L 50,300 Z",

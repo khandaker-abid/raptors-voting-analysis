@@ -30,7 +30,6 @@ def validate_preprocessing():
     logger.info("PREPROCESSING DATA VALIDATION")
     logger.info("="*70)
     
-    # Check each collection
     collections_to_check = {
         'boundaryData': {
             'min_count': 48,
@@ -107,7 +106,6 @@ def validate_preprocessing():
         else:
             logger.info(f"  ✅ Count OK")
         
-        # Check required fields
         sample = db.find_one(collection_name, {})
         if sample:
             missing_fields = [
@@ -124,10 +122,8 @@ def validate_preprocessing():
                 logger.info(f"  ✅ Required fields present")
                 validation_results['passed'].append(f"{collection_name}: OK")
     
-    # Special checks
     logger.info(f"\n--- Special Validations ---")
     
-    # Check for data completeness scores
     eavs_with_scores = db.count_documents('eavsData', {'dataCompletenessScore': {'$exists': True}})
     eavs_total = db.count_documents('eavsData')
     if eavs_total > 0:
@@ -138,8 +134,6 @@ def validate_preprocessing():
                 f"Prepro-5: Only {score_pct:.1f}% of EAVS records have completeness scores"
             )
     
-    # Check for equipment quality scores
-    # Note: Quality scores only apply to EAVS-format records, not VerifiedVoting records
     equip_with_scores = db.count_documents('votingEquipmentData', {'equipmentDetails.qualityScore': {'$exists': True}})
     equip_eavs_format = db.count_documents('votingEquipmentData', {'equipmentDetails': {'$type': 'array'}})
     equip_total = db.count_documents('votingEquipmentData')
@@ -156,7 +150,6 @@ def validate_preprocessing():
     elif equip_total > 0:
         logger.info(f"  Equipment records: {equip_total} (all VerifiedVoting format - quality scoring not applicable)")
     
-    # Summary
     logger.info("\n" + "="*70)
     logger.info("VALIDATION SUMMARY")
     logger.info("="*70)

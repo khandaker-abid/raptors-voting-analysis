@@ -3,11 +3,6 @@ import { Button, Tooltip } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
-/**
- * Fixed position button to reset current page state.
- * On detail pages: Reloads page to reset filters and selections.
- * On home page: No action needed.
- */
 const ResetButton: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();

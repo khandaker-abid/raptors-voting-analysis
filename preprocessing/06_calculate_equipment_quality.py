@@ -13,7 +13,6 @@ import logging
 from pathlib import Path
 from datetime import datetime
 
-# Add utils to path
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import DatabaseManager
@@ -22,13 +21,11 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
-# Scoring weights
 WEIGHT_AGE = 0.40
 WEIGHT_CERTIFICATION = 0.30
 WEIGHT_OS = 0.15
 WEIGHT_PERFORMANCE = 0.15
 
-# Equipment type expected lifespans (years)
 EXPECTED_LIFESPANS = {
     'DRE': 10,
     'Optical Scan': 15,
@@ -58,8 +55,6 @@ class EquipmentQualityCalculator:
         age = CURRENT_YEAR - year_acquired
         lifespan = EXPECTED_LIFESPANS.get(equipment_type, 10)
         
-        # Score decreases linearly as equipment ages
-        # 0 years old = 1.0, lifespan years old = 0.0
         score = max(0.0, 1.0 - (age / (lifespan * 1.5)))
         
         return round(score, 3)
@@ -89,19 +84,15 @@ class EquipmentQualityCalculator:
         
         os_lower = os_info.lower()
         
-        # Modern, supported OS
         if any(x in os_lower for x in ['windows 10', 'windows 11', 'linux 5', 'linux 6', 'ubuntu 20', 'ubuntu 22']):
             return 1.0
         
-        # Older but still supported
         if any(x in os_lower for x in ['windows 8', 'windows 7', 'linux 4', 'ubuntu 18']):
             return 0.7
         
-        # Legacy/unsupported
         if any(x in os_lower for x in ['windows xp', 'windows vista', 'windows 2000', 'linux 3']):
             return 0.3
         
-        # Unknown/proprietary
         return 0.5
     
     def calculate_performance_score(self, record: dict) -> float:
@@ -110,17 +101,14 @@ class EquipmentQualityCalculator:
         """
         score = 1.0
         
-        # Get performance indicators (if available)
         malfunctions = record.get('malfunctionsReported', 0)
         rejected_ballots = record.get('ballotsRejected', 0)
         total_usage = record.get('totalBallotsProcessed', 1)
         
-        # Malfunction penalty
         if malfunctions > 0:
             malfunction_rate = malfunctions / 100  # per 100 units
             score -= min(0.5, malfunction_rate * 0.1)
         
-        # Rejection rate penalty
         if rejected_ballots > 0 and total_usage > 0:
             rejection_rate = rejected_ballots / total_usage
             if rejection_rate > 0.02:  # More than 2% rejection
@@ -134,19 +122,16 @@ class EquipmentQualityCalculator:
         
         Returns dict with score and component scores
         """
-        # Extract fields
         year_acquired = record.get('yearAcquired', 0)
         equipment_type = record.get('equipmentType', 'Other')
         certification = record.get('certificationStatus', 'Unknown')
         os_info = record.get('operatingSystem', '')
         
-        # Calculate component scores
         age_score = self.calculate_age_score(year_acquired, equipment_type)
         cert_score = self.calculate_certification_score(certification)
         os_score = self.calculate_os_score(os_info)
         perf_score = self.calculate_performance_score(record)
         
-        # Weighted average
         quality_score = (
             age_score * WEIGHT_AGE +
             cert_score * WEIGHT_CERTIFICATION +
@@ -168,7 +153,6 @@ class EquipmentQualityCalculator:
         """Process all equipment records and update quality scores"""
         logger.info("Calculating equipment quality scores...")
         
-        # Get all equipment records
         records = self.db.find_many('votingEquipmentData')
         total = len(records)
         
@@ -179,7 +163,6 @@ class EquipmentQualityCalculator:
         
         logger.info(f"Processing {total:,} equipment records...")
         
-        # Count how many have detailed equipment data
         detailed_count = sum(1 for r in records if r.get('equipmentDetails'))
         if detailed_count == 0:
             logger.warning(f"Found {total} equipment records but none have detailed specs")
@@ -196,30 +179,20 @@ class EquipmentQualityCalculator:
         }
         
         for i, record in enumerate(records):
-            # Check if this is old EAVS format (equipmentDetails is a list)
-            # or new VerifiedVoting format (equipment info in root)
             equipment_details = record.get('equipmentDetails', [])
             
-            # Skip VerifiedVoting records for now (they have dict equipmentDetails)
-            # Quality scoring for VerifiedVoting format would need different logic
             if isinstance(equipment_details, dict):
-                # This is a VerifiedVoting record, skip for now
                 continue
             
             if not equipment_details or not isinstance(equipment_details, list):
-                # No detailed equipment in this record, skip
                 continue
             
-            # Calculate scores for each equipment item (EAVS format only)
             for equipment in equipment_details:
-                # Skip if equipment is not a dict (defensive check)
                 if not isinstance(equipment, dict):
                     continue
                     
-                # Calculate score
                 score_data = self.calculate_quality_score(equipment)
                 
-                # Track distribution
                 score = score_data['qualityScore']
                 if score >= 0.8:
                     score_distribution['Excellent (0.8-1.0)'] += 1
@@ -232,10 +205,8 @@ class EquipmentQualityCalculator:
                 else:
                     score_distribution['Critical (0.0-0.2)'] += 1
                 
-                # Update equipment item with scores
                 equipment.update(score_data)
             
-            # Update the entire record with scored equipment details
             self.db.upsert_one(
                 'votingEquipmentData',
                 {'_id': record['_id']},
@@ -248,7 +219,6 @@ class EquipmentQualityCalculator:
                 logger.info(f"  Processed {i + 1:,}/{total:,} records...")
 
         
-        # Summary
         logger.info("\n" + "="*70)
         logger.info("EQUIPMENT QUALITY SUMMARY")
         logger.info("="*70)

@@ -127,7 +127,6 @@ const RegistrationComparisonPage: React.FC = () => {
         Registration & Early Voting Comparisons (2024)
       </Typography>
 
-      {/* Tabs */}
       <Paper sx={{ mb: 1.5 }}>
         <Tabs
           value={tabValue}
@@ -142,9 +141,7 @@ const RegistrationComparisonPage: React.FC = () => {
         </Tabs>
       </Paper>
 
-      {/* Tab Panels */}
       <Box sx={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
-        {/* Opt-in vs Opt-out Comparison */}
         {tabValue === 0 && (
           <Paper sx={{ p: 2, borderRadius: 3, height: "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             <Typography variant="subtitle1" gutterBottom fontWeight={600} align="center">
@@ -215,7 +212,6 @@ const RegistrationComparisonPage: React.FC = () => {
           </Paper>
         )}
 
-        {/* Early Voting Comparison */}
         {tabValue === 2 && (
           <Paper sx={{ p: 2, borderRadius: 3, height: "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             <Typography variant="subtitle1" gutterBottom fontWeight={600} align="center">

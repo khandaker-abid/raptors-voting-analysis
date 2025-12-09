@@ -23,11 +23,9 @@ from pymongo import MongoClient
 import numpy as np
 from datetime import datetime, UTC
 
-# MongoDB connection
 MONGO_URI = "mongodb://localhost:27017/"
 DB_NAME = "voting_analysis"  # Match backend configuration
 
-# Maryland counties with demographic data (Census estimates)
 MARYLAND_COUNTIES = {
     "Anne Arundel County": {
         "white": 0.63, "african_american": 0.17, "hispanic": 0.08, "asian": 0.06, "native_american": 0.003, "other": 0.057
@@ -89,8 +87,6 @@ def generate_equipment_quality_curves():
     """
     documents = []
     
-    # Define realistic mean quality scores by demographic (based on research)
-    # These reflect documented disparities in election infrastructure
     demographic_means = {
         "white": 76.0,           # Higher average quality
         "african_american": 64.0, # Lower average quality (documented disparity)
@@ -113,7 +109,6 @@ def generate_equipment_quality_curves():
         mean = demographic_means[demographic]
         std_dev = demographic_stddev[demographic]
         
-        # Generate probability curve (quality scores 0-100)
         curve_data = []
         for quality_score in range(0, 101, 2):  # Step by 2 for efficiency
             probability = normal_distribution(quality_score, mean, std_dev)
@@ -161,8 +156,6 @@ def generate_rejection_rate_curves():
     """
     documents = []
     
-    # Define realistic mean rejection rates by demographic (%)
-    # Based on research from 2020 election studies
     demographic_means = {
         "white": 2.3,              # Lower rejection rate
         "african_american": 5.2,   # Significantly higher (documented disparity)
@@ -185,7 +178,6 @@ def generate_rejection_rate_curves():
         mean = demographic_means[demographic]
         std_dev = demographic_stddev[demographic]
         
-        # Generate probability curve (rejection rates 0-15%)
         curve_data = []
         x_values = np.arange(0, 15.1, 0.3)  # 0 to 15% in 0.3% steps
         
@@ -229,18 +221,15 @@ def generate_precinct_level_data():
     documents = []
     
     for county, demographics in MARYLAND_COUNTIES.items():
-        # Generate 10-20 precincts per county
         num_precincts = np.random.randint(10, 21)
         
         for precinct_num in range(1, num_precincts + 1):
             precinct_name = f"{county} Precinct {precinct_num}"
             
-            # Determine dominant demographic (weighted by county demographics)
             probabilities = np.array([demographics.get(d, 0.01) for d in DEMOGRAPHICS])
             probabilities = probabilities / probabilities.sum()  # Normalize to sum to 1
             dominant_demo = np.random.choice(DEMOGRAPHICS, p=probabilities)
             
-            # Equipment quality correlates with demographic composition
             if dominant_demo in ["white", "asian"]:
                 quality_base = np.random.uniform(70, 85)
             elif dominant_demo in ["african_american", "hispanic"]:
@@ -248,14 +237,11 @@ def generate_precinct_level_data():
             else:
                 quality_base = np.random.uniform(60, 80)
             
-            # Add county-level variation (urban counties have better equipment)
             if county in ["Montgomery County", "Howard County", "Baltimore city"]:
                 quality_base += np.random.uniform(0, 10)
             
             equipment_quality = min(100, quality_base)
             
-            # Rejection rates inversely correlate with quality
-            # Also affected by demographic factors
             if dominant_demo in ["white", "asian"]:
                 rejection_base = np.random.uniform(1.5, 3.5)
             elif dominant_demo in ["african_american", "native_american"]:
@@ -290,13 +276,11 @@ def main():
     print("=" * 70)
     
     try:
-        # Connect to MongoDB
         print("\n1. Connecting to MongoDB...")
         client = MongoClient(MONGO_URI)
         db = client[DB_NAME]
         print("   [OK] Connected successfully")
         
-        # Generate equipment quality curves (GUI-28)
         print("\n2. Generating equipment quality analysis (GUI-28)...")
         equipment_docs = generate_equipment_quality_curves()
         
@@ -305,7 +289,6 @@ def main():
             db.ei_equipment_analysis.insert_many(equipment_docs)
             print(f"   [OK] Inserted {len(equipment_docs)} equipment quality curves")
         
-        # Generate rejection rate curves (GUI-29)
         print("\n3. Generating ballot rejection analysis (GUI-29)...")
         rejection_docs = generate_rejection_rate_curves()
         
@@ -314,7 +297,6 @@ def main():
             db.ei_rejection_analysis.insert_many(rejection_docs)
             print(f"   [OK] Inserted {len(rejection_docs)} rejection rate curves")
         
-        # Generate precinct-level data
         print("\n4. Generating precinct-level EI data...")
         precinct_docs = generate_precinct_level_data()
         
@@ -323,7 +305,6 @@ def main():
             db.ei_precinct_analysis.insert_many(precinct_docs)
             print(f"   [OK] Inserted {len(precinct_docs)} precinct records")
         
-        # Summary
         print("\n" + "=" * 70)
         print("Summary of Generated Data")
         print("=" * 70)

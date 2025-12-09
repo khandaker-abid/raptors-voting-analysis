@@ -9,7 +9,6 @@ import sys
 import logging
 from pathlib import Path
 
-# Add utils to path
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import DatabaseManager, load_config, get_state_fips_mapping
@@ -26,7 +25,6 @@ class CVAPDataDownloader:
         self.db = DatabaseManager(config_path)
         self.config = load_config(config_path)
         
-        # Get Census API key from config
         census_api_key = self.config['apiKeys'].get('censusApiKey')
         if not census_api_key:
             raise ValueError("Census API key not found in config.json")
@@ -44,32 +42,26 @@ class CVAPDataDownloader:
         
         state_fips = self.state_fips[state_abbr]
         
-        # Download CVAP data by county (using 2023 as most recent year)
         cvap_data = self.census.get_cvap_data(year=2023, state_fips=state_fips)
         
         if not cvap_data or len(cvap_data) < 2:
             logger.warning(f"No CVAP data retrieved for {state_abbr}")
             return 0
         
-        # Parse response (first row is headers)
         headers = cvap_data[0]
         rows = cvap_data[1:]
         
         logger.info(f"Retrieved CVAP data for {len(rows)} counties")
         
-        # Transform and store
         documents = []
         
         for row in rows:
-            # Create dict from headers and row
             county_data = dict(zip(headers, row))
             
-            # Extract county FIPS
             state_code = county_data.get('state', '')
             county_code = county_data.get('county', '')
             county_fips = f"{state_code}{county_code}"
             
-            # Build document
             doc = {
                 'fipsCode': county_fips,  # Required by validation
                 'state': state_abbr,       # Required by validation
@@ -92,7 +84,6 @@ class CVAPDataDownloader:
             
             documents.append(doc)
         
-        # Store in database
         if documents:
             logger.info(f"Storing {len(documents)} CVAP records...")
             for doc in documents:

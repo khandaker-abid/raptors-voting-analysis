@@ -46,7 +46,6 @@ const QuickAccessWidget: React.FC = () => {
                 pointerEvents: "none",
             }}
         >
-            {/* State Cards */}
             {stateData.map((state) => (
                 <Tooltip
                     key={state.name}

@@ -24,18 +24,15 @@ import numpy as np
 from datetime import datetime, UTC
 from scipy import stats
 
-# MongoDB connection
 MONGO_URI = "mongodb://localhost:27017/"
 DB_NAME = "voting_analysis"
 
-# States to process
 STATES = {
     "Arkansas": "AR",
     "Maryland": "MD",
     "Rhode Island": "RI"
 }
 
-# County data for each state (based on real demographic distributions)
 STATE_COUNTIES = {
     "Arkansas": {
         "Pulaski": {"white": 0.52, "african_american": 0.40, "hispanic": 0.06, "asian": 0.02},
@@ -89,7 +86,6 @@ def calculate_voting_patterns(demographics, state_abbr):
     hispanic_pct = demographics["hispanic"]
     asian_pct = demographics["asian"]
     
-    # Base voting patterns by state (2024 Presidential election patterns)
     if state_abbr == "MD":  # Maryland is Democratic-leaning
         dem_base = 60.0
         rep_base = 38.0
@@ -100,32 +96,23 @@ def calculate_voting_patterns(demographics, state_abbr):
         dem_base = 56.0
         rep_base = 42.0
     
-    # Adjust based on racial demographics
-    # Research shows strong correlations between race and voting patterns
     
-    # African American voters tend to vote Democratic (85-95%)
     dem_adjustment = (african_american_pct * 45.0)
     
-    # Hispanic voters lean Democratic (60-70%)
     dem_adjustment += (hispanic_pct * 25.0)
     
-    # Asian voters lean Democratic (55-65%)
     dem_adjustment += (asian_pct * 18.0)
     
-    # White voters vary by state but generally lean Republican
     rep_adjustment = (white_pct * 20.0)
     
-    # Calculate final percentages with noise
     noise = np.random.normal(0, 3.0)  # Add realistic variance
     
     dem_pct = dem_base + dem_adjustment - (rep_adjustment * 0.4) + noise
     rep_pct = rep_base + rep_adjustment - (dem_adjustment * 0.3) - noise
     
-    # Ensure percentages are valid
     dem_pct = max(10.0, min(90.0, dem_pct))
     rep_pct = max(10.0, min(90.0, rep_pct))
     
-    # Normalize to ensure they don't exceed 100% together
     total = dem_pct + rep_pct
     if total > 98.0:
         factor = 98.0 / total
@@ -150,37 +137,28 @@ def generate_precincts_for_county(state_name, state_abbr, county_name, county_de
     """
     precincts = []
     
-    # Generate 15-30 precincts per county
     num_precincts = np.random.randint(15, 31)
     
     for precinct_num in range(1, num_precincts + 1):
         precinct_id = f"{county_name}-{precinct_num:03d}"
         precinct_name = f"{county_name} County Precinct {precinct_num}"
         
-        # Add variance to county demographics for precinct level
-        # Precincts within a county can have different demographic compositions
         demographics = {}
         for demo, pct in county_demographics.items():
-            # Add normal variance around county average
             variance = np.random.normal(0, 0.08)  # 8% standard deviation
             precinct_pct = pct + variance
-            # Ensure valid range
             precinct_pct = max(0.0, min(1.0, precinct_pct))
             demographics[demo] = precinct_pct
         
-        # Normalize demographics to sum to ~1.0
         total = sum(demographics.values())
         if total > 0:
             demographics = {k: v/total for k, v in demographics.items()}
         
-        # Calculate voting patterns based on demographics
         dem_pct, rep_pct = calculate_voting_patterns(demographics, state_abbr)
         
-        # Calculate other party percentage
         other_pct = 100.0 - dem_pct - rep_pct
         other_pct = max(1.0, other_pct)  # Ensure at least 1% for other
         
-        # Generate vote counts (realistic precinct sizes)
         total_votes = np.random.randint(500, 2500)
         dem_votes = int(total_votes * dem_pct / 100.0)
         rep_votes = int(total_votes * rep_pct / 100.0)
@@ -195,7 +173,6 @@ def generate_precincts_for_county(state_name, state_abbr, county_name, county_de
             "electionYear": 2024,
             "electionType": "Presidential",
             
-            # Voting results
             "democraticPct": dem_pct,
             "republicanPct": rep_pct,
             "otherPct": round(other_pct, 2),
@@ -205,7 +182,6 @@ def generate_precincts_for_county(state_name, state_abbr, county_name, county_de
             "otherVotes": other_votes,
             "totalVotes": total_votes,
             
-            # Demographics (as percentages 0-100)
             "whitePct": round(demographics["white"] * 100, 2),
             "africanAmericanPct": round(demographics["african_american"] * 100, 2),
             "hispanicPct": round(demographics["hispanic"] * 100, 2),
@@ -234,16 +210,12 @@ def calculate_regression_coefficients(precincts, demographic_key):
     Returns:
         dict: Regression coefficients for both parties
     """
-    # Extract data points
     x_values = [p[demographic_key] for p in precincts]
     dem_y_values = [p["democraticPct"] for p in precincts]
     rep_y_values = [p["republicanPct"] for p in precincts]
     
-    # Fit power law: y = a * x^b
-    # Take log to linearize: log(y) = log(a) + b * log(x)
     
     def fit_power_law(x, y):
-        # Filter out zeros to avoid log(0)
         valid_indices = [(i, xi, yi) for i, (xi, yi) in enumerate(zip(x, y)) if xi > 0 and yi > 0]
         if len(valid_indices) < 5:
             return {"a": 0.5, "b": 1.0}  # Default values
@@ -254,7 +226,6 @@ def calculate_regression_coefficients(precincts, demographic_key):
         log_x = np.log(x_valid)
         log_y = np.log(y_valid)
         
-        # Linear regression on log-log scale
         slope, intercept, r_value, p_value, std_err = stats.linregress(log_x, log_y)
         
         a = np.exp(intercept)
@@ -295,7 +266,6 @@ def generate_state_data(state_name, state_abbr):
     
     print(f"    Generated {len(all_precincts)} precincts across {len(counties)} counties")
     
-    # Calculate regression coefficients for each demographic
     regression_data = {
         "state": state_name,
         "stateAbbr": state_abbr,
@@ -319,19 +289,16 @@ def main():
     print("=" * 70)
     
     try:
-        # Connect to MongoDB
         print("\n1. Connecting to MongoDB...")
         client = MongoClient(MONGO_URI)
         db = client[DB_NAME]
         print("   [OK] Connected successfully")
         
-        # Clear existing data
         print("\n2. Clearing existing precinct data...")
         db.precinct_demographics.delete_many({})
         db.gingles_regressions.delete_many({})
         print("   [OK] Cleared existing data")
         
-        # Generate data for each state
         print("\n3. Generating precinct-level data...")
         
         total_precincts = 0
@@ -340,19 +307,15 @@ def main():
         for state_name, state_abbr in STATES.items():
             precincts, regression_data = generate_state_data(state_name, state_abbr)
             
-            # Insert precinct data
             if precincts:
                 db.precinct_demographics.insert_many(precincts)
                 total_precincts += len(precincts)
             
-            # Store regression data
             all_regressions.append(regression_data)
         
-        # Insert regression data
         if all_regressions:
             db.gingles_regressions.insert_many(all_regressions)
         
-        # Summary
         print("\n" + "=" * 70)
         print("Summary of Generated Data")
         print("=" * 70)
@@ -369,7 +332,6 @@ def main():
         print("  - precinct_demographics (precinct-level voting and demographics)")
         print("  - gingles_regressions (regression coefficients for trend lines)")
         
-        # Show sample regression data
         print("\n4. Sample Regression Data:")
         sample = db.gingles_regressions.find_one({"state": "Maryland"})
         if sample:

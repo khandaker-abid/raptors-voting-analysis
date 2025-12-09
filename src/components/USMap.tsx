@@ -1,9 +1,3 @@
-/**
- * Interactive US map component using Leaflet.
- * Displays all 50 states with clickable regions that navigate to state detail pages.
- * Detail states (Arkansas, Maryland, Rhode Island) are highlighted.
- */
-
 import React, { useMemo, useEffect, useState } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { useNavigate } from "react-router-dom";
@@ -41,7 +35,7 @@ const USMap: React.FC = () => {
 			color: isDetailState ? theme.palette.primary.main : "#bdbdbd",
 			dashArray: "",
 			fillOpacity: isDetailState ? 0.5 : 0.2,
-			className: "no-outline", // Remove focus outline
+			className: "no-outline",
 		};
 	};
 
@@ -116,7 +110,7 @@ const USMap: React.FC = () => {
 				height: "100%",
 				margin: "0",
 				padding: "0",
-				minHeight: "500px", // Ensure minimum height for map rendering
+				minHeight: "500px",
 			}}>
 			<Box
 				className="us-map-container"
@@ -130,10 +124,10 @@ const USMap: React.FC = () => {
 					height: "100%",
 					width: "100%",
 					overflow: "visible",
-					minHeight: "500px", // Ensure minimum height for map rendering
+					minHeight: "500px",
 				}}>
 				<MapContainer
-					center={[39.5, -96.0]} // Adjusted center to better show Florida and Maine
+					center={[39.5, -96.0]}
 					zoom={4.8}
 					zoomSnap={0.25}
 					minZoom={4.0}

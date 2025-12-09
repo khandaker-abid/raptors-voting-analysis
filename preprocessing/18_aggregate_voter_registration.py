@@ -16,7 +16,6 @@ def aggregate_voter_registration():
     db = db_manager.db
     voter_collection = db['voter_registration']
     
-    # Get all states
     states = voter_collection.distinct('state')
     print(f"Found {len(states)} states: {states}")
     
@@ -25,12 +24,10 @@ def aggregate_voter_registration():
     for state in states:
         print(f"\nProcessing {state}...")
         
-        # Get all counties in this state
         counties = voter_collection.distinct('county', {'state': state})
         print(f"  Found {len(counties)} counties")
         
         for county in counties:
-            # Aggregate data for this county
             pipeline = [
                 {
                     '$match': {
@@ -82,7 +79,6 @@ def aggregate_voter_registration():
                 })
                 print(f"    {county}: {data['totalRegistered']} voters")
     
-    # Save to JSON file for backend
     output_dir = os.path.join(os.path.dirname(__file__), '..', 'backend', 'src', 'main', 'resources', 'data')
     os.makedirs(output_dir, exist_ok=True)
     
@@ -94,7 +90,6 @@ def aggregate_voter_registration():
     print(f"\n[OK] Aggregated data saved to {output_file}")
     print(f"  Total records: {len(aggregated_data)}")
     
-    # Print summary by state
     print("\nSummary by state:")
     for state in states:
         state_data = [d for d in aggregated_data if d['stateName'] == state]

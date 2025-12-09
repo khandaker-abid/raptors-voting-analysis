@@ -1,9 +1,3 @@
-/**
- * Interactive state map component using Leaflet.
- * Displays county/jurisdiction boundaries with clickable regions.
- * Supports choropleth overlays and data-driven styling.
- */
-
 import React, { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import {
@@ -64,12 +58,6 @@ const StateMap: React.FC<StateMapProps> = ({
 	const hoveredLayerRef = useRef<L.Path | null>(null);
 	const lastHoveredFeatureRef = useRef<Feature | undefined>(undefined);
 
-	/**
-	 * Robust de-highlighter.
-	 * - If we know the hovered layer, reset just that.
-	 * - If we don't (or caller asks), reset ALL layers.
-	 * - Also closes all tooltips.
-	 */
 	const clearHover = (resetAll = false) => {
 		const gj = geoJsonRef.current;
 		const hovered = hoveredLayerRef.current as any | null;

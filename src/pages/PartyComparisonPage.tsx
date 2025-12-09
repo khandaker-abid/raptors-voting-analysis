@@ -149,7 +149,6 @@ const PartyComparisonPage: React.FC = () => {
 				Compare voting metrics between Republican-controlled, Democratic-controlled, and Split states
 			</Typography>
 
-			{/* Summary Cards */}
 			<Box sx={{ display: 'flex', gap: 2, mb: 1.5 }}>
 				<Box sx={{ flex: 1 }}>
 					<Card sx={{ bgcolor: 'error.light', color: 'white' }}>
@@ -180,9 +179,7 @@ const PartyComparisonPage: React.FC = () => {
 				</Box>
 			</Box>
 
-			{/* Charts in two columns */}
 			<Box sx={{ display: 'flex', gap: 2, mb: 1.5, flex: '1 1 auto', minHeight: 0 }}>
-				{/* Voting Metrics Chart */}
 				<Paper sx={{ p: 2, flex: 1, display: 'flex', flexDirection: 'column' }}>
 					<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
 						Voting Metrics Comparison
@@ -203,7 +200,6 @@ const PartyComparisonPage: React.FC = () => {
 					</Box>
 				</Paper>
 
-				{/* Felony Voting Policies Chart */}
 				<Paper sx={{ p: 2, flex: 1, display: 'flex', flexDirection: 'column' }}>
 					<Typography variant="subtitle1" fontWeight="bold" gutterBottom>
 						Felony Voting Policies
@@ -225,7 +221,6 @@ const PartyComparisonPage: React.FC = () => {
 				</Paper>
 			</Box>
 
-			{/* Summary Table */}
 			<Paper sx={{ p: 2 }}>
 				<Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
 					Summary Statistics

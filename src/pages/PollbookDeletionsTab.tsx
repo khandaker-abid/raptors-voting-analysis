@@ -40,7 +40,7 @@ const PollbookDeletionsTab = ({ stateName }: PollbookDeletionsTabProps) => {
         })();
 
         return () => {
-            alive = false; // cleanup on unmount
+            alive = false;
         };
     }, [stateName]);
 

@@ -1,8 +1,3 @@
-/**
- * Ecological Inference - Rejected Ballots Probability
- * Shows probability curves for ballot rejection by demographic group.
- */
-
 import React, { useState, useMemo, useEffect } from "react";
 import {
     ResponsiveContainer,
@@ -59,7 +54,7 @@ const DEMOGRAPHIC_COLORS: Record<string, string> = {
     "Hispanic": "#388e3c", // Green
     "Asian": "#f57c00", // Orange
     "Native American": "#7b1fa2", // Purple
-    "Other": "#c2185b", // Pink
+    "Other": "#c2185b",
 };
 
 const toBackendFormat = (demographic: string): string => {
@@ -166,8 +161,9 @@ const EIRejectedBallotsChart: React.FC<Props> = ({ stateName }) => {
     };
 
     const chartData = useMemo(() => {
-        if (!data) return [];
+        if (!data || !data.curves || data.curves.length === 0) return [];
 
+        // Get all unique rejection probabilities from the data
         const allRejectionProbs = new Set<number>();
         data.curves.forEach(curve => {
             curve.data.forEach(point => {
@@ -181,8 +177,8 @@ const EIRejectedBallotsChart: React.FC<Props> = ({ stateName }) => {
             const point: any = { rejectionProbability: prob };
 
             selectedDemographics.forEach(demographic => {
-                const backendName = toBackendFormat(demographic);
-                const curve = data.curves.find(c => c.demographic === backendName);
+                // Find curve by matching the UI demographic name (already normalized in transform)
+                const curve = data.curves.find(c => c.demographic === demographic);
                 if (curve) {
                     const dataPoint = curve.data.find(d =>
                         Math.abs(d.rejectionProbability - prob) < 0.01

@@ -6,9 +6,6 @@ interface ResponsiveTableWrapperProps {
     maxHeight?: number | string;
 }
 
-/**
- * Responsive wrapper for tables that makes them scrollable on mobile
- */
 export const ResponsiveTableWrapper: React.FC<ResponsiveTableWrapperProps> = ({
     children,
     maxHeight = 600,

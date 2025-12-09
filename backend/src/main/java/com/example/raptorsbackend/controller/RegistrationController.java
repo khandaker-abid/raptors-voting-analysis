@@ -9,19 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
-/**
- * REST Controller for voter registration data.
- * 
- * Provides endpoints for:
- * - Registration trends across election years (2016, 2020, 2024)
- * - Census block level voter analysis
- * - Party dominance bubble overlays
- * - Paginated registered voter listings
- * - Felony voting policy data
- * 
- * Supports GUI use cases: GUI-1, GUI-2, GUI-3
- * Data sources: EAVS registration data, state voter files
- */
 @RestController
 @RequestMapping("/api/registration")
 @CrossOrigin(origins = { "http://localhost:3000", "http://localhost:5173" })
@@ -31,14 +18,6 @@ public class RegistrationController {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    /**
-     * Get registration trends for a state across election years.
-     * Returns voter counts by geographic unit for trend analysis.
-     * 
-     * @param state State name (case-sensitive)
-     * @param years Comma-separated list of years (default: 2016,2020,2024)
-     * @return Map with state name and registration data by year
-     */
     @GetMapping("/trends/{state}")
     public Map<String, Object> getRegistrationTrends(
             @PathVariable String state,
@@ -48,12 +27,10 @@ public class RegistrationController {
         Map<String, Object> result = new HashMap<>();
         result.put("state", state);
 
-        // Get 2024 data first to establish geographic unit order
         Query query2024 = new Query();
         query2024.addCriteria(Criteria.where("stateFull").is(state).and("year").is(2024));
         List<Map> data2024 = mongoTemplate.find(query2024, Map.class, "eavsData");
 
-        // Sort by registered voters (ascending)
         data2024.sort((a, b) -> {
             Object aVal = a.get("A1a");
             Object bVal = b.get("A1a");
@@ -70,7 +47,6 @@ public class RegistrationController {
 
         result.put("geographicUnitOrder2024", geographicUnits);
 
-        // Get data for each year
         Map<String, List<Integer>> byYear = new HashMap<>();
         for (String year : yearArray) {
             Query query = new Query();
@@ -78,7 +54,6 @@ public class RegistrationController {
             query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(Integer.parseInt(year.trim())));
             List<Map> yearData = mongoTemplate.find(query, Map.class, "eavsData");
 
-            // Create lookup map
             Map<String, Integer> lookup = new HashMap<>();
             for (Map doc : yearData) {
                 String unit = (String) doc.get("jurisdictionName");
@@ -88,7 +63,6 @@ public class RegistrationController {
                 }
             }
 
-            // Build ordered list matching 2024 order
             List<Integer> orderedValues = new ArrayList<>();
             for (String unit : geographicUnits) {
                 orderedValues.add(lookup.getOrDefault(unit, 0));
@@ -101,13 +75,6 @@ public class RegistrationController {
         return result;
     }
 
-    /**
-     * Get census block bubbles for party dominance visualization.
-     * Returns geographic points with dominant party for map display.
-     * 
-     * @param state State name (case-sensitive)
-     * @return Map with state name and bubble points
-     */
     @GetMapping("/blocks/{state}")
     public Map<String, Object> getBlockBubbles(@PathVariable String state) {
         Query query = new Query();
@@ -124,7 +91,6 @@ public class RegistrationController {
             point.put("lat", block.get("centerLat"));
             point.put("lng", block.get("centerLng"));
 
-            // Determine dominant party
             int repCount = ((Number) block.getOrDefault("republicanCount", 0)).intValue();
             int demCount = ((Number) block.getOrDefault("democraticCount", 0)).intValue();
 
@@ -136,17 +102,6 @@ public class RegistrationController {
         return result;
     }
 
-    /**
-     * Get registered voters by geographic unit.
-     * Returns paginated voter records for a specific region.
-     * 
-     * @param state  State name (case-sensitive)
-     * @param region Geographic region name
-     * @param party  Party filter (optional)
-     * @param page   Page number (default: 0)
-     * @param size   Page size (default: 25)
-     * @return Map with voters, total count, and pagination info
-     */
     @GetMapping("/voters/{state}/{region}")
     public Map<String, Object> getRegisteredVoters(
             @PathVariable String state,
@@ -163,10 +118,8 @@ public class RegistrationController {
             query.addCriteria(Criteria.where("party").is(party));
         }
 
-        // Get total count
         long total = mongoTemplate.count(query, "voter_registration");
 
-        // Apply pagination
         query.with(PageRequest.of(page, size));
 
         List<Map> voters = mongoTemplate.find(query, Map.class, "voter_registration");
@@ -191,15 +144,8 @@ public class RegistrationController {
         return result;
     }
 
-    /**
-     * Get opt-in/opt-out registration policy comparison.
-     * Returns registration statistics by policy type across states.
-     * 
-     * @return List of states with registration policy data
-     */
     @GetMapping("/opt-in-out-comparison")
     public List<Map<String, Object>> getOptInOutComparison() {
-        // Define detail states and their registration types
         String[] states = { "RHODE ISLAND", "MARYLAND", "ARKANSAS" };
         String[] stateDisplay = { "Rhode Island", "Maryland", "Arkansas" };
         String[] registrationTypes = { "Opt-out", "Opt-out", "Opt-in" };
@@ -211,12 +157,10 @@ public class RegistrationController {
             String state = states[i];
             String regType = registrationTypes[i];
 
-            // Query EAVS data for the state (2024) - aggregate all counties
             Query query = new Query();
             query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(2024));
             List<Map> eavsData = mongoTemplate.find(query, Map.class, "eavsData");
 
-            // Calculate totals by aggregating all counties
             long totalRegistered = 0;
             long totalCVAP = 0;
             long totalVotesCast = 0;
@@ -224,7 +168,6 @@ public class RegistrationController {
             for (Map doc : eavsData) {
                 totalRegistered += getLongValue(doc, "A1a"); // Total registered voters
                 totalCVAP += getLongValue(doc, "A1b"); // Citizen Voting Age Population
-                // Total votes cast = sum of all voting methods
                 totalVotesCast += getLongValue(doc, "F1a"); // Election day
                 totalVotesCast += getLongValue(doc, "F1b"); // Polling place
                 totalVotesCast += getLongValue(doc, "F1d"); // Mail
@@ -238,13 +181,11 @@ public class RegistrationController {
             row.put("registeredVoters", totalRegistered);
             row.put("votesCast", totalVotesCast);
 
-            // Calculate registration rate (registered / CVAP * 100)
             double registrationRate = totalCVAP > 0
                     ? (double) totalRegistered / totalCVAP * 100
                     : 0.0;
             row.put("registrationRate", Math.round(registrationRate * 10) / 10.0);
 
-            // Calculate turnout rate (votes cast / registered * 100)
             double turnoutRate = totalRegistered > 0
                     ? (double) totalVotesCast / totalRegistered * 100
                     : 0.0;
@@ -256,12 +197,6 @@ public class RegistrationController {
         return result;
     }
 
-    /**
-     * Get early voting comparison across states.
-     * Returns early voting statistics for comparison analysis.
-     * 
-     * @return List of states with early voting data
-     */
     @GetMapping("/early-voting/comparison")
     public List<Map<String, Object>> getEarlyVotingComparison() {
         String[] states = { "RHODE ISLAND", "MARYLAND", "ARKANSAS" };
@@ -270,26 +205,22 @@ public class RegistrationController {
 
         for (int i = 0; i < states.length; i++) {
             String state = states[i];
-            // Query EAVS data for the state (2024) - aggregate all counties
             Query query = new Query();
             query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(2024));
             List<Map> eavsData = mongoTemplate.find(query, Map.class, "eavsData");
 
-            // Calculate totals by aggregating all counties
             long totalVotesCast = 0;
             long mailBallots = 0;
             long earlyInPerson = 0;
             long dropBox = 0;
 
             for (Map doc : eavsData) {
-                // Total votes cast = sum of all voting methods (F1 fields)
                 long f1a = getLongValue(doc, "F1a"); // Election day
                 long f1b = getLongValue(doc, "F1b"); // Polling place
                 long f1d = getLongValue(doc, "F1d"); // Mail
                 long f1f = getLongValue(doc, "F1f"); // Early in-person
                 totalVotesCast += f1a + f1b + f1d + f1f;
 
-                // Early voting methods
                 mailBallots += f1d; // Mail ballots (F1d is the actual count)
                 earlyInPerson += f1f; // Early in-person (F1f is the actual count)
                 dropBox += getLongValue(doc, "C3a"); // Drop box
@@ -316,9 +247,6 @@ public class RegistrationController {
         return result;
     }
 
-    /**
-     * Helper: Safely get integer value from document
-     */
     private int getIntValue(Map doc, String key) {
         Object value = doc.get(key);
         if (value == null)
@@ -333,9 +261,6 @@ public class RegistrationController {
         }
     }
 
-    /**
-     * Helper: Safely get long value from document
-     */
     private long getLongValue(Map doc, String key) {
         Object value = doc.get(key);
         if (value == null)
@@ -350,9 +275,6 @@ public class RegistrationController {
         }
     }
 
-    /**
-     * Health check
-     */
     @GetMapping("/health")
     public Map<String, String> health() {
         return Map.of("status", "ok", "service", "registration-controller");

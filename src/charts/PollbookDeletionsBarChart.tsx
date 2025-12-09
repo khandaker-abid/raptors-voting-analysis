@@ -1,8 +1,3 @@
-/**
- * Stacked bar chart showing pollbook deletion reasons.
- * Displays breakdown by category (death, moved, felony, etc.)
- */
-
 import { useMemo } from "react";
 import { Paper, Typography, Box } from "@mui/material";
 import {

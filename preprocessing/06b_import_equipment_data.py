@@ -18,7 +18,6 @@ from pathlib import Path
 from datetime import datetime, timezone
 from typing import List, Dict
 
-# Add utils to path
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import DatabaseManager, load_config
@@ -75,13 +74,10 @@ class EquipmentDataImporter:
         
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
-                # Skip the first line (VerifiedVoting header)
                 header_line = f.readline()
                 
-                # Read the CSV header line
                 csv_header = f.readline()
                 
-                # Parse the CSV data
                 records = self._parse_verifier_csv(f, csv_header, state_abbr, year, equipment_type)
                     
         except Exception as e:
@@ -93,41 +89,30 @@ class EquipmentDataImporter:
         """Parse VerifiedVoting CSV format (merged jurisdictions + machines data)"""
         records = []
         
-        # Parse the header to get column names
-        # The CSV header line should contain the column names
         import io
         header_reader = csv.reader(io.StringIO(csv_header))
         columns = next(header_reader)
         
-        # Now parse the data rows
         reader = csv.reader(file_obj)
         
         for row in reader:
-            # Skip empty rows
             if not row or not any(row):
                 continue
             
-            # Stop parsing when we hit the second section (equipment details)
-            # The second section has different columns - check if "Equipment Type" column appears
             if row and len(row) > 3:
-                # Check if this looks like the equipment details section
-                # Equipment details have "Internet Voting", "Batch-Fed", etc. in column 4
                 if any(term in str(row[3]) for term in ['Internet Voting', 'Batch-Fed', 'Equipment Type']):
                     logger.info(f"  Reached equipment details section, stopping jurisdiction parsing")
                     break
             
-            # Create a dictionary from the row
             row_dict = {}
             for i, value in enumerate(row):
                 if i < len(columns):
                     row_dict[columns[i].strip()] = value.strip() if value else ''
             
-            # Skip if no jurisdiction info
             jurisdiction = row_dict.get('Jurisdiction', row_dict.get('County', ''))
             if not jurisdiction:
                 continue
             
-            # Create the record
             record = {
                 'stateAbbr': state_abbr,
                 'jurisdiction': jurisdiction,
@@ -137,7 +122,6 @@ class EquipmentDataImporter:
                 'lastUpdated': datetime.now(timezone.utc),
             }
             
-            # Add relevant fields
             if 'FIPS code' in row_dict and row_dict['FIPS code']:
                 record['fipsCode'] = row_dict['FIPS code']
             
@@ -153,7 +137,6 @@ class EquipmentDataImporter:
                 except (ValueError, TypeError):
                     pass
             
-            # Extract equipment/voting methods
             marking_method = row_dict.get('Election Day Marking Method', '')
             tabulation = row_dict.get('Election Day Tabulation', '')
             
@@ -162,7 +145,6 @@ class EquipmentDataImporter:
             if tabulation:
                 record['tabulationMethod'] = tabulation
             
-            # Add all data as equipment details
             equipment_details = {}
             for key, value in row_dict.items():
                 if key not in ['FIPS code', 'State', 'Jurisdiction', 'County'] and value:
@@ -178,14 +160,12 @@ class EquipmentDataImporter:
     def store_equipment_records(self, records: List[Dict]):
         """Store equipment records in database"""
         for record in records:
-            # Upsert based on state, jurisdiction (if present), year, and equipment type
             query = {
                 'stateAbbr': record['stateAbbr'],
                 'year': record['year'],
                 'equipmentType': record.get('equipmentType', 'standard')
             }
             
-            # Add jurisdiction to query if present
             if 'jurisdiction' in record:
                 query['jurisdiction'] = record['jurisdiction']
             elif 'manufacturer' in record and 'model' in record:
@@ -208,7 +188,6 @@ def main():
     
     importer = EquipmentDataImporter()
     
-    # Import all equipment data
     total_records = importer.import_all_equipment()
     
     logger.info("")

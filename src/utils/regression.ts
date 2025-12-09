@@ -1,29 +1,17 @@
-/**
- * Regression line calculation utilities.
- * Implements linear and power regression for bubble charts.
- */
-
 export interface Point {
     x: number;
     y: number;
 }
-
 export interface LinearCoefficients {
     slope: number;
     intercept: number;
-    r2: number; // Coefficient of determination
+    r2: number;
 }
-
 export interface PowerCoefficients {
-    a: number; // Coefficient
-    b: number; // Exponent
-    r2: number; // Coefficient of determination
+    a: number;
+    b: number;
+    r2: number;
 }
-
-/**
- * Calculate linear regression (y = mx + b)
- * Uses ordinary least squares method
- */
 export function calculateLinearRegression(
     points: Point[]
 ): LinearCoefficients {
@@ -46,18 +34,15 @@ export function calculateLinearRegression(
         sumX2 += point.x * point.x;
     }
 
-    // Calculate slope (m) and intercept (b)
     const denominator = n * sumX2 - sumX * sumX;
 
     if (Math.abs(denominator) < 1e-10) {
-        // Vertical line or all points have same x
         return { slope: 0, intercept: sumY / n, r2: 0 };
     }
 
     const slope = (n * sumXY - sumX * sumY) / denominator;
     const intercept = (sumY - slope * sumX) / n;
 
-    // Calculate R² (coefficient of determination)
     const meanY = sumY / n;
     let ssTotal = 0;
     let ssResidual = 0;
@@ -77,11 +62,6 @@ export function calculateLinearRegression(
     };
 }
 
-/**
- * Calculate power regression (y = a * x^b)
- * Uses logarithmic transformation and linear regression
- * Best for non-linear relationships
- */
 export function calculatePowerRegression(
     points: Point[]
 ): PowerCoefficients {
@@ -89,11 +69,9 @@ export function calculatePowerRegression(
         return { a: 0, b: 1, r2: 0 };
     }
 
-    // Filter out points where x or y is <= 0 (can't take log)
     const validPoints = points.filter((p) => p.x > 0 && p.y > 0);
 
     if (validPoints.length < 2) {
-        // Fall back to linear regression
         const linear = calculateLinearRegression(points);
         return {
             a: linear.intercept,
@@ -102,20 +80,16 @@ export function calculatePowerRegression(
         };
     }
 
-    // Transform to log space: ln(y) = ln(a) + b*ln(x)
     const logPoints: Point[] = validPoints.map((p) => ({
         x: Math.log(p.x),
         y: Math.log(p.y),
     }));
 
-    // Perform linear regression in log space
     const logRegression = calculateLinearRegression(logPoints);
 
-    // Transform back: a = e^intercept, b = slope
     const a = Math.exp(logRegression.intercept);
     const b = logRegression.slope;
 
-    // Calculate R² in original space
     const meanY = validPoints.reduce((sum, p) => sum + p.y, 0) / validPoints.length;
     let ssTotal = 0;
     let ssResidual = 0;
@@ -135,9 +109,6 @@ export function calculatePowerRegression(
     };
 }
 
-/**
- * Generate line points from linear regression coefficients
- */
 export function generateLinearLinePoints(
     coef: LinearCoefficients,
     xMin: number,
@@ -156,9 +127,6 @@ export function generateLinearLinePoints(
     return points;
 }
 
-/**
- * Generate line points from power regression coefficients
- */
 export function generatePowerLinePoints(
     coef: PowerCoefficients,
     xMin: number,
@@ -177,9 +145,6 @@ export function generatePowerLinePoints(
     return points;
 }
 
-/**
- * Clamp value between 0 and 1 (for percentages)
- */
 export function clamp01(value: number): number {
     return Math.max(0, Math.min(100, value));
 }

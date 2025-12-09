@@ -6,9 +6,6 @@ interface ChartSkeletonProps {
     showLegend?: boolean;
 }
 
-/**
- * Skeleton loader for charts while data is being fetched
- */
 export const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
     height = 400,
     showLegend = true,
@@ -42,9 +39,6 @@ interface TableSkeletonProps {
     columns?: number;
 }
 
-/**
- * Skeleton loader for tables while data is being fetched
- */
 export const TableSkeleton: React.FC<TableSkeletonProps> = ({
     rows = 5,
     columns = 4,
@@ -82,9 +76,6 @@ interface MapSkeletonProps {
     height?: number;
 }
 
-/**
- * Skeleton loader for maps while tiles are loading
- */
 export const MapSkeleton: React.FC<MapSkeletonProps> = ({ height = 500 }) => {
     return (
         <Box sx={{ width: '100%', p: 2 }}>
@@ -147,9 +138,6 @@ interface StatCardSkeletonProps {
     count?: number;
 }
 
-/**
- * Skeleton loader for stat cards
- */
 export const StatCardSkeleton: React.FC<StatCardSkeletonProps> = ({ count = 3 }) => {
     return (
         <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>

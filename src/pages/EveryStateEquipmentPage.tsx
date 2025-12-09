@@ -11,7 +11,7 @@ const EveryStateEquipmentPage: React.FC = () => {
 				alignItems: 'flex-start',
 				minHeight: '100vh',
 				bgcolor: '#f5f5f5',
-				p: 3, 
+				p: 3,
 				overflow: 'hidden',
 			}}>
 			<EveryStateEquipmentTable />

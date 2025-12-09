@@ -31,7 +31,6 @@ class DatabaseManager:
         """Establish MongoDB connection"""
         try:
             self.client = MongoClient(self.mongo_uri, serverSelectionTimeoutMS=5000)
-            # Test connection
             self.client.admin.command('ping')
             self.db = self.client[self.db_name]
             logger.info(f"Connected to MongoDB: {self.db_name}")

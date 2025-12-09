@@ -10,7 +10,6 @@ import logging
 from pathlib import Path
 from datetime import datetime, timezone
 
-# Add utils to path
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import DatabaseManager, load_config
@@ -52,7 +51,6 @@ class FelonyVotingDataProcessor:
         """Process and store felony voting policies for all states"""
         documents = []
         
-        # Get state name mapping
         from utils.data_sources import FELONY_VOTING_POLICIES
         
         for state_abbr, policy in FELONY_VOTING_POLICIES.items():
@@ -71,15 +69,12 @@ class FelonyVotingDataProcessor:
             documents.append(document)
             logger.info(f"{state_abbr}: {policy}")
         
-        # Store in database
         if documents:
             logger.info(f"Storing {len(documents)} felony voting policies...")
             
-            # Use stateAbbr as key for upsert
             self.db.bulk_upsert('felonyVotingData', documents, key_field='stateAbbr')
             logger.info("Felony voting policies stored successfully!")
         
-        # Log detailed states
         logger.info("\nPolicies for detailed states:")
         republican_state = self.detailed_states.get('republicanDominated')
         democratic_state = self.detailed_states.get('democraticDominated')
@@ -100,7 +95,6 @@ class FelonyVotingDataProcessor:
         logger.info("FELONY VOTING RIGHTS SUMMARY")
         logger.info("="*70)
         
-        # Count by category
         categories = {}
         for policy in FELONY_VOTING_POLICIES.values():
             categories[policy] = categories.get(policy, 0) + 1
@@ -109,7 +103,6 @@ class FelonyVotingDataProcessor:
             logger.info(f"\n{category}:")
             logger.info(f"  States: {count}")
             
-            # List states in this category
             states = [abbr for abbr, pol in FELONY_VOTING_POLICIES.items() if pol == category]
             logger.info(f"  {', '.join(sorted(states))}")
         

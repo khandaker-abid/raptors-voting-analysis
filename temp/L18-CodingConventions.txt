@@ -1,0 +1,362 @@
+L18 – Coding Conventions
+
+12/2/2025
+
+CSE 416-S01
+Code Review Preparation
+Coding Conventions Highlights
+Java with some Python and JavaScript
+
+1
+
+© Robert Kelly, 2016-2025
+
+2
+
+Reading
+• Python coding style
+
+https://www.python.org/dev/peps/pep-0008/
+“Code is read much more often than it is written. “
+“A style guide is about consistency. Consistency with this style
+guide is important. Consistency within a project is more important.
+Consistency within one module or function is the most important.”
+
+2
+
+CSE416-S01
+
+1
+
+L18 – Coding Conventions
+
+12/2/2025
+
+© Robert Kelly, 2016-2025
+
+3
+
+Includes review of pre-processing,
+server, and client code
+
+Code Reviews
+
+• Code review dates
+• In class – 10-minute sessions today (volunteer) and 12/4 (actual)
+• Others – 10-minute Zoom sessions (attendance limited to the team) on Monday,
+12/8
+• Project team picks the starting use case
+• Start by briefly showing the GUI (does not need to be fully functional)
+• Trace the use case logic step-by-step in the code, starting with the HTML
+• Plan to respond to requests to review any use case or
+
+algorithm / pre-processing code
+• Scoring
+
+• Oral communications (maximum of 5 points)
+• Technical (maximum of 100 points)
+
+3
+
+© Robert Kelly, 2016-2025
+
+4
+
+Oral Communications Evaluation Criteria
+• Voice Projection
+• Proper use of vocabulary
+• Effectively managing time
+• Handling questions
+
+If not in class - all team members
+must enable video in Zoom
+
+4
+
+CSE416-S01
+
+2
+
+L18 – Coding Conventions
+
+12/2/2025
+
+© Robert Kelly, 2016-2025
+
+5
+
+Technical Quality Evaluation Criteria - Overall
+• Code is readable and maintainable
+• Code is logical
+• Code follows coding conventions
+• Completed code shows progress in all aspects of the system
+• Team demonstrates an understanding of libraries, frameworks, and
+
+language features
+• Test (or real) data is available for all planned use cases
+• DB is partially populated
+
+5
+
+© Robert Kelly, 2016-2025
+
+6
+
+Technical Evaluation Criteria
+• Absence of logic flaws
+
+• Appropriate use of tools
+
+• Use of appropriate data
+
+• Comprehensive RESTful API
+
+structures
+• Correct structure
+• Proper style (e.g., readable)
+• Consistency of coding style
+• Appropriately named identifiers
+• Modular code
+
+• Proper client event handling
+• Robust set of SW to date
+• Comments only when needed
+• Avoiding “magic” numbers
+• Import of configuration data
+• Code to enable testing
+
+6
+
+CSE416-S01
+
+3
+
+L18 – Coding Conventions
+
+12/2/2025
+
+© Robert Kelly, 2016-2025
+
+7
+
+AI Code Checking
+• Be prepared to discuss AI tools you have used to improve your
+
+code
+• Code quality
+• Readability
+• Performance
+• Refactoring
+• Improving modularity
+
+7
+
+© Robert Kelly, 2016-2025
+
+8
+
+Why Do We Need Coding Conventions?
+• Reduce software maintenance
+• Improve readability of the SW
+• Easier code walkthroughs and design reviews
+• Short methods
+
+Think about showing
+complete logic blocks in
+one screen
+
+8
+
+CSE416-S01
+
+4
+
+L18 – Coding Conventions
+
+12/2/2025
+
+© Robert Kelly, 2016-2025
+
+9
+
+Comments
+• Implementation comments are for commenting out code or
+
+describing particular implementation issues
+• Comments should provide only info that is not available in the code
+(don’t document trivial issues)
+• Don’t use special characters, boxes, etc.
+• Block comments should be indented to the same level as the code
+• Trailing comments (same line) should be shifted away from code
+Comments often take away
+from single screen readability
+9
+
+© Robert Kelly, 2016-2025
+
+10
+
+Appearance
+• Indentation
+• 2 spaces is recommended (4 is OK)
+• Use the formatting feature of your IDE (tailor your settings)
+
+Helpful to use the IDE
+format feature regularly
+as you are coding – it
+helps you to see errors
+
+10
+
+CSE416-S01
+
+5
+
+L18 – Coding Conventions
+
+12/2/2025
+
+© Robert Kelly, 2016-2025
+
+11
+
+Java Declarations
+• Declarations at the beginning of a block
+• One declaration per line
+• You can either use a space or a tab between the type and the
+
+identifier
+• int level
+
+• int level
+
+//authorization level
+//authorization level
+
+• No space between a method name and the (
+
+Left alignment
+improves readability
+
+• { at the end of the line
+• {} when there is a null
+
+Helpful if identifier names line up
+on multiple lines
+
+11
+
+© Robert Kelly, 2016-2025
+
+12
+
+Java Annotations
+• Annotations applying to a class, method or constructor appear
+
+immediately after the documentation block
+• Each annotation is listed on a line of its own (that is, one
+annotation per line)
+@Override
+@Nullable
+public String getNameIfPresent() { ... }
+
+12
+
+CSE416-S01
+
+6
+
+L18 – Coding Conventions
+
+12/2/2025
+
+© Robert Kelly, 2016-2025
+
+13
+
+Blank Lines
+• Between methods
+• Between local variables in a method and the first statement
+• Between logical sections
+
+Do not use unnecessary blank
+lines – remember, a code
+module should be readable on
+a screen without scrolling
+
+13
+
+© Robert Kelly, 2016-2025
+
+14
+
+Java Naming Conventions
+• Packages – lower case (not CC)
+• Classes – should be nouns in upper camel case
+• First letter of each internal word is capitalized
+• Use whole words – avoid acronyms and abbreviations
+• Methods – should be verbs in lower camel case
+• Variables –
+
+lower camel case
+• Don’t use _ or $
+
+• Constants – all uppercase
+
+Do not use default
+package
+
+14
+
+CSE416-S01
+
+7
+
+L18 – Coding Conventions
+
+12/2/2025
+
+© Robert Kelly, 2016-2025
+
+15
+
+Worthless Documentation
+/**
+* Represents a command history
+*/
+public class CommandHistory {
+/**
+* Get the command history for a given user
+*/
+public static CommandHistory
+getCommandHistory(String user) {
+}
+}
+15
+
+© Robert Kelly, 2016-2025
+
+16
+
+Python Coding Convention Highlights
+• PeP 8 – style guide
+• Naming
+• Variables, lower case, using a _ for separation
+• Classes – upper camel case
+• 4 spaces per indentation level
+• # Arguments on first line discouraged, as in
+• No mixing of tabs and
+
+foo = long_function_name(var_one, var_two,
+var_three, var_four)
+
+spaces for indentation (spaces preferred)
+• Lines limited to 79 characters
+• Imports at the top of the file on separate lines
+16
+
+CSE416-S01
+
+8
+
+

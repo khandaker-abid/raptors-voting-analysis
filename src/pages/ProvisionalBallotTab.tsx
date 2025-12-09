@@ -21,7 +21,6 @@ const ProvisionalBallotTab = ({ stateName }: ProvisionalBallotTabProps) => {
 
 	useEffect(() => {
 		if (!stateName) return;
-
 		setData(undefined);
 		setError(null);
 		setLoading(true);

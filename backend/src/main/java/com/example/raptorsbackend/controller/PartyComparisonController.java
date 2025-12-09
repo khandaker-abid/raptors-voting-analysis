@@ -7,19 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * REST Controller for party comparison analysis.
- * 
- * Provides endpoints comparing Republican vs Democratic controlled states:
- * - Registration rates by party control
- * - Voter turnout comparisons
- * - Mail ballot usage patterns
- * - Drop box availability
- * - Felony voting policies
- * 
- * Supports GUI use cases: GUI-12, GUI-13
- * Party control based on 2024 state government data
- */
 @RestController
 @RequestMapping("/api/comparison")
 @CrossOrigin(origins = "*")
@@ -29,28 +16,16 @@ public class PartyComparisonController {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    /**
-     * Compare states by party control.
-     * Returns metrics comparing Republican-controlled vs Democratic-controlled
-     * states:
-     * registration rates, voter turnout, mail ballot usage, drop box usage, and
-     * felony policies.
-     * 
-     * @return Map with comparison metrics by party
-     */
     @GetMapping("/party-states")
     public Map<String, Object> getPartyComparison() {
 
-        // Define party control by state (2024 data - governor/legislature control)
         Map<String, String> statePartyControl = getStatePartyControl();
 
-        // Get all EAVS data for 2024
         org.springframework.data.mongodb.core.query.Query eavsQuery = new org.springframework.data.mongodb.core.query.Query();
         eavsQuery.addCriteria(org.springframework.data.mongodb.core.query.Criteria.where("year").is(2024));
         List<Map<String, Object>> eavsData = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(eavsQuery,
                 Map.class, "eavsData");
 
-        // Get felony voting policies
         List<Map<String, Object>> felonyData = (List<Map<String, Object>>) (List<?>) mongoTemplate.findAll(Map.class,
                 "felonyVotingData");
         Map<String, Map<String, Object>> felonyByAbbr = felonyData.stream()
@@ -59,10 +34,8 @@ public class PartyComparisonController {
                         f -> f,
                         (a, b) -> a));
 
-        // Create state name to abbreviation mapping
         Map<String, String> stateToAbbr = getStateAbbreviations();
 
-        // Group counties by state and aggregate
         Map<String, List<Map<String, Object>>> countiesByState = new HashMap<>();
         for (Map<String, Object> eavs : eavsData) {
             String state = (String) eavs.get("stateFull");
@@ -71,19 +44,16 @@ public class PartyComparisonController {
             }
         }
 
-        // Group states by party
         Map<String, List<Map<String, Object>>> statesByParty = new HashMap<>();
         statesByParty.put("Republican", new ArrayList<>());
         statesByParty.put("Democratic", new ArrayList<>());
         statesByParty.put("Split", new ArrayList<>());
 
-        // Process each state by aggregating its counties
         for (Map.Entry<String, List<Map<String, Object>>> entry : countiesByState.entrySet()) {
             String state = entry.getKey();
             List<Map<String, Object>> counties = entry.getValue();
             String party = statePartyControl.getOrDefault(state, "Split");
 
-            // Aggregate data across all counties in the state
             long totalRegistered = 0;
             long totalCVAP = 0;
             long totalVotesCast = 0;
@@ -93,12 +63,9 @@ public class PartyComparisonController {
             for (Map<String, Object> county : counties) {
                 totalRegistered += safeLong(county.get("A1a")); // Total registered
                 totalCVAP += safeLong(county.get("A1b")); // CVAP
-                // Total votes = sum of all voting methods
                 totalVotesCast += safeLong(county.get("F1a")) + safeLong(county.get("F1b"))
                         + safeLong(county.get("F1d")) + safeLong(county.get("F1f"));
-                // Mail ballots transmitted (C9a)
                 totalMailBallots += safeLong(county.get("C9a"));
-                // Drop box votes (F1f)
                 totalDropBoxVotes += safeLong(county.get("F1f"));
             }
 
@@ -106,23 +73,18 @@ public class PartyComparisonController {
             stateData.put("state", toTitleCase(state));
             stateData.put("party", party);
 
-            // Calculate registration rate (registered / CVAP * 100)
             double registrationRate = totalCVAP > 0 ? (totalRegistered * 100.0 / totalCVAP) : 0;
             stateData.put("registrationRate", Math.round(registrationRate * 10) / 10.0);
 
-            // Calculate turnout rate (votes cast / registered * 100)
             double turnout = totalRegistered > 0 ? (totalVotesCast * 100.0 / totalRegistered) : 0;
             stateData.put("turnout", Math.round(turnout * 10) / 10.0);
 
-            // Calculate mail ballot rate (mail ballots / votes cast * 100)
             double mailBallotRate = totalVotesCast > 0 ? (totalMailBallots * 100.0 / totalVotesCast) : 0;
             stateData.put("mailBallotRate", Math.round(mailBallotRate * 10) / 10.0);
 
-            // Calculate drop box rate (drop box votes / votes cast * 100)
             double dropBoxRate = totalVotesCast > 0 ? (totalDropBoxVotes * 100.0 / totalVotesCast) : 0;
             stateData.put("dropBoxRate", Math.round(dropBoxRate * 10) / 10.0);
 
-            // Add felony policy
             String stateAbbr = stateToAbbr.get(state);
             Map<String, Object> felony = stateAbbr != null ? felonyByAbbr.get(stateAbbr) : null;
             if (felony != null) {
@@ -137,7 +99,6 @@ public class PartyComparisonController {
             statesByParty.get(party).add(stateData);
         }
 
-        // Calculate aggregates by party
         Map<String, Object> result = new HashMap<>();
         result.put("republican", calculateAggregates(statesByParty.get("Republican")));
         result.put("democratic", calculateAggregates(statesByParty.get("Democratic")));
@@ -147,9 +108,6 @@ public class PartyComparisonController {
         return result;
     }
 
-    /**
-     * Convert state name to title case (e.g., "RHODE ISLAND" -> "Rhode Island")
-     */
     private String toTitleCase(String str) {
         if (str == null || str.isEmpty()) {
             return str;
@@ -166,9 +124,6 @@ public class PartyComparisonController {
         return result.toString().trim();
     }
 
-    /**
-     * Calculate aggregate metrics for a group of states
-     */
     private Map<String, Object> calculateAggregates(List<Map<String, Object>> states) {
         Map<String, Object> agg = new HashMap<>();
 
@@ -216,9 +171,6 @@ public class PartyComparisonController {
         return agg;
     }
 
-    /**
-     * Determine if felony policy is restrictive
-     */
     private boolean isRestrictive(String category) {
         if (category == null)
             return false;
@@ -227,14 +179,9 @@ public class PartyComparisonController {
                 lower.contains("probation") || lower.contains("incarceration");
     }
 
-    /**
-     * Define party control by state (2024 data)
-     * Based on governor + legislature control
-     */
     private Map<String, String> getStatePartyControl() {
         Map<String, String> control = new HashMap<>();
 
-        // Republican-controlled states (2024)
         String[] republican = {
                 "Alabama", "Alaska", "Arkansas", "Florida", "Georgia", "Idaho", "Indiana",
                 "Iowa", "Mississippi", "Missouri", "Montana", "Nebraska", "New Hampshire",
@@ -242,7 +189,6 @@ public class PartyComparisonController {
                 "Tennessee", "Texas", "Utah", "West Virginia", "Wyoming"
         };
 
-        // Democratic-controlled states (2024)
         String[] democratic = {
                 "California", "Colorado", "Connecticut", "Delaware", "Hawaii", "Illinois",
                 "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Nevada",
@@ -250,7 +196,6 @@ public class PartyComparisonController {
                 "Vermont", "Washington"
         };
 
-        // Split control (mixed governor/legislature or swing states)
         String[] split = {
                 "Arizona", "Kansas", "Kentucky", "Louisiana", "North Carolina",
                 "Pennsylvania", "Virginia", "Wisconsin"
@@ -269,9 +214,6 @@ public class PartyComparisonController {
         return control;
     }
 
-    /**
-     * Get state name to abbreviation mapping
-     */
     private Map<String, String> getStateAbbreviations() {
         Map<String, String> map = new HashMap<>();
         map.put("ALABAMA", "AL");
@@ -327,9 +269,6 @@ public class PartyComparisonController {
         return map;
     }
 
-    /**
-     * Safely convert Object to long
-     */
     private long safeLong(Object obj) {
         if (obj == null)
             return 0;

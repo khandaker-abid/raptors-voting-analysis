@@ -1,9 +1,3 @@
-/**
- * Application-wide constants for the voting analysis frontend.
- * Centralizes configuration values to avoid magic numbers and ensure consistency.
- */
-
-/** Standard chart heights for different visualization contexts */
 export const CHART_HEIGHTS = {
     SMALL: 300,
     MEDIUM: 400,
@@ -11,7 +5,6 @@ export const CHART_HEIGHTS = {
     LARGE: 600,
 } as const;
 
-/** Z-index layering for UI components */
 export const Z_INDEX = {
     DROPDOWN: 100,
     MODAL_BACKDROP: 900,
@@ -29,6 +22,12 @@ export const DEFAULT_EAVS_YEAR = 2024;
 export const EAVS_YEARS = [2016, 2020, 2024] as const;
 
 export const DETAIL_STATES = ["Arkansas", "Maryland", "Rhode Island"] as const;
+export const PRECLEARANCE_STATE = "Maryland";
+export const REPUBLICAN_STATE = "Arkansas";
+export const DEMOCRATIC_STATE = "Maryland";
+export const OPT_IN_STATE = "Arkansas";
+export const OPT_OUT_SAME_DAY_STATE = "Maryland";
+export const OPT_OUT_NO_SAME_DAY_STATE = "Rhode Island";
 
 export const MAP_ZOOM = {
     US_OVERVIEW: 4,
@@ -59,6 +58,14 @@ export const EQUIPMENT_COLORS: Record<string, string> = {
     "MIXED": "#9E9E9E",
 } as const;
 
+export const CERTIFICATION_LEVELS = [
+    "VVSG 2.0 certified",
+    "VVSG 2.0 applied",
+    "VVSG 1.1 certified",
+    "VVSG 1.0 certified",
+    "not certified",
+] as const;
+
 export const ANIMATION_DURATION = {
     FAST: 150,
     NORMAL: 300,
@@ -77,3 +84,11 @@ export const NUMBER_FORMAT = {
     PERCENTAGE_DECIMALS: 1,
     LOCALE: "en-US",
 } as const;
+
+export const EQUIPMENT_AGE_BINS = {
+    MIN: 1,
+    MAX: 10,
+    OLDER_LABEL: "10+",
+} as const;
+
+export const FEDERAL_ELECTION_YEARS = [2016, 2018, 2020, 2022, 2024] as const;

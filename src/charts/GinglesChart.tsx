@@ -1,10 +1,3 @@
-/**
- * Gingles Chart for preclearance states showing racially polarized voting patterns.
- * Two bubbles per precinct (Democratic % and Republican %)
- * X-axis: % of selected demographic group
- * Y-axis: % of votes for that party
- */
-
 import React, { useState, useMemo } from "react";
 import {
     ResponsiveContainer,
@@ -28,7 +21,6 @@ import {
     Alert,
 } from "@mui/material";
 import { CHART_HEIGHTS } from "../constants";
-
 interface PrecinctData {
     precinct: string;
     democraticPct: number;
@@ -37,26 +29,22 @@ interface PrecinctData {
     hispanicPct: number;
     africanAmericanPct: number;
 }
-
 interface GinglesDataPoint {
     precinct: string;
     demographicPct: number;
     votePct: number;
     party: "D" | "R";
 }
-
 interface RegressionCoefficients {
     a: number;
     b: number;
 }
-
 interface Props {
     stateName: string;
     data: PrecinctData[];
     democraticRegression?: RegressionCoefficients;
     republicanRegression?: RegressionCoefficients;
 }
-
 const GinglesChart: React.FC<Props> = ({
     data,
     democraticRegression,
@@ -171,7 +159,6 @@ const GinglesChart: React.FC<Props> = ({
                 Gingles Chart - Racially Polarized Voting Analysis
             </Typography>
 
-            {/* Description */}
             <Typography
                 variant="caption"
                 color="text.secondary"
@@ -184,7 +171,6 @@ const GinglesChart: React.FC<Props> = ({
                 Vote % vs. Demographic % by Precinct (Data Year: 2024)
             </Typography>
 
-            {/* Demographic Selection */}
             <Box sx={{ mb: 2, display: "flex", justifyContent: "center" }}>
                 <FormControl>
                     <Typography variant="subtitle2" gutterBottom sx={{ textAlign: "center" }}>
@@ -214,7 +200,6 @@ const GinglesChart: React.FC<Props> = ({
                 </FormControl>
             </Box>
 
-            {/* Chart */}
             {data.length === 0 ? (
                 <Alert severity="warning" sx={{ mb: 2 }}>
                     No precinct data available for this state.
@@ -273,7 +258,6 @@ const GinglesChart: React.FC<Props> = ({
                             />
                             <Legend verticalAlign="bottom" align="center" />
 
-                            {/* Democratic Bubbles - Blue */}
                             <Scatter
                                 name="Democratic counties"
                                 data={democraticPoints}
@@ -281,7 +265,6 @@ const GinglesChart: React.FC<Props> = ({
                                 fillOpacity={0.7}
                             />
 
-                            {/* Republican Bubbles - Red */}
                             <Scatter
                                 name="Republican counties"
                                 data={republicanPoints}
@@ -289,7 +272,6 @@ const GinglesChart: React.FC<Props> = ({
                                 fillOpacity={0.7}
                             />
 
-                            {/* Regression Lines - Don't show in legend */}
                             {regressionLines.map((line, index) => (
                                 <Line
                                     key={index}

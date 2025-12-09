@@ -14,7 +14,6 @@ interface ProvisionalBallotChoroplethMapProps {
 		lat?: number;
 		lng?: number;
 	}>;
-	/** Optional: change value when an external dialog closes to force-clear hover */
 	resetHoverKey?: number;
 }
 
@@ -370,13 +369,11 @@ const ProvisionalBallotChoroplethMap: React.FC<
 
 
 
-			{/* Color Legend */}
 			<Box>
 				<Typography variant="body2" gutterBottom fontWeight={600} fontSize="0.85rem">
 					Color Scale (E1a - Total Provisional Ballots Cast)
 				</Typography>
 				<Box>
-					{/* Color bar */}
 					<Box
 						display="flex"
 						height={24}
@@ -397,7 +394,6 @@ const ProvisionalBallotChoroplethMap: React.FC<
 						))}
 					</Box>
 
-					{/* Boundary values at dividing lines between segments */}
 					<Box sx={{ position: "relative", height: "1.5rem" }}>
 						{Array.from({ length: COLOR_PALETTE.length + 1 }, (_, i) => {
 							const ratio = i / COLOR_PALETTE.length;
@@ -428,7 +424,6 @@ const ProvisionalBallotChoroplethMap: React.FC<
 
 
 
-				{/* Note for states that use town-level data */}
 				{(stateName === "Rhode Island" || stateName === "Vermont" || stateName === "Connecticut" || stateName === "Massachusetts") && (
 					<Typography variant="caption" color="primary.main" display="block" mt={0.5} fontSize="0.7rem" fontStyle="italic">
 						Note: {stateName} reports data at the town level. Values shown have been aggregated to county level for map display consistency.

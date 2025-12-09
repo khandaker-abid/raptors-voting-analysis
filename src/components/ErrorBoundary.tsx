@@ -18,19 +18,6 @@ interface ErrorBoundaryState {
     errorInfo: ErrorInfo | null;
 }
 
-/**
- * Error Boundary component to catch and handle React errors gracefully
- * 
- * Usage:
- * <ErrorBoundary>
- *   <YourComponent />
- * </ErrorBoundary>
- * 
- * With custom fallback:
- * <ErrorBoundary fallback={<CustomErrorUI />}>
- *   <YourComponent />
- * </ErrorBoundary>
- */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     constructor(props: ErrorBoundaryProps) {
         super(props);
@@ -57,10 +44,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             error,
             errorInfo,
         });
-
-        // Send error to logging service (future enhancement)
-        // logErrorToService(error, errorInfo);
-    }
+    };
 
     handleReset = (): void => {
         this.setState({
@@ -161,9 +145,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
 }
 
-/**
- * Functional wrapper for smaller error boundaries
- */
 interface ChartErrorBoundaryProps {
     children: ReactNode;
     chartName?: string;

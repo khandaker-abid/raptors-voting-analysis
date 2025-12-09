@@ -74,11 +74,9 @@ class CensusGeocoder:
                 coordinates = match.get('coordinates', {})
                 geographies = match.get('geographies', {})
                 
-                # Extract census block
                 census_blocks = geographies.get('Census Blocks', [])
                 census_block = census_blocks[0] if census_blocks else {}
                 
-                # Extract county
                 counties = geographies.get('Counties', [])
                 county = counties[0] if counties else {}
                 
@@ -165,7 +163,6 @@ class CompositeGeocoder:
         self.fallback_geocoder = FallbackGeocoder() if use_fallback else None
         self.cache = {}
         
-        # Load cache if exists
         cache_dir = Path(self.config['processing']['cacheDir']) / 'geocoding'
         cache_dir.mkdir(parents=True, exist_ok=True)
         self.cache_file = cache_dir / 'geocoding_cache.json'
@@ -181,19 +178,16 @@ class CompositeGeocoder:
         Returns:
             Dict with geocoding results including lat, lon, census_block
         """
-        # Create cache key
         cache_key = full_address.strip().lower()
         
         if cache_key in self.cache:
             return self.cache[cache_key]
         
-        # Parse address components
         parts = [p.strip() for p in full_address.split(',')]
         
         street = parts[0] if len(parts) > 0 else ''
         city = parts[1] if len(parts) > 1 else ''
         
-        # Parse state and zip from last part
         state = ''
         zip_code = ''
         if len(parts) > 2:
@@ -201,14 +195,12 @@ class CompositeGeocoder:
             state = state_zip[0] if len(state_zip) > 0 else ''
             zip_code = state_zip[1] if len(state_zip) > 1 else ''
         
-        # Try Census geocoder first
         result = self.census_geocoder.geocode_address(street, city, state, zip_code)
         
         if result:
             result['source'] = 'census'
             result['census_block'] = result.get('censusBlock')
         
-        # If Census fails and we have fallback, try Nominatim
         if not result and self.fallback_geocoder:
             coords = self.fallback_geocoder.geocode_address(full_address)
             if coords:
@@ -219,11 +211,9 @@ class CompositeGeocoder:
                     'source': 'nominatim'
                 }
         
-        # Cache result
         if result:
             self.cache[cache_key] = result
             
-            # Save cache periodically (every 100 new entries)
             if len(self.cache) % 100 == 0:
                 self.save_cache(str(self.cache_file))
         
@@ -272,12 +262,10 @@ def geocode_batch_with_progress(addresses: List[Dict], output_file: str = None) 
             'result': result
         })
         
-        # Save incrementally every 1000 addresses
         if output_file and i > 0 and i % 1000 == 0:
             with open(output_file, 'w') as f:
                 json.dump(results, f)
     
-    # Final save
     if output_file:
         with open(output_file, 'w') as f:
             json.dump(results, f)

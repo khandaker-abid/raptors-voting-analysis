@@ -10,7 +10,6 @@ import logging
 from pathlib import Path
 import time
 
-# Add utils to path
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import DatabaseManager
@@ -33,11 +32,9 @@ class VoterGeocoder:
         
         Returns update dict with censusBlock field
         """
-        # Skip if already geocoded
         if voter.get('censusBlock'):
             return None
         
-        # Build full address
         address = voter.get('address', {})
         street = address.get('street', '')
         city = address.get('city', '')
@@ -49,7 +46,6 @@ class VoterGeocoder:
         
         full_address = f"{street}, {city}, {state} {zipcode}"
         
-        # Geocode
         result = self.geocoder.geocode(full_address)
         
         if result and result.get('census_block'):
@@ -74,7 +70,6 @@ class VoterGeocoder:
         """
         logger.info(f"Geocoding up to {max_voters:,} voters...")
         
-        # Get voters without census blocks
         voters = list(self.db.find_many('voterRegistration', {
             '$or': [
                 {'censusBlock': None},
@@ -111,7 +106,6 @@ class VoterGeocoder:
                 logger.warning(f"Error geocoding voter {voter.get('voterId')}: {e}")
                 failed += 1
             
-            # Progress and rate limiting
             if (i + 1) % 10 == 0:
                 time.sleep(1)  # Rate limiting
             
@@ -120,7 +114,6 @@ class VoterGeocoder:
                 logger.info(f"  Pausing 5 seconds to respect rate limits...")
                 time.sleep(5)
         
-        # Summary
         logger.info("\n" + "="*70)
         logger.info("GEOCODING SUMMARY")
         logger.info("="*70)
@@ -135,7 +128,6 @@ class VoterGeocoder:
 def main():
     """Main execution"""
     try:
-        # First, check if there are any voter records to geocode
         from utils.database import DatabaseManager
         db = DatabaseManager()
         voter_count = db.count_documents('voterRegistration')

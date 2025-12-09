@@ -1,9 +1,3 @@
-/**
- * Bubble chart showing drop box usage vs partisan voting patterns.
- * Each bubble represents a geographic unit; size indicates total votes.
- * X-axis: % Drop box usage, Y-axis: % Republican votes
- */
-
 import React, { useMemo } from "react";
 import {
   ResponsiveContainer,

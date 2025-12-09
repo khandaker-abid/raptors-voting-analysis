@@ -1,27 +1,23 @@
-// Centralized shared types used by multiple components
 export type Year = 2016 | 2020 | 2024;
-
+export type PartyCode = "R" | "D" | "U";
 
 export interface ChoroplethDatum {
-    geographicUnit: string; // county/town/etc. display name
-    value: number; // count
-    percentOfTotal?: number; // 0..100 (for choropleths by %)
+    geographicUnit: string;
+    value: number;
+    percentOfTotal?: number;
 }
 
-
 export interface ActiveVotersRow {
-    geographicUnit: string; // EAVS unit name
+    geographicUnit: string;
     activeVoters: number;
     totalVoters: number;
     inactiveVoters: number;
-    activePercentage: number; // 0..100
+    activePercentage: number;
 }
-
 
 export interface PollbookDeletionRow {
     geographicUnit: string;
-    dataYear?: number; // Actual year of the data (may differ from requested year)
-    // A12b–A12h; keys map to server fields exactly
+    dataYear?: number;
     A12b_Death: number;
     A12c_Moved: number;
     A12d_Felon: number;
@@ -30,25 +26,22 @@ export interface PollbookDeletionRow {
     A12g_FailedToVote: number;
     A12h_Other: number;
     total: number;
-    deletionPercentage: number; // 0..100 of total deletions
+    deletionPercentage: number;
 }
-
 
 export interface MailRejectionRow {
     geographicUnit: string;
-    dataYear?: number; // Actual year of the data (may differ from requested year)
-    // C9b–C9q (subset shown; server sends full set)
+    dataYear?: number;
     C9b_NoSignature: number;
     C9c_SigMismatch: number;
     C9d_ReceivedLate: number;
     C9e_MissingInfo: number;
     C9f_NotRegistered: number;
     C9g_WrongEnvelope: number;
-    C9h_Other: number; // add all through C9q on the backend as applicable
+    C9h_Other: number;
     total: number;
-    rejectionPercentage: number; // 0..100 of total rejected
+    rejectionPercentage: number;
 }
-
 
 export type EquipmentCategory =
     | "DRE no VVPAT"
@@ -56,31 +49,70 @@ export type EquipmentCategory =
     | "Ballot Marking Device"
     | "Scanner";
 
-
 export interface EquipmentHistorySeries {
     category: EquipmentCategory;
     byYear: { [Y in 2016 | 2018 | 2020 | 2022 | 2024]?: number };
 }
 
-
 export interface RegistrationTrendPayload {
     state: string;
-    geographicUnitOrder2024: string[]; // ascending by 2024 registered count
+    geographicUnitOrder2024: string[];
     byYear: {
-        2016: number[]; // aligned to geographicUnitOrder2024
+        2016: number[];
         2020: number[];
         2024: number[];
     };
 }
 
-
 export interface BlockBubblePoint {
     lat: number;
     lng: number;
-    dominantParty: "R" | "D";
+    dominantParty: PartyCode;
 }
 
 export interface BlockBubblePayload {
     state: string;
     points: BlockBubblePoint[];
+}
+
+export interface GinglesDataPoint {
+    precinct: string;
+    democraticPct: number;
+    republicanPct: number;
+    whitePct: number;
+    hispanicPct: number;
+    africanAmericanPct: number;
+}
+
+export interface RegressionCoefficients {
+    a: number;
+    b: number;
+}
+
+export interface EquipmentQualityBubble {
+    county: string;
+    equipmentQuality: number;
+    rejectionRate: number;
+    party: PartyCode;
+}
+
+export interface EIProbabilityPoint {
+    x: number;
+    probability: number;
+}
+
+export interface EIDemographicCurve {
+    demographic: string;
+    data: EIProbabilityPoint[];
+    mean?: number;
+    stdDev?: number;
+}
+
+export interface DropboxBubbleDatum {
+    county: string;
+    republicanPct: number;
+    dropBoxPct: number;
+    party: PartyCode;
+    totalBallots?: number;
+    dataYear?: number;
 }

@@ -71,8 +71,6 @@ class CensusAPI:
         Returns:
             List of data rows with CVAP by demographics
         """
-        # CVAP variables from ACS special tabulation
-        # Note: These may need to be updated based on actual Census table codes
         variables = [
             'NAME',
             'B05003_001E',  # Total CVAP
@@ -146,7 +144,6 @@ class CensusAPI:
         if not data or len(data) < 2:
             return None
         
-        # Process data into dict format
         headers = data[0]
         rows = data[1:]
         
@@ -241,7 +238,6 @@ def download_cvap_for_states(api_key: str, state_fips_list: List[str],
             
             results[state_fips] = processed
         
-        # Rate limiting
         time.sleep(0.5)
     
     return results
@@ -271,7 +267,6 @@ def download_demographics_for_states(api_key: str, state_fips_list: List[str],
         if data:
             results[state_fips] = data
         
-        # Rate limiting
         time.sleep(0.5)
     
     return results

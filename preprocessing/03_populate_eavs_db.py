@@ -11,7 +11,6 @@ from pathlib import Path
 import pandas as pd
 from datetime import datetime, timezone
 
-# Add utils to path
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import DatabaseManager, load_config, get_state_fips_mapping
@@ -20,14 +19,11 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
-# EAVS field mappings - these are the columns we need from EAVS
 EAVS_FIELD_MAPPINGS = {
-    # Registration fields
     'A1a': 'Total Registered',
     'A1b': 'Active Registration',
     'A1c': 'Inactive Registration',
     
-    # Provisional ballots
     'E1a': 'Provisional Ballots Cast',
     'E1d': 'Provisional Ballots Rejected',
     'E2a': 'Provisional - Not on List',
@@ -40,7 +36,6 @@ EAVS_FIELD_MAPPINGS = {
     'E2h': 'Provisional - Extended Hours',
     'E2i': 'Provisional - SDR',
     
-    # Mail ballot rejections
     'C9a': 'Mail Ballots Rejected',
     'C9b': 'Mail Rejected - Late',
     'C9c': 'Mail Rejected - Missing Voter Signature',
@@ -59,7 +54,6 @@ EAVS_FIELD_MAPPINGS = {
     'C9p': 'Mail Rejected - Not Eligible',
     'C9q': 'Mail Rejected - No Application',
     
-    # Pollbook deletions
     'A12b': 'Removed - Moved',
     'A12c': 'Removed - Death',
     'A12d': 'Removed - Felony',
@@ -68,16 +62,13 @@ EAVS_FIELD_MAPPINGS = {
     'A12g': 'Removed - Voter Request',
     'A12h': 'Removed - Duplicate',
     
-    # Equipment
     'F3a': 'DRE no VVPAT',
     'F4a': 'DRE with VVPAT',
     'F5a': 'Ballot Marking Device',
     'F6a': 'Scanner',
     
-    # Drop boxes
     'C3a': 'Drop Boxes Total',
     
-    # Voting participation
     'F1a': 'Total Voters',
     'F1b': 'Physical Polling Place',
     'F1c': 'Absentee UOCAVA',
@@ -85,7 +76,6 @@ EAVS_FIELD_MAPPINGS = {
     'F1e': 'Provisional Ballot',
     'F1f': 'In Person Early Voting',
     
-    # UOCAVA
     'B24a': 'UOCAVA Rejected',
 }
 
@@ -104,7 +94,6 @@ class EAVSDataPopulator:
         logger.info(f"Reading EAVS {year} Excel file...")
         
         try:
-            # Read Excel file - EAVS files typically have data starting at row 2-3
             df = pd.read_excel(filepath, sheet_name=0)
             
             logger.info(f"  Loaded {len(df)} rows from EAVS {year}")
@@ -119,13 +108,11 @@ class EAVSDataPopulator:
     def transform_eavs_record(self, row: pd.Series, year: int) -> dict:
         """Transform EAVS row to MongoDB document"""
         
-        # Try to extract jurisdiction info - column names vary by year
         jurisdiction_name = None
         state_name = None
         state_abbr = None
         fips_code = None
         
-        # Common column name patterns
         for col in row.index:
             col_lower = str(col).lower()
             if 'jurisdiction' in col_lower or 'county' in col_lower or 'locality' in col_lower:
@@ -135,7 +122,6 @@ class EAVSDataPopulator:
             elif 'fips' in col_lower or 'geoid' in col_lower:
                 fips_code = str(row[col]).zfill(5) if pd.notna(row[col]) else None
         
-        # Build document
         document = {
             'year': year,
             'fipsCode': fips_code,
@@ -144,16 +130,13 @@ class EAVSDataPopulator:
             'stateAbbr': state_abbr,
         }
         
-        # Map EAVS fields
         for field_code, column_pattern in EAVS_FIELD_MAPPINGS.items():
-            # Try to find matching column
             value = None
             for col in row.index:
                 if column_pattern.lower() in str(col).lower() or field_code in str(col):
                     value = row[col]
                     break
             
-            # Convert to int, handle missing
             if pd.notna(value):
                 try:
                     document[field_code] = int(float(value))
@@ -162,7 +145,6 @@ class EAVSDataPopulator:
             else:
                 document[field_code] = None
         
-        # Add timestamps
         document['createdAt'] = datetime.now(timezone.utc)
         document['updatedAt'] = datetime.now(timezone.utc)
         
@@ -179,14 +161,12 @@ class EAVSDataPopulator:
         
         logger.info(f"\nProcessing EAVS {year}...")
         
-        # Check if data already exists in database
         collection = self.db.get_collection('eavsData')
         existing_count = collection.count_documents({'year': year})
         
         if existing_count > 0:
             logger.info(f"  Found {existing_count} existing records for {year} in database")
             
-            # Check file modification time vs database timestamp
             file_mtime = datetime.fromtimestamp(filepath.stat().st_mtime)
             newest_doc = collection.find_one(
                 {'year': year}, 
@@ -204,16 +184,13 @@ class EAVSDataPopulator:
             else:
                 logger.info(f"  Will refresh data (cannot determine database timestamp)")
         
-        # Parse Excel
         df = self.parse_eavs_excel(filepath, year)
         
-        # Transform records
         documents = []
         for idx, row in df.iterrows():
             try:
                 doc = self.transform_eavs_record(row, year)
                 
-                # Only add if we have minimum required fields
                 if doc.get('fipsCode') and doc.get('jurisdictionName'):
                     documents.append(doc)
                 
@@ -226,14 +203,11 @@ class EAVSDataPopulator:
         
         logger.info(f"  Transformed {len(documents)} valid records")
         
-        # Store in database
         if documents:
-            # Delete existing records for this year first
             collection = self.db.get_collection('eavsData')
             deleted = collection.delete_many({'year': year})
             logger.info(f"  Deleted {deleted.deleted_count} existing {year} records")
             
-            # Insert new records
             inserted = self.db.insert_many_safe('eavsData', documents)
             logger.info(f"  ✓ Inserted {inserted} records for {year}")
             
@@ -250,7 +224,6 @@ class EAVSDataPopulator:
             count = self.populate_year(year)
             total_inserted += count
         
-        # Summary
         logger.info("\n" + "="*70)
         logger.info("EAVS DATA POPULATION SUMMARY")
         logger.info("="*70)

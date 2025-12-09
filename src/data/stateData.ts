@@ -1,4 +1,3 @@
-// State center points and geographical data
 export interface StateInfo {
 	name: string;
 	abbreviation: string;
@@ -93,7 +92,6 @@ export const stateData: StateInfo[] = [
 	{ name: "Wyoming", abbreviation: "WY", party: "Republican" },
 ];
 
-// State center coordinates for map centering
 export const stateCenters: Record<string, [number, number]> = {
 	"Rhode Island": [-71.5118, 41.6809],
 	"West Virginia": [-80.4549, 38.5976],
@@ -145,7 +143,6 @@ export const stateCenters: Record<string, [number, number]> = {
 	"Wyoming": [-107.2903, 43.076],
 };
 
-// Detail states (with comprehensive data)
 export const detailStates = ["Rhode Island", "Maryland", "Arkansas"];
 
 export const getStateCenter = (stateName: string): [number, number] => {

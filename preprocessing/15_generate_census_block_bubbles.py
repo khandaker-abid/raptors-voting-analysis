@@ -16,14 +16,11 @@ import math
 def generate_census_block_bubbles():
     """Generate mock census block voter bubbles for visualization"""
     
-    # Connect to MongoDB
     client = MongoClient('mongodb://localhost:27017/')
     db = client['voting_analysis']
     
-    # Clear existing data
     db.census_block_voters.delete_many({})
     
-    # State coordinates (approximate centers)
     state_centers = {
         'MARYLAND': {'lat': 39.0458, 'lng': -76.6413, 'zoom': 7},
         'VIRGINIA': {'lat': 37.4316, 'lng': -78.6569, 'zoom': 6},
@@ -44,7 +41,6 @@ def generate_census_block_bubbles():
         'NEVADA': {'lat': 38.8026, 'lng': -116.4194, 'zoom': 6},
     }
     
-    # Party lean by state (rough 2024 estimates)
     state_party_lean = {
         'MARYLAND': 'D',  # Blue
         'VIRGINIA': 'D',  # Blue
@@ -70,8 +66,6 @@ def generate_census_block_bubbles():
     for state, center in state_centers.items():
         state_lean = state_party_lean.get(state, 'R')
         
-        # Number of census blocks to generate (proportional to state size)
-        # More populated states = more blocks
         num_blocks = {
             'MARYLAND': 150,
             'VIRGINIA': 200,
@@ -94,48 +88,34 @@ def generate_census_block_bubbles():
         
         print(f"Generating {num_blocks} census blocks for {state}...")
         
-        # Generate blocks distributed around state
         for i in range(num_blocks):
-            # Create clusters (urban areas tend to cluster)
-            # 30% in major metro areas (tight clusters)
-            # 70% distributed throughout state
             
             if random.random() < 0.3:
-                # Urban cluster - tighter distribution
                 angle = random.uniform(0, 2 * math.pi)
                 distance = random.uniform(0, 0.5)  # Degrees (smaller radius)
             else:
-                # Suburban/rural - wider distribution
                 angle = random.uniform(0, 2 * math.pi)
                 distance = random.uniform(0.5, 2.5)  # Degrees (larger radius)
             
             lat = center['lat'] + distance * math.cos(angle)
             lng = center['lng'] + distance * math.sin(angle)
             
-            # Determine party dominance
-            # State lean affects probability
             if state_lean == 'D':
                 dem_prob = 0.65  # 65% Democratic in blue states
             else:
                 dem_prob = 0.35  # 35% Democratic in red states
             
-            # Urban areas tend to be more Democratic
             if distance < 0.5:  # Urban
                 dem_prob += 0.15
             
-            # Random voter counts for the block
             dem_count = random.randint(20, 500)
             rep_count = random.randint(20, 500)
             
-            # Adjust based on probability
             if random.random() < dem_prob:
-                # Democratic-leaning block
                 dem_count = int(dem_count * random.uniform(1.2, 2.0))
             else:
-                # Republican-leaning block
                 rep_count = int(rep_count * random.uniform(1.2, 2.0))
             
-            # Create census block document
             block = {
                 'state': state,
                 'censusBlock': f"{state[:2]}{i:06d}",  # Mock FIPS code
@@ -150,19 +130,16 @@ def generate_census_block_bubbles():
             
             blocks.append(block)
     
-    # Insert all blocks
     if blocks:
         db.census_block_voters.insert_many(blocks)
         print(f"\n[OK] Generated {len(blocks)} census block bubbles!")
         
-        # Show summary by state
         for state in state_centers.keys():
             count = len([b for b in blocks if b['state'] == state])
             dem_count = len([b for b in blocks if b['state'] == state and b['dominantParty'] == 'D'])
             rep_count = len([b for b in blocks if b['state'] == state and b['dominantParty'] == 'R'])
             print(f"  {state}: {count} blocks ({dem_count} D, {rep_count} R)")
         
-        # Test query for Maryland
         sample = db.census_block_voters.find_one({'state': 'MARYLAND'})
         if sample:
             print(f"\nSample Maryland block:")

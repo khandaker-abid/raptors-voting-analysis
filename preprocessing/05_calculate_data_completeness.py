@@ -9,7 +9,6 @@ import sys
 import logging
 from pathlib import Path
 
-# Add utils to path
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import DatabaseManager
@@ -18,19 +17,15 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
-# Required fields for GUI use cases - weighted by importance
 REQUIRED_FIELDS = {
-    # Critical fields (high weight)
     'A1a': 2.0,  # Total Registered
     'A1b': 2.0,  # Active
     'A1c': 2.0,  # Inactive
     
-    # Important fields (medium weight)
     'E1a': 1.5,  # Provisional Ballots Cast
     'C9a': 1.5,  # Mail Ballots Rejected
     'F1a': 1.5,  # Total Voters
     
-    # Standard fields (normal weight)
     'E2a': 1.0, 'E2b': 1.0, 'E2c': 1.0, 'E2d': 1.0, 'E2e': 1.0,
     'E2f': 1.0, 'E2g': 1.0, 'E2h': 1.0, 'E2i': 1.0,
     
@@ -66,13 +61,11 @@ class DataCompletenessCalculator:
         for field, weight in REQUIRED_FIELDS.items():
             value = record.get(field)
             
-            # Consider field complete if it has a non-null value
             if value is not None:
                 achieved_weight += weight
             else:
                 missing_count += 1
         
-        # Calculate score (0-1)
         score = achieved_weight / total_weight if total_weight > 0 else 0
         
         return {
@@ -85,7 +78,6 @@ class DataCompletenessCalculator:
         """Process all EAVS records and update completeness scores"""
         logger.info("Calculating data completeness scores...")
         
-        # Get all EAVS records
         records = self.db.find_many('eavsData')
         total = len(records)
         
@@ -105,10 +97,8 @@ class DataCompletenessCalculator:
         }
         
         for i, record in enumerate(records):
-            # Calculate score
             score_data = self.calculate_completeness_score(record)
             
-            # Track distribution
             score = score_data['dataCompletenessScore']
             if score < 0.2:
                 score_distribution['0.0-0.2'] += 1
@@ -121,7 +111,6 @@ class DataCompletenessCalculator:
             else:
                 score_distribution['0.8-1.0'] += 1
             
-            # Update record
             self.db.upsert_one(
                 'eavsData',
                 {'_id': record['_id']},
@@ -133,7 +122,6 @@ class DataCompletenessCalculator:
             if (i + 1) % 1000 == 0:
                 logger.info(f"  Processed {i + 1:,}/{total:,} records...")
         
-        # Summary
         logger.info("\n" + "="*70)
         logger.info("DATA COMPLETENESS SUMMARY")
         logger.info("="*70)

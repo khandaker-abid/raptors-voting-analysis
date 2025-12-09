@@ -2,7 +2,6 @@
 Common data source URLs and configurations
 """
 
-# EAVS Data Sources
 EAVS_SOURCES = {
     2024: {
         'url': 'https://www.eac.gov/sites/default/files/2025-06/2024_EAVS_for_Public_Release_V1_xlsx.xlsx',
@@ -18,7 +17,6 @@ EAVS_SOURCES = {
     }
 }
 
-# Census Bureau Boundary Data
 CENSUS_BOUNDARIES = {
     'states_2020': 'https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_state_20m.zip',
     'counties_2020': 'https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_county_20m.zip',
@@ -26,7 +24,6 @@ CENSUS_BOUNDARIES = {
     'counties_2024': 'https://www2.census.gov/geo/tiger/GENZ2024/shp/cb_2024_us_county_20m.zip',
 }
 
-# Voter Registration Data Sources by State
 VOTER_REGISTRATION_SOURCES = {
     'NC': {
         'name': 'North Carolina',
@@ -73,7 +70,6 @@ VOTER_REGISTRATION_SOURCES = {
     },
 }
 
-# Election Results Sources
 ELECTION_RESULTS_SOURCES = {
     'mit_election_lab': {
         'name': 'MIT Election Data and Science Lab',
@@ -87,17 +83,14 @@ ELECTION_RESULTS_SOURCES = {
     },
 }
 
-# State-specific sources for 2024 Presidential Election Results
 STATE_ELECTION_RESULTS_2024 = {
     'TX': 'https://results.texas-election.com/',
     'CA': 'https://electionresults.sos.ca.gov/',
     'NC': 'https://www.ncsbe.gov/results-data',
     'GA': 'https://results.enr.clarityelections.com/GA/',
     'FL': 'https://results.elections.myflorida.com/',
-    # Add more as needed
 }
 
-# Voting Equipment Data Sources
 VOTING_EQUIPMENT_SOURCES = {
     'verifier': {
         'name': 'Verified Voting',
@@ -111,7 +104,6 @@ VOTING_EQUIPMENT_SOURCES = {
     },
 }
 
-# Felony Voting Rights Sources
 FELONY_VOTING_SOURCES = {
     'ncsl': {
         'name': 'National Conference of State Legislatures',
@@ -125,14 +117,11 @@ FELONY_VOTING_SOURCES = {
     },
 }
 
-# Felony Voting Categories by State (as of 2024)
 FELONY_VOTING_POLICIES = {
-    # No denial of voting
     'ME': 'no denial of voting',
     'VT': 'no denial of voting',
     'DC': 'no denial of voting',
     
-    # Automatic restoration upon release
     'CA': 'automatic restoration upon release from prison',
     'CO': 'automatic restoration upon release from prison',
     'CT': 'automatic restoration upon release from prison',
@@ -151,7 +140,6 @@ FELONY_VOTING_POLICIES = {
     'RI': 'automatic restoration upon release from prison',
     'UT': 'automatic restoration upon release from prison',
     
-    # Restoration after parole and probation
     'AK': 'restoration after completing parole and probation',
     'AR': 'restoration after completing parole and probation',
     'GA': 'restoration after completing parole and probation',
@@ -172,7 +160,6 @@ FELONY_VOTING_POLICIES = {
     'WV': 'restoration after completing parole and probation',
     'WI': 'restoration after completing parole and probation',
     
-    # Additional action required
     'AL': 'additional action required for restoration',
     'AZ': 'additional action required for restoration',
     'DE': 'additional action required for restoration',
@@ -186,7 +173,6 @@ FELONY_VOTING_POLICIES = {
     'WY': 'additional action required for restoration',
 }
 
-# Census API Endpoints
 CENSUS_API_ENDPOINTS = {
     'acs5_2023': 'https://api.census.gov/data/2023/acs/acs5',
     'acs1_2023': 'https://api.census.gov/data/2023/acs/acs1',
@@ -194,7 +180,6 @@ CENSUS_API_ENDPOINTS = {
     'geocoder': 'https://geocoding.geo.census.gov/geocoder',
 }
 
-# CVAP Special Tabulation
 CVAP_DATA_SOURCE = {
     'url': 'https://www.census.gov/programs-surveys/decennial-census/about/voting-rights/cvap.html',
     'note': 'Citizen Voting Age Population Special Tabulation',
@@ -202,7 +187,6 @@ CVAP_DATA_SOURCE = {
     'years': [2019, 2020, 2021, 2022, 2023]
 }
 
-# State Categorizations - Examples (update these based on your selections)
 STATE_CATEGORIES = {
     'opt_in': ['OR', 'CA', 'AK', 'CO', 'DC', 'HI', 'ID', 'IL', 'IA', 'ME', 
                'MD', 'MI', 'MN', 'MT', 'NV', 'NM', 'RI', 'UT', 'VT', 'VA', 
@@ -211,14 +195,11 @@ STATE_CATEGORIES = {
     'opt_out_no_same_day_reg': ['TX', 'FL', 'PA', 'OH', 'NC', 'GA'],
 }
 
-# EAVS Field Mappings (Field codes to human-readable names)
 EAVS_FIELD_NAMES = {
-    # Registration
     'A1a': 'Total Registered Voters',
     'A1b': 'Active Registered Voters',
     'A1c': 'Inactive Registered Voters',
     
-    # Provisional Ballots
     'E1a': 'Total Provisional Ballots Cast',
     'E1d': 'Provisional Ballots Rejected',
     'E2a': 'Provisional - Voter Not on List',
@@ -231,20 +212,17 @@ EAVS_FIELD_NAMES = {
     'E2h': 'Provisional - Judge Extended Hours',
     'E2i': 'Provisional - Voter Used SDR',
     
-    # Mail Ballots
     'C9a': 'Total Mail Ballots Rejected',
     'C9b': 'Mail Ballots Rejected - Late',
     'C9c': 'Mail Ballots Rejected - Missing Voter Signature',
     'C9d': 'Mail Ballots Rejected - Missing Witness Signature',
     'C9e': 'Mail Ballots Rejected - Non-Matching Signature',
     
-    # Equipment
     'F3a': 'DRE no VVPAT',
     'F4a': 'DRE with VVPAT',
     'F5a': 'Ballot Marking Device',
     'F6a': 'Scanner',
     
-    # Pollbook Deletions
     'A12b': 'Removed - Moved',
     'A12c': 'Removed - Death',
     'A12d': 'Removed - Felony',

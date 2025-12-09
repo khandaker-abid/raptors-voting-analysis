@@ -1,5 +1,3 @@
-// 2024 EAVS Active Voters mock generator + helpers used by charts/maps/tables.
-
 export interface ActiveVotersData {
 	county: string;
 	totalVoters: number;
@@ -198,10 +196,6 @@ export const getStateActivePercentage = (data: ActiveVotersData[]): number => {
 	return total ? Math.round((totalActive / total) * 1000) / 10 : 0;
 };
 
-/**
- * Chart adapter for ActiveVotersBarChart.
- * Returns three categories: "Active", "Inactive", and "Total"
- */
 export const getActiveVotersChartData = (data: ActiveVotersData[]) => {
 	const totalActive = getTotalActiveVoters(data);
 	const totalInactive = getTotalInactiveVoters(data);

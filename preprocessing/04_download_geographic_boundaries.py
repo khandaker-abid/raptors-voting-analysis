@@ -9,7 +9,6 @@ import sys
 import logging
 from pathlib import Path
 
-# Add utils to path
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import DatabaseManager, load_config, get_state_fips_mapping
@@ -34,7 +33,6 @@ class GeographicBoundaryProcessor:
         self.cache_dir = Path(self.config['processing']['cacheDir']) / 'boundaries'
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         
-        # Get detailed states
         detailed_states = self.config['detailedStates']['stateAbbrs']
         self.state_fips = get_state_fips_mapping()
         self.detailed_state_fips = [self.state_fips[abbr] for abbr in detailed_states]
@@ -46,12 +44,10 @@ class GeographicBoundaryProcessor:
         filepath = self.cache_dir / filename
         extract_dir = filepath.parent / filepath.stem
         
-        # Check if already extracted
         if extract_dir.exists() and list(extract_dir.rglob('*.shp')):
             logger.info(f"Using extracted files in {extract_dir}")
             return extract_dir
         
-        # Download if needed
         if not filepath.exists():
             logger.info(f"Downloading {filename}...")
             response = requests.get(url, stream=True)
@@ -63,7 +59,6 @@ class GeographicBoundaryProcessor:
         else:
             logger.info(f"Using cached file: {filepath}")
         
-        # Extract
         extract_dir.mkdir(exist_ok=True)
         logger.info(f"Extracting {filename}...")
         with zipfile.ZipFile(filepath, 'r') as zip_ref:
@@ -73,13 +68,11 @@ class GeographicBoundaryProcessor:
     
     def process_county_boundaries(self):
         """Process county boundaries for detailed states"""
-        # Download county shapefile
         extract_dir = self.download_and_extract(
             CENSUS_BOUNDARIES['counties_2020'],
             'cb_2020_us_county_20m.zip'
         )
         
-        # Find shapefile - it might be in a subdirectory
         shapefiles = list(extract_dir.rglob('*.shp'))
         if not shapefiles:
             logger.error(f"No shapefile found in {extract_dir}")
@@ -96,19 +89,16 @@ class GeographicBoundaryProcessor:
         for state_fips in self.detailed_state_fips:
             logger.info(f"\nProcessing counties for state FIPS {state_fips}...")
             
-            # Filter to this state
             state_geojson = filter_geojson_by_state(geojson, state_fips)
             
             for feature in state_geojson.get('features', []):
                 geometry = feature['geometry']
                 properties = feature['properties']
                 
-                # Get county FIPS (state + county)
                 county_fips = properties.get('GEOID') or f"{state_fips}{properties.get('COUNTYFP', '')}"
                 county_name = properties.get('NAME', 'Unknown')
                 state_name = properties.get('NAMELSAD', 'Unknown')
                 
-                # Calculate center and zoom
                 centroid = calculate_centroid(geometry)
                 zoom = calculate_zoom_level(geometry)
                 
@@ -128,7 +118,6 @@ class GeographicBoundaryProcessor:
                 documents.append(document)
                 logger.info(f"  {county_name} County (FIPS: {county_fips})")
         
-        # Store in database
         if documents:
             logger.info(f"\nStoring {len(documents)} county boundaries...")
             self.db.bulk_upsert('boundaryData', documents, key_field='fipsCode')

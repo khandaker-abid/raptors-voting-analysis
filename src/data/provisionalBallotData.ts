@@ -1,5 +1,3 @@
-// Enhanced provisional ballot data with more realistic values
-
 export interface ProvisionalBallotCategory {
 	key: string;
 	label: string;
@@ -8,7 +6,7 @@ export interface ProvisionalBallotCategory {
 
 export interface ProvisionalBallotData {
 	county: string;
-	E1a: number; // Total provisional ballots
+	E1a: number;
 	E2a: number;
 	E2b: number;
 	E2c: number;
@@ -76,7 +74,6 @@ export const getProvisionalBallotCategories =
 		},
 	];
 
-// Mock data generation with more realistic distribution
 const generateCountyData = (
 	countyName: string,
 	baseMultiplier: number = 1,
@@ -105,7 +102,7 @@ const generateCountyData = (
 
 	return {
 		county: countyName,
-		E1a: total, // Total provisional ballots
+		E1a: total,
 		E2a: e2a,
 		E2b: e2b,
 		E2c: e2c,
@@ -118,7 +115,6 @@ const generateCountyData = (
 	};
 };
 
-// State-specific data
 const rhodeIslandCounties = [
 	"Bristol County",
 	"Kent County",
@@ -306,7 +302,6 @@ export const getChoroplethData = (
 	});
 };
 
-// Helper function to get state totals for each category
 export const getStateCategoryTotals = (
 	stateName: string,
 ): Record<string, number> => {
@@ -337,7 +332,6 @@ export const getStateCategoryTotals = (
 	return totals;
 };
 
-// Helper function to get total provisional ballots for a state
 export const getStateProvisionalTotal = (stateName: string): number => {
 	const ballotData = getProvisionalBallotData(stateName);
 	if (!ballotData) return 0;
@@ -345,7 +339,6 @@ export const getStateProvisionalTotal = (stateName: string): number => {
 	return ballotData.reduce((total, county) => total + county.E1a, 0);
 };
 
-// Helper function to get county-level provisional ballot percentages
 export const getCountyProvisionalPercentages = (
 	stateName: string,
 ): Array<{ county: string; percentage: number }> => {
@@ -360,7 +353,6 @@ export const getCountyProvisionalPercentages = (
 	}));
 };
 
-// Helper function to get top counties by provisional ballot count
 export const getTopCountiesByProvisionalBallots = (
 	stateName: string,
 	limit: number = 5,
@@ -371,7 +363,6 @@ export const getTopCountiesByProvisionalBallots = (
 	return ballotData.sort((a, b) => b.E1a - a.E1a).slice(0, limit);
 };
 
-// Helper function to get state summary statistics
 export const getStateProvisionalSummary = (stateName: string) => {
 	const ballotData = getProvisionalBallotData(stateName);
 	if (!ballotData) return null;

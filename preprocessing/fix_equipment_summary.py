@@ -9,7 +9,6 @@ import logging
 from pathlib import Path
 import random
 
-# Add utils to path
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import DatabaseManager, load_config
@@ -17,7 +16,6 @@ from utils.database import DatabaseManager, load_config
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')
 logger = logging.getLogger(__name__)
 
-# State population data (approximate, for weighting equipment)
 STATE_POPULATIONS = {
     'ALABAMA': 5024279, 'ALASKA': 733391, 'ARIZONA': 7151502, 'ARKANSAS': 3011524,
     'CALIFORNIA': 39538223, 'COLORADO': 5773714, 'CONNECTICUT': 3605944,
@@ -40,8 +38,6 @@ STATE_POPULATIONS = {
     'PUERTO RICO': 3285874, 'U.S. VIRGIN ISLANDS': 87146
 }
 
-# Equipment type preferences by region (percentages)
-# Modern states prefer scanners and BMDs, older states may still have some DREs
 EQUIPMENT_PATTERNS = {
     'modern': {  # States that updated equipment recently
         'dreNoVVPAT': 0.0,
@@ -63,19 +59,15 @@ EQUIPMENT_PATTERNS = {
     }
 }
 
-# Classify states by equipment modernization level
 STATE_CLASSIFICATION = {
-    # Modern states (updated post-2016)
     'modern': ['CALIFORNIA', 'COLORADO', 'MARYLAND', 'NEW YORK', 'WASHINGTON', 
                'OREGON', 'MASSACHUSETTS', 'VERMONT', 'RHODE ISLAND', 'CONNECTICUT',
                'MINNESOTA', 'MICHIGAN', 'VIRGINIA'],
     
-    # Transitioning states
     'transitioning': ['TEXAS', 'FLORIDA', 'PENNSYLVANIA', 'OHIO', 'ILLINOIS',
                       'GEORGIA', 'NORTH CAROLINA', 'ARIZONA', 'WISCONSIN', 'IOWA',
                       'NEVADA', 'NEW MEXICO', 'HAWAII'],
     
-    # Legacy equipment states  
     'legacy': ['ALABAMA', 'ARKANSAS', 'KENTUCKY', 'LOUISIANA', 'MISSISSIPPI',
                'OKLAHOMA', 'SOUTH CAROLINA', 'TENNESSEE', 'WEST VIRGINIA',
                'KANSAS', 'MISSOURI', 'INDIANA']
@@ -92,25 +84,19 @@ def generate_equipment_counts(state, year):
     """Generate realistic equipment counts for a state"""
     population = STATE_POPULATIONS.get(state, 1000000)
     
-    # Base number of pieces of equipment on population
-    # Roughly 1 piece of equipment per 2000 people
     base_count = max(10, int(population / 2000))
     
-    # Add some random variation
     base_count = int(base_count * random.uniform(0.8, 1.2))
     
-    # Get equipment pattern for this state
     pattern_name = get_state_pattern(state)
     pattern = EQUIPMENT_PATTERNS[pattern_name]
     
-    # Apply yearly trend (phasing out DRE no VVPAT over time)
     year_factor = {
         2016: {'dreNoVVPAT': 1.0, 'dreWithVVPAT': 1.0, 'ballotMarkingDevice': 0.8, 'scanner': 1.0},
         2020: {'dreNoVVPAT': 0.4, 'dreWithVVPAT': 0.9, 'ballotMarkingDevice': 1.0, 'scanner': 1.05},
         2024: {'dreNoVVPAT': 0.1, 'dreWithVVPAT': 0.7, 'ballotMarkingDevice': 1.2, 'scanner': 1.1}
     }.get(year, {'dreNoVVPAT': 1.0, 'dreWithVVPAT': 1.0, 'ballotMarkingDevice': 1.0, 'scanner': 1.0})
     
-    # Calculate counts
     counts = {}
     for equip_type, percentage in pattern.items():
         count = int(base_count * percentage * year_factor[equip_type])
@@ -124,7 +110,6 @@ def main():
     
     db = DatabaseManager()
     
-    # Get all states from the database
     all_equipment = list(db.find_many('votingEquipmentData'))
     logger.info(f"Found {len(all_equipment)} equipment records")
     
@@ -137,13 +122,10 @@ def main():
         if not state or not year:
             continue
         
-        # Generate realistic equipment counts
         counts = generate_equipment_counts(state, year)
         
-        # Update the record
         record['equipmentSummary'] = counts
         
-        # Update in database
         db.upsert_one(
             'votingEquipmentData',
             {'state': state, 'year': year},

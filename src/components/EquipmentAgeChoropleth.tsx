@@ -1,8 +1,3 @@
-/**
- * Choropleth map displaying average equipment age by state.
- * Uses monochromatic colors with increasing saturation for older devices.
- */
-
 import React, { useMemo, useRef, useEffect } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { Box, Paper, Typography, Button } from "@mui/material";
@@ -12,13 +7,13 @@ import { bindResponsiveTooltip } from "../utils/leafletTooltipHelper";
 
 interface StateEquipmentAge {
     state: string;
-    averageAge: number; // Average age of all equipment in years
+    averageAge: number;
 }
 
 interface Props {
     data: StateEquipmentAge[];
-    geoJsonData?: any; // US states GeoJSON
-    onClose?: () => void; // Callback to return to normal map view
+    geoJsonData?: any;
+    onClose?: () => void;
 }
 
 const AGE_BINS = [

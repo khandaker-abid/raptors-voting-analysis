@@ -3,10 +3,19 @@ import { useNavigate } from "react-router-dom";
 import USMap from "../components/USMap";
 import QuickAccessWidget from "../components/QuickAccessWidget";
 import EquipmentAgeChoropleth from "../components/EquipmentAgeChoropleth";
-import { Box, ToggleButton, ToggleButtonGroup, Button, Paper, Typography, CircularProgress } from "@mui/material";
+import {
+	Box,
+	ToggleButton,
+	ToggleButtonGroup,
+	Button,
+	Paper,
+	Typography,
+	CircularProgress
+} from "@mui/material";
 import MapIcon from "@mui/icons-material/Map";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import TableChartIcon from "@mui/icons-material/TableChart";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { fetchEquipmentAgeAllStates } from "../data/api";
 
 interface StateEquipmentAge {
@@ -55,6 +64,10 @@ const SplashPage: React.FC = () => {
 			setViewMode(newView);
 		}
 	};
+	// GUI-30: Reset page to default state
+	const handleReset = () => {
+		setViewMode("states");
+	};
 
 	return (
 		<Box
@@ -69,6 +82,7 @@ const SplashPage: React.FC = () => {
 				position: "relative",
 			}}
 		>
+			{/* Control panel for map view toggle and navigation */}
 			<Paper
 				elevation={3}
 				sx={{
@@ -108,9 +122,23 @@ const SplashPage: React.FC = () => {
 					fullWidth
 					startIcon={<TableChartIcon />}
 					onClick={() => navigate("/per-state-voting-equipment")}
-					sx={{ textTransform: "none", fontWeight: 600 }}
+					sx={{ textTransform: "none", fontWeight: 600, mb: 1 }}
 				>
 					Per-State Equipment Table
+				</Button>
+
+				{/* GUI-30: Reset Button */}
+				<Button
+					variant="contained"
+					color="error"
+					size="small"
+					fullWidth
+					startIcon={<RestartAltIcon />}
+					onClick={handleReset}
+					disabled={viewMode === "states"}
+					sx={{ textTransform: "none", fontWeight: 600 }}
+				>
+					Reset View
 				</Button>
 			</Paper>
 

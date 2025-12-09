@@ -15,7 +15,6 @@ interface VoterRegistrationChloroplethMapProps {
 		lat?: number;
 		lng?: number;
 	}>;
-	/** Optional: change value (e.g., flip 0/1) when your dialog closes to force-clear hover */
 	resetHoverKey?: number;
 }
 
@@ -336,7 +335,8 @@ const VoterRegistrationChloroplethMap: React.FC<
 		const handler = () => clearHover();
 		node.addEventListener("mouseleave", handler);
 		return () => node.removeEventListener("mouseleave", handler);
-	}, [mapRef.current]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [geoData]); // Re-run when geoData changes (map is re-rendered)
 
 	useEffect(() => {
 		clearHover();
@@ -444,7 +444,6 @@ const VoterRegistrationChloroplethMap: React.FC<
 				</MapContainer>
 			</Box>
 
-			{/* Color Legend - Gradient style matching other tabs */}
 			<Box>
 				<Typography variant="body2" gutterBottom fontWeight={600} fontSize="0.85rem">
 					Color Scale (Total Registered Voters)

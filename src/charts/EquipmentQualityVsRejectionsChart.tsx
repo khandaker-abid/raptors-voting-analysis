@@ -67,10 +67,6 @@ const CustomTooltip = ({ active, payload }: any) => {
     }
     return null;
 };
-
-/**
- * Generate regression line points for both power and linear regression
- */
 const generateRegressionPoints = (
     coefficients: { a: number; b: number },
     xMin: number,

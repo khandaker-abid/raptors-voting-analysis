@@ -17,15 +17,12 @@ import random
 def generate_county_voters():
     """Generate individual voter records for all three detail states based on real statistics"""
     
-    # Connect to MongoDB
     client = MongoClient('mongodb://localhost:27017/')
     db = client['voting_analysis']
     
-    # Clear existing voter data
     print("Clearing existing voter registration data...")
     db.voter_registration.delete_many({})
     
-    # Common US first names (from US Census data)
     first_names = [
         "James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda",
         "William", "Barbara", "David", "Elizabeth", "Richard", "Susan", "Joseph", "Jessica",
@@ -52,7 +49,6 @@ def generate_county_voters():
         "Wayne", "Danielle", "Roy", "Theresa", "Ralph", "Sophia", "Randy", "Marie"
     ]
     
-    # Common US last names (from US Census data)
     last_names = [
         "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
         "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas",
@@ -79,11 +75,8 @@ def generate_county_voters():
         "Rose", "Stone", "Salazar", "Fox", "Warren", "Mills", "Meyer", "Rice"
     ]
     
-    # All three detail states with their county/region registration data
-    # Format: {"state": "State Name", "county": "County Name", "dem": X, "rep": Y, "unaf": Z}
     
     all_regions = [
-        # ARKANSAS COUNTIES
         {"state": "Arkansas", "county": "Benton", "dem": 13595, "rep": 19722, "unaf": 4213},
         {"state": "Arkansas", "county": "Washington", "dem": 12044, "rep": 10415, "unaf": 8984},
         {"state": "Arkansas", "county": "Carroll", "dem": 4550, "rep": 46796, "unaf": 58305},
@@ -161,7 +154,6 @@ def generate_county_voters():
         {"state": "Arkansas", "county": "Little River", "dem": 2500, "rep": 3800, "unaf": 2200},
         {"state": "Arkansas", "county": "Baxter", "dem": 3500, "rep": 6200, "unaf": 3800},
         
-        # MARYLAND COUNTIES
         {"state": "Maryland", "county": "Allegany", "dem": 30222, "rep": 55698, "unaf": 18315},
         {"state": "Maryland", "county": "Garrett", "dem": 9376, "rep": 225, "unaf": 8701},
         {"state": "Maryland", "county": "Washington", "dem": 32701, "rep": 27977, "unaf": 33612},
@@ -187,7 +179,6 @@ def generate_county_voters():
         {"state": "Maryland", "county": "Prince George's", "dem": 68450, "rep": 18230, "unaf": 45820},
         {"state": "Maryland", "county": "Caroline", "dem": 8920, "rep": 12450, "unaf": 5830},
         
-        # RHODE ISLAND COUNTIES
         {"state": "Rhode Island", "county": "Providence", "dem": 16889, "rep": 36352, "unaf": 36856},
         {"state": "Rhode Island", "county": "Kent", "dem": 17682, "rep": 18499, "unaf": 49542},
         {"state": "Rhode Island", "county": "Bristol", "dem": 37137, "rep": 28743, "unaf": 37293},
@@ -202,7 +193,6 @@ def generate_county_voters():
     
     total_voters_generated = 0
     
-    # Street names for addresses
     street_names = [
         "Main St", "Oak Ave", "Maple Dr", "Pine St", "Elm Rd", "Cedar Ln", 
         "Washington St", "Park Ave", "Broadway", "Church St", "Market St", "Mill Rd",
@@ -218,17 +208,14 @@ def generate_county_voters():
         
         total_count = dem_count + rep_count + unaf_count
         
-        # Generate a sample of voters (10% of total to keep database reasonable size)
         sample_size = max(50, int(total_count * 0.1))  # At least 50 voters per county
         
-        # Calculate proportions
         dem_sample = int(sample_size * (dem_count / total_count))
         rep_sample = int(sample_size * (rep_count / total_count))
         unaf_sample = sample_size - dem_sample - rep_sample
         
         voters = []
         
-        # Generate Democratic voters
         for i in range(dem_sample):
             voter = {
                 "state": state,
@@ -241,7 +228,6 @@ def generate_county_voters():
             }
             voters.append(voter)
         
-        # Generate Republican voters
         for i in range(rep_sample):
             voter = {
                 "state": state,
@@ -254,7 +240,6 @@ def generate_county_voters():
             }
             voters.append(voter)
         
-        # Generate Unaffiliated voters
         for i in range(unaf_sample):
             voter = {
                 "state": state,
@@ -267,19 +252,16 @@ def generate_county_voters():
             }
             voters.append(voter)
         
-        # Insert voters for this region
         if voters:
             db.voter_registration.insert_many(voters)
             total_voters_generated += len(voters)
             print(f"  {state} - {county}: {len(voters)} voters (D:{dem_sample}, R:{rep_sample}, U:{unaf_sample})")
     
-    # Create indexes for efficient querying
     print("\nCreating database indexes...")
     db.voter_registration.create_index([("state", 1), ("county", 1)])
     db.voter_registration.create_index([("party", 1)])
     db.voter_registration.create_index([("lastName", 1), ("firstName", 1)])
     
-    # Summary statistics
     arkansas_count = db.voter_registration.count_documents({"state": "Arkansas"})
     maryland_count = db.voter_registration.count_documents({"state": "Maryland"})
     rhode_island_count = db.voter_registration.count_documents({"state": "Rhode Island"})

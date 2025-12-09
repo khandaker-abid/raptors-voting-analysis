@@ -9,7 +9,6 @@ import sys
 import logging
 from pathlib import Path
 
-# Add utils to path
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import DatabaseManager
@@ -27,7 +26,6 @@ class VoterRegionAssigner:
         self.db = DatabaseManager(config_path)
         self.geocoder = CompositeGeocoder(config_path)
         
-        # Load county boundaries
         logger.info("Loading county boundaries...")
         self.boundaries = list(self.db.find_many('boundaryData', {'boundaryType': 'county'}))
         logger.info(f"Loaded {len(self.boundaries)} county boundaries")
@@ -45,18 +43,14 @@ class VoterRegionAssigner:
     
     def assign_voter_region(self, voter: dict) -> dict:
         """Assign EAVS region to a voter"""
-        # Check if already assigned
         if voter.get('eavsRegionFips'):
             return None
         
-        # Check if already geocoded
         census_block = voter.get('censusBlock')
         if census_block:
-            # Extract county FIPS from census block (first 5 digits)
             county_fips = census_block[:5]
             return {'eavsRegionFips': county_fips}
         
-        # Try geocoding the address
         address = voter.get('address', {})
         street = address.get('street', '')
         city = address.get('city', '')
@@ -65,20 +59,17 @@ class VoterRegionAssigner:
         
         full_address = f"{street}, {city}, {state} {zipcode}"
         
-        # Geocode
         result = self.geocoder.geocode(full_address)
         
         if result and result.get('lat') and result.get('lon'):
             lat = result['lat']
             lon = result['lon']
             
-            # Find county
             county_fips = self.find_county_for_point(lat, lon)
             
             if county_fips:
                 return {'eavsRegionFips': county_fips}
         
-        # Fallback: Try to match by county name
         county_name = voter.get('county', '').lower()
         if county_name:
             for boundary in self.boundaries:
@@ -92,7 +83,6 @@ class VoterRegionAssigner:
         """Process all voters and assign regions"""
         logger.info("Assigning EAVS regions to voters...")
         
-        # Get voters without region assignment
         voters = list(self.db.find_many('voterRegistration', {
             '$or': [
                 {'eavsRegionFips': None},
@@ -132,7 +122,6 @@ class VoterRegionAssigner:
             if (i + 1) % 1000 == 0:
                 logger.info(f"  Processed {i + 1:,}/{total:,} voters (assigned: {assigned:,}, failed: {failed:,})")
         
-        # Summary
         logger.info("\n" + "="*70)
         logger.info("REGION ASSIGNMENT SUMMARY")
         logger.info("="*70)

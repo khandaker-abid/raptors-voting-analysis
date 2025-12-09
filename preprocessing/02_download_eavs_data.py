@@ -16,7 +16,6 @@ import requests
 import logging
 from pathlib import Path
 
-# Add utils to path
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import load_config
@@ -40,7 +39,6 @@ class EAVSDownloader:
     def find_working_url(self, year: int) -> str:
         """Find a working URL for the given year"""
         
-        # First check if the configured URL works
         source_info = EAVS_SOURCES.get(year)
         if source_info:
             url = source_info['url']
@@ -56,7 +54,6 @@ class EAVSDownloader:
             except Exception as e:
                 logger.warning(f"Configured URL failed for {year}: {e}")
         
-        # If configured URL doesn't work, use scraper to find it
         logger.info(f"Discovering URL for EAVS {year}...")
         discovered_url = self.scraper.find_eavs_url(year)
         
@@ -72,12 +69,10 @@ class EAVSDownloader:
         filename = f'EAVS_{year}_Dataset.xlsx'
         filepath = self.cache_dir / filename
         
-        # Check if already downloaded
         if filepath.exists():
             logger.info(f"✓ EAVS {year} already downloaded: {filepath}")
             return filepath
         
-        # Find working URL
         url = self.find_working_url(year)
         
         if not url:
@@ -92,7 +87,6 @@ class EAVSDownloader:
             response = requests.get(url, stream=True, timeout=300)
             response.raise_for_status()
             
-            # Get file size for progress
             total_size = int(response.headers.get('content-length', 0))
             
             with open(filepath, 'wb') as f:
@@ -127,7 +121,6 @@ class EAVSDownloader:
             filepath = self.download_eavs_file(year)
             results[year] = filepath
         
-        # Update data_sources.py with discovered URLs
         if self.discovered_urls:
             logger.info("\nUpdating data_sources.py with discovered URLs...")
             data_sources_path = Path(__file__).parent / 'utils' / 'data_sources.py'
@@ -137,7 +130,6 @@ class EAVSDownloader:
             except Exception as e:
                 logger.warning(f"Could not update data_sources.py: {e}")
         
-        # Summary
         logger.info("\n" + "="*70)
         logger.info("EAVS DOWNLOAD SUMMARY")
         logger.info("="*70)
@@ -169,7 +161,6 @@ def main():
         downloader = EAVSDownloader()
         results = downloader.download_all()
         
-        # Check if any downloads succeeded
         if any(fp and fp.exists() for fp in results.values()):
             logger.info("\n✓ EAVS download complete!")
             logger.info("Next step: Run 03_populate_eavs_db.py to load data into MongoDB")

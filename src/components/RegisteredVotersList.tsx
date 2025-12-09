@@ -1,8 +1,3 @@
-/**
- * Display registered voters by name with party filter.
- * Shows paginated list when clicking EAVS geographic regions.
- */
-
 import React, { useState, useEffect } from "react";
 import {
     Dialog,
@@ -61,7 +56,8 @@ const RegisteredVotersList: React.FC<Props> = ({
 
         setLoading(true);
 
-        const apiUrl = `http://localhost:8080/api/registration/voters/${encodeURIComponent(stateName)}/${encodeURIComponent(geographicUnit)}?party=${partyFilter}&page=0&size=1000`;
+        // Fetch all voters for this location - filtering is done client-side
+        const apiUrl = `http://localhost:8080/api/registration/voters/${encodeURIComponent(stateName)}/${encodeURIComponent(geographicUnit)}?page=0&size=1000`;
 
         fetch(apiUrl)
             .then(res => res.json())
