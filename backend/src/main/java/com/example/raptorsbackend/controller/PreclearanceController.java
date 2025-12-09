@@ -43,6 +43,7 @@ public class PreclearanceController {
 
         // Fetch precinct-level voting and demographic data
         Query query = new Query();
+
         query.addCriteria(Criteria.where("state").is(state));
 
         List<Map<String, Object>> precincts = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(query, Map.class,
@@ -108,6 +109,7 @@ public class PreclearanceController {
             @RequestParam(required = false) String demographic) {
 
         Query query = new Query();
+
         query.addCriteria(Criteria.where("state").is(state)
                 .and("analysis_type").is("equipment_quality"));
 
@@ -152,6 +154,7 @@ public class PreclearanceController {
             @RequestParam(required = false) String demographic) {
 
         Query query = new Query();
+
         query.addCriteria(Criteria.where("state").is(state)
                 .and("analysis_type").is("ballot_rejection"));
 
@@ -196,12 +199,13 @@ public class PreclearanceController {
     @GetMapping("/debug/ei-equipment")
     public Map<String, Object> debugEIEquipment() {
         long count = mongoTemplate.count(new Query(), "ei_equipment_analysis");
-
         Query query = new Query();
+
         query.addCriteria(Criteria.where("state").is("Maryland"));
         long marylandCount = mongoTemplate.count(query, "ei_equipment_analysis");
 
         Query fullQuery = new Query();
+
         fullQuery.addCriteria(Criteria.where("state").is("Maryland")
                 .and("analysis_type").is("equipment_quality"));
         long fullQueryCount = mongoTemplate.count(fullQuery, "ei_equipment_analysis");

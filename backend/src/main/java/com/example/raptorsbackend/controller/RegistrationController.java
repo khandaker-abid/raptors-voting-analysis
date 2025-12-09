@@ -74,6 +74,7 @@ public class RegistrationController {
         Map<String, List<Integer>> byYear = new HashMap<>();
         for (String year : yearArray) {
             Query query = new Query();
+
             query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(Integer.parseInt(year.trim())));
             List<Map> yearData = mongoTemplate.find(query, Map.class, "eavsData");
 
@@ -110,6 +111,7 @@ public class RegistrationController {
     @GetMapping("/blocks/{state}")
     public Map<String, Object> getBlockBubbles(@PathVariable String state) {
         Query query = new Query();
+
         query.addCriteria(Criteria.where("state").is(state));
 
         List<Map> blocks = mongoTemplate.find(query, Map.class, "census_block_voters");
@@ -154,6 +156,7 @@ public class RegistrationController {
             @RequestParam(defaultValue = "25") int size) {
 
         Query query = new Query();
+
         query.addCriteria(Criteria.where("state").is(state).and("county").is(region));
 
         if (party != null && !party.equals("All")) {

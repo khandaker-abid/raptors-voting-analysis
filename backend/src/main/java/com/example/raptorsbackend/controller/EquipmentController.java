@@ -46,6 +46,7 @@ public class EquipmentController {
 
         // Query VerifiedVoting data for jurisdiction-level equipment info
         Query query = new Query();
+
         query.addCriteria(Criteria.where("stateAbbr").is(stateAbbr)
                 .and("year").is(2024)
                 .and("dataSource").is("VerifiedVoting.org")
@@ -283,6 +284,7 @@ public class EquipmentController {
 
         // Query VerifiedVoting data for this state (2024 only)
         Query query = new Query();
+
         query.addCriteria(Criteria.where("stateAbbr").is(stateAbbr)
                 .and("year").is(2024)
                 .and("dataSource").is("VerifiedVoting.org"));
