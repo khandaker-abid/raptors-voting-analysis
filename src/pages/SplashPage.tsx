@@ -16,24 +16,20 @@ interface StateEquipmentAge {
 
 const SplashPage: React.FC = () => {
 	const navigate = useNavigate();
-	// GUI-11: Toggle between state map and equipment age choropleth
 	const [viewMode, setViewMode] = useState<"states" | "equipmentAge">("states");
 	const [equipmentAgeData, setEquipmentAgeData] = useState<StateEquipmentAge[]>([]);
 	const [geoJsonData, setGeoJsonData] = useState<any>(null);
 	const [loading, setLoading] = useState(false);
 
-	// Load equipment age data when switching to that view
 	useEffect(() => {
 		if (viewMode === "equipmentAge" && equipmentAgeData.length === 0) {
 			setLoading(true);
 
-			// Fetch equipment age data for all states using API function
 			Promise.all([
 				fetchEquipmentAgeAllStates(),
 				fetch("/us-state-boundaries.geojson").then(r => r.json())
 			])
 				.then(([ageData, geoJson]) => {
-					// Transform backend response to expected format
 					const transformedData = Array.isArray(ageData)
 						? ageData.map((item: any) => ({
 							state: item.state || item.stateName || "",
@@ -73,7 +69,6 @@ const SplashPage: React.FC = () => {
 				position: "relative",
 			}}
 		>
-			{/* GUI-11 & GUI-12: View Controls - Bottom Right overlay (above Leaflet attribution) */}
 			<Paper
 				elevation={3}
 				sx={{
@@ -90,7 +85,6 @@ const SplashPage: React.FC = () => {
 				<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1, fontWeight: 600 }}>
 					Map View
 				</Typography>
-				{/* GUI-11: Toggle between State Map and Equipment Age */}
 				<ToggleButtonGroup
 					value={viewMode}
 					exclusive
@@ -108,7 +102,6 @@ const SplashPage: React.FC = () => {
 					</ToggleButton>
 				</ToggleButtonGroup>
 
-				{/* GUI-12: Quick link to per-state equipment table */}
 				<Button
 					variant="outlined"
 					size="small"
@@ -121,7 +114,6 @@ const SplashPage: React.FC = () => {
 				</Button>
 			</Paper>
 
-			{/* Main Map Area */}
 			<Box
 				sx={{
 					flex: 1,
@@ -146,7 +138,6 @@ const SplashPage: React.FC = () => {
 				)}
 			</Box>
 
-			{/* Quick Access Widget - floating overlay on the right */}
 			<QuickAccessWidget />
 		</Box>
 	);

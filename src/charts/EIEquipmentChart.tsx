@@ -1,8 +1,7 @@
-// GUI-28: Ecological Inference - Equipment Quality Access
-// For preclearance state (Maryland)
-// Shows probability curves for equipment quality by demographic group
-// X-axis: Equipment quality score (0-100)
-// Y-axis: Probability density
+/**
+ * Ecological Inference - Equipment Quality Access
+ * Shows probability curves for equipment quality by demographic group.
+ */
 
 import React, { useState, useMemo, useEffect } from "react";
 import {
@@ -242,33 +241,33 @@ const EIEquipmentChart: React.FC<Props> = ({ stateName }) => {
 
             <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
                 <ResponsiveContainer width="75%" height={470} id="ei-equipment-chart">
-                <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                        dataKey="qualityScore"
-                        label={{ value: "Equipment Quality Score", position: "insideBottom", offset: -5, style: { fontSize: 12, fontWeight: 600 } }}
-                    />
-                    <YAxis
-                        label={{ value: "Probability Density", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 600 } }}
-                    />
-                    <Tooltip
-                        formatter={(value: number) => value.toFixed(4)}
-                        labelFormatter={(label) => `Quality Score: ${label}`}
-                    />
-                    <Legend />
-                    {selectedDemographics.map((demographic) => (
-                        <Line
-                            key={demographic}
-                            type="monotone"
-                            dataKey={demographic}
-                            stroke={DEMOGRAPHIC_COLORS[demographic]}
-                            strokeWidth={2}
-                            dot={false}
-                            name={demographic}
+                    <LineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis
+                            dataKey="qualityScore"
+                            label={{ value: "Equipment Quality Score", position: "insideBottom", offset: -5, style: { fontSize: 12, fontWeight: 600 } }}
                         />
-                    ))}
-                </LineChart>
-            </ResponsiveContainer>
+                        <YAxis
+                            label={{ value: "Probability Density", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 600 } }}
+                        />
+                        <Tooltip
+                            formatter={(value: number) => value.toFixed(4)}
+                            labelFormatter={(label) => `Quality Score: ${label}`}
+                        />
+                        <Legend />
+                        {selectedDemographics.map((demographic) => (
+                            <Line
+                                key={demographic}
+                                type="monotone"
+                                dataKey={demographic}
+                                stroke={DEMOGRAPHIC_COLORS[demographic]}
+                                strokeWidth={2}
+                                dot={false}
+                                name={demographic}
+                            />
+                        ))}
+                    </LineChart>
+                </ResponsiveContainer>
 
                 <Box sx={{ width: "25%", display: "flex", flexDirection: "column", gap: 0.5 }}>
                     <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>

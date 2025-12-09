@@ -10,8 +10,17 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 /**
- * Controller for voter registration data
- * Handles GUI use cases: GUI-16, GUI-18, GUI-19
+ * REST Controller for voter registration data.
+ * 
+ * Provides endpoints for:
+ * - Registration trends across election years (2016, 2020, 2024)
+ * - Census block level voter analysis
+ * - Party dominance bubble overlays
+ * - Paginated registered voter listings
+ * - Felony voting policy data
+ * 
+ * Supports GUI use cases: GUI-1, GUI-2, GUI-3
+ * Data sources: EAVS registration data, state voter files
  */
 @RestController
 @RequestMapping("/api/registration")
@@ -23,8 +32,12 @@ public class RegistrationController {
     private MongoTemplate mongoTemplate;
 
     /**
-     * GUI-16: Get registration trends for a state (2016, 2020, 2024)
-     * GET /api/registration/trends/{state}?years=2016,2020,2024
+     * Get registration trends for a state across election years.
+     * Returns voter counts by geographic unit for trend analysis.
+     * 
+     * @param state State name (case-sensitive)
+     * @param years Comma-separated list of years (default: 2016,2020,2024)
+     * @return Map with state name and registration data by year
      */
     @GetMapping("/trends/{state}")
     public Map<String, Object> getRegistrationTrends(
@@ -88,8 +101,11 @@ public class RegistrationController {
     }
 
     /**
-     * GUI-18: Get census block bubbles for party dominance
-     * GET /api/registration/blocks/{state}
+     * Get census block bubbles for party dominance visualization.
+     * Returns geographic points with dominant party for map display.
+     * 
+     * @param state State name (case-sensitive)
+     * @return Map with state name and bubble points
      */
     @GetMapping("/blocks/{state}")
     public Map<String, Object> getBlockBubbles(@PathVariable String state) {
@@ -119,8 +135,15 @@ public class RegistrationController {
     }
 
     /**
-     * GUI-19: Get registered voters by geographic unit
-     * GET /api/registration/voters/{state}/{region}?party=Democratic&page=0&size=25
+     * Get registered voters by geographic unit.
+     * Returns paginated voter records for a specific region.
+     * 
+     * @param state  State name (case-sensitive)
+     * @param region Geographic region name
+     * @param party  Party filter (optional)
+     * @param page   Page number (default: 0)
+     * @param size   Page size (default: 25)
+     * @return Map with voters, total count, and pagination info
      */
     @GetMapping("/voters/{state}/{region}")
     public Map<String, Object> getRegisteredVoters(
@@ -166,8 +189,10 @@ public class RegistrationController {
     }
 
     /**
-     * GUI-21: Get opt-in/opt-out registration comparison
-     * GET /api/registration/opt-in-out-comparison
+     * Get opt-in/opt-out registration policy comparison.
+     * Returns registration statistics by policy type across states.
+     * 
+     * @return List of states with registration policy data
      */
     @GetMapping("/opt-in-out-comparison")
     public List<Map<String, Object>> getOptInOutComparison() {
@@ -229,8 +254,10 @@ public class RegistrationController {
     }
 
     /**
-     * GUI-23: Get early voting comparison
-     * GET /api/registration/early-voting/comparison
+     * Get early voting comparison across states.
+     * Returns early voting statistics for comparison analysis.
+     * 
+     * @return List of states with early voting data
      */
     @GetMapping("/early-voting/comparison")
     public List<Map<String, Object>> getEarlyVotingComparison() {

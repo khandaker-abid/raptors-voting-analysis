@@ -1,4 +1,9 @@
-// components/DropBoxBubbleChart.tsx
+/**
+ * Bubble chart showing drop box usage vs partisan voting patterns.
+ * Each bubble represents a geographic unit; size indicates total votes.
+ * X-axis: % Drop box usage, Y-axis: % Republican votes
+ */
+
 import React, { useMemo } from "react";
 import {
   ResponsiveContainer,
@@ -13,6 +18,7 @@ import {
   Line,
 } from "recharts";
 import { Paper, Typography, Box } from "@mui/material";
+import { CHART_HEIGHTS } from "../constants";
 
 type PartyCode = "R" | "D" | "U";
 
@@ -247,7 +253,7 @@ const DropBoxBubbleChart: React.FC<Props> = ({ data, regressionLines = [] }) => 
       {/* Spacer to align with Gingles chart's demographic selection */}
       <Box sx={{ mb: 2, height: 72 }} />
 
-      <Box sx={{ flex: 1, minHeight: 500, height: 500 }}>
+      <Box sx={{ flex: 1, minHeight: CHART_HEIGHTS.STANDARD, height: CHART_HEIGHTS.STANDARD }}>
         {!hasData ? (
           <Box
             sx={{

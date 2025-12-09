@@ -1,4 +1,3 @@
-// GUI - 9
 import React, { useState, useMemo } from "react";
 import {
     Box,

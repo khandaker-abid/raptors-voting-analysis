@@ -4,12 +4,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 /**
- * GUI-30: Reset Button
- * 
- * Fixed position button to reset/clear current page state:
- * - On detail pages: Reloads current page (resets filters, tabs, selections)
- * - On home/landing pages: Navigates to main landing page
- * - Always visible in bottom-right corner
+ * Fixed position button to reset current page state.
+ * On detail pages: Reloads page to reset filters and selections.
+ * On home page: No action needed.
  */
 const ResetButton: React.FC = () => {
   const navigate = useNavigate();

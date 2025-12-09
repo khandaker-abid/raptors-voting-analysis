@@ -1,7 +1,7 @@
-// GUI-19: Display registered voters by name
-// Clickable EAVS geographic regions showing paginated list of voters
-// Filter by political party (Republican/Democratic)
-// Required for Maryland (voter registration state)
+/**
+ * Display registered voters by name with party filter.
+ * Shows paginated list when clicking EAVS geographic regions.
+ */
 
 import React, { useState, useEffect } from "react";
 import {
@@ -62,7 +62,6 @@ const RegisteredVotersList: React.FC<Props> = ({
 
         setLoading(true);
 
-        // Fetch real voter data from API (GUI-19)
         const apiUrl = `http://localhost:8080/api/registration/voters/${encodeURIComponent(stateName)}/${encodeURIComponent(geographicUnit)}?party=${partyFilter}&page=0&size=1000`;
 
         fetch(apiUrl)

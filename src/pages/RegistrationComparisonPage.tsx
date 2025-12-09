@@ -147,7 +147,7 @@ const RegistrationComparisonPage: React.FC = () => {
 
       {/* Tab Panels */}
       <Box sx={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
-        {/* GUI-21: Opt-in vs Opt-out Comparison */}
+        {/* Opt-in vs Opt-out Comparison */}
         {tabValue === 0 && (
           <Paper sx={{ p: 2, borderRadius: 3, height: "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             <Typography variant="subtitle1" gutterBottom fontWeight={600} align="center">
@@ -218,7 +218,7 @@ const RegistrationComparisonPage: React.FC = () => {
           </Paper>
         )}
 
-        {/* GUI-23: Early Voting Comparison */}
+        {/* Early Voting Comparison */}
         {tabValue === 2 && (
           <Paper sx={{ p: 2, borderRadius: 3, height: "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             <Typography variant="subtitle1" gutterBottom fontWeight={600} align="center">

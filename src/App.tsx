@@ -3,8 +3,8 @@ import { BrowserRouter as Router, useLocation } from "react-router-dom";
 import { Box, Alert, Typography, Paper } from "@mui/material";
 import Navigation from "./components/Navigation";
 import AppRoutes from "./routes";
+import { CHART_HEIGHTS } from "./constants";
 
-// Error Boundary to catch render errors
 interface ErrorBoundaryState {
 	hasError: boolean;
 	error: Error | null;
@@ -41,7 +41,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, Error
 							p: 2,
 							borderRadius: 1,
 							overflow: "auto",
-							maxHeight: 400
+							maxHeight: CHART_HEIGHTS.MEDIUM
 						}}>
 							{this.state.error?.stack}
 						</Typography>

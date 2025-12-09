@@ -14,23 +14,22 @@ import { Paper, Typography, Box, CircularProgress, Alert } from "@mui/material";
 
 interface EquipmentQualityDataPoint {
     county: string;
-    equipmentQuality: number; // 0-100 scale
-    rejectionRate: number; // percentage
+    equipmentQuality: number;
+    rejectionRate: number;
     party: "R" | "D";
 }
 
-// GUI-26: Regression line interface for non-linear regression display
 interface RegressionLine {
     party: "R" | "D";
     coefficients: { a: number; b: number };
     r2: number;
-    type?: "power" | "linear"; // GUI-26: Support both regression types
+    type?: "power" | "linear";
 }
 
 interface Props {
     stateName: string;
     data?: EquipmentQualityDataPoint[];
-    regressionLines?: RegressionLine[]; // GUI-26: Optional regression lines from props
+    regressionLines?: RegressionLine[];
 }
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -69,7 +68,9 @@ const CustomTooltip = ({ active, payload }: any) => {
     return null;
 };
 
-// GUI-26: Generate regression line points for both power and linear regression
+/**
+ * Generate regression line points for both power and linear regression
+ */
 const generateRegressionPoints = (
     coefficients: { a: number; b: number },
     xMin: number,
@@ -122,7 +123,6 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
                         setRegressionLines(propRegressionLines);
                     }
                 } else {
-                    // GUI-26: Fetch from new endpoint that includes regression coefficients
                     const response = await fetch(
                         `/api/equipment/vs-rejected-with-regression/${encodeURIComponent(stateName)}`
                     );
@@ -142,7 +142,6 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
 
                     setChartData(transformedData);
 
-                    // GUI-26: Set regression lines from backend
                     if (result.regressionLines && Array.isArray(result.regressionLines)) {
                         const transformedRegression = result.regressionLines.map((reg: any) => ({
                             party: reg.party,
@@ -206,12 +205,10 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
     const xMin = Math.floor(qualityMin / 10) * 10; // Round down to nearest 10
     const xMax = 100;
 
-    // Calculate Y-axis range based on data 
     const rejections = chartData.map((d) => d.rejectionRate);
     const maxRejection = Math.max(...rejections);
-    const yMax = Math.max(maxRejection * 1.15, 1); // At least 1% range, 15% padding at top
+    const yMax = Math.max(maxRejection * 1.15, 1);
 
-    // GUI-26: Generate regression line data from backend coefficients
     const republicanRegression = regressionLines?.find((r) => r.party === "R");
     const democraticRegression = regressionLines?.find((r) => r.party === "D");
 
@@ -323,7 +320,6 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
                                 />
                             ))}
                         </Scatter>
-                        {/* GUI-26: Republican regression line */}
                         {republicanRegressionPoints.length > 0 && (
                             <Scatter
                                 name="Republican Trend"
@@ -333,7 +329,6 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
                                 isAnimationActive={false}
                             />
                         )}
-                        {/* GUI-26: Democratic regression line */}
                         {democraticRegressionPoints.length > 0 && (
                             <Scatter
                                 name="Democratic Trend"

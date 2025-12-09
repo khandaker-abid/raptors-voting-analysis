@@ -12,8 +12,16 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 /**
- * Controller for voting equipment data
- * Handles GUI use cases: GUI-10, GUI-11, GUI-14
+ * REST Controller for voting equipment data and analysis.
+ * 
+ * Provides endpoints for:
+ * - Equipment types by jurisdiction (DRE, BMD, Scanner, etc.)
+ * - Equipment usage statistics and quality metrics
+ * - Historical equipment changes across election years
+ * - Equipment age and certification data
+ * 
+ * Supports GUI use cases: GUI-4, GUI-5, GUI-6
+ * Data sources: Verified Voting, EAVS equipment sections
  */
 @RestController
 @RequestMapping("/api/equipment")
@@ -25,8 +33,11 @@ public class EquipmentController {
     private MongoTemplate mongoTemplate;
 
     /**
-     * GUI-10: Get equipment types by geographic unit for a state
-     * GET /api/equipment/{state}/types
+     * Get equipment types by geographic unit for a state.
+     * Returns equipment composition and counts by jurisdiction.
+     * 
+     * @param state State name or abbreviation
+     * @return List of equipment data by jurisdiction
      */
     @GetMapping("/{state}/types")
     public List<Map<String, Object>> getEquipmentTypes(@PathVariable String state) {
@@ -259,9 +270,11 @@ public class EquipmentController {
     }
 
     /**
-     * GUI-6: Get detailed equipment information for a specific state
-     * GET /api/equipment/state/{state}/details
-     * Returns equipment by make/model with quantity, age, certification, etc.
+     * Get detailed equipment information for a specific state.
+     * Returns equipment by make/model with quantity, age, certification status.
+     * 
+     * @param state State name or abbreviation
+     * @return List of equipment details with make, model, age, and certification
      */
     @GetMapping("/state/{state}/details")
     public List<Map<String, Object>> getStateEquipmentDetails(@PathVariable String state) {
@@ -487,8 +500,10 @@ public class EquipmentController {
     }
 
     /**
-     * GUI-11: Get average equipment age for all states
-     * GET /api/equipment/age/all-states
+     * Get average equipment age for all states.
+     * Returns aggregated equipment age statistics by state.
+     * 
+     * @return List of states with average equipment age
      */
     @GetMapping("/age/all-states")
     public List<Map<String, Object>> getAllStatesEquipmentAge() {
@@ -531,8 +546,11 @@ public class EquipmentController {
     }
 
     /**
-     * GUI-14: Get equipment history for a state (2016-2024)
-     * GET /api/equipment/history/{state}
+     * Get equipment history for a state across election years (2016-2024).
+     * Returns equipment category counts by year for trend analysis.
+     * 
+     * @param state State name or abbreviation
+     * @return List of equipment categories with counts by year
      */
     @GetMapping("/history/{state}")
     public List<Map<String, Object>> getEquipmentHistory(@PathVariable String state) {
@@ -576,8 +594,10 @@ public class EquipmentController {
     }
 
     /**
-     * GUI-12: Get equipment for all states (table view)
-     * GET /api/equipment/all-states
+     * Get equipment data for all states (table view).
+     * Returns aggregated equipment counts and types by state.
+     * 
+     * @return List of states with equipment summary data
      */
     @GetMapping("/all-states")
     public List<Map<String, Object>> getAllStatesEquipment() {
@@ -639,9 +659,10 @@ public class EquipmentController {
     }
 
     /**
-     * GUI-13: Get equipment summary by manufacturer and model (uses
-     * votingEquipmentDetails)
-     * GET /api/equipment/summary
+     * Get equipment summary by manufacturer and model.
+     * Returns aggregated equipment counts across all states.
+     * 
+     * @return List of equipment models with manufacturer, count, and usage data
      */
     @GetMapping("/summary")
     public List<Map<String, Object>> getEquipmentSummary() {
@@ -872,9 +893,9 @@ public class EquipmentController {
     }
 
     /**
-     * Helper: Get certification status based on equipment type
-     * Per GUI-6: Valid values are: VVSG 2.0 certified, VVSG 2.0 applied,
-     * VVSG 1.1 certified, VVSG 1.0 certified, not certified
+     * Helper: Get certification status based on equipment type.
+     * Valid values: VVSG 2.0 certified, VVSG 2.0 applied,
+     * VVSG 1.1 certified, VVSG 1.0 certified, not certified.
      */
     private String getCertificationForType(String equipmentType) {
         switch (equipmentType) {
@@ -940,13 +961,12 @@ public class EquipmentController {
         } else if (tabulationMethod.contains("DRE")) {
             return "VVSG 1.0 certified"; // Legacy DRE
         }
-        return "not certified"; // Default - changed from "EAC Certified" to match GUI-6 spec
+        return "not certified";
     }
 
     /**
-     * Helper: Calculate quality score (0-1 scale) based on multiple factors
-     * Per Prepro-6: weighs age, OS, certification, scan rate, error rate, and
-     * reliability
+     * Helper: Calculate quality score (0-1 scale) based on multiple factors.
+     * Weighs age, OS, certification, scan rate, error rate, and reliability.
      */
     private double calculateQualityScore(double age, double reliability, String certification) {
         // Age score (0-1): newer is better, scale from 0-15 years
@@ -956,8 +976,8 @@ public class EquipmentController {
         double reliabilityScore = reliability / 100.0;
 
         // Certification score (0-1): based on VVSG version
-        // Per GUI-6: VVSG 2.0 certified, VVSG 2.0 applied, VVSG 1.1 certified, VVSG 1.0
-        // certified, not certified
+        // VVSG 2.0 certified, VVSG 2.0 applied, VVSG 1.1 certified, VVSG 1.0 certified,
+        // not certified
         double certificationScore;
         if (certification.contains("2.0 certified")) {
             certificationScore = 1.0; // Best - VVSG 2.0 certified
@@ -1013,10 +1033,12 @@ public class EquipmentController {
     }
 
     /**
-     * GUI-25: Get equipment quality vs rejected ballots comparison
-     * GET /api/equipment/vs-rejected/{state}
+     * Get equipment quality vs rejected ballots comparison.
      * Returns county-level data for bubble chart showing relationship between
-     * equipment quality and rejected ballot percentages
+     * equipment quality and rejected ballot percentages.
+     * 
+     * @param state State name or abbreviation
+     * @return List of data points with equipment quality and rejection rates
      */
     @GetMapping("/vs-rejected/{state}")
     public List<Map<String, Object>> getEquipmentVsRejected(@PathVariable String state) {
@@ -1355,10 +1377,11 @@ public class EquipmentController {
     }
 
     /**
-     * GUI-26: Get equipment quality vs rejected ballots with regression lines
-     * GET /api/equipment/vs-rejected-with-regression/{state}
-     * Returns county-level data plus calculated regression coefficients for each
-     * party
+     * Get equipment quality vs rejected ballots with regression analysis.
+     * Returns county-level data plus calculated regression coefficients by party.
+     * 
+     * @param state State name or abbreviation
+     * @return Map with data points and regression coefficients
      */
     @GetMapping("/vs-rejected-with-regression/{state}")
     public Map<String, Object> getEquipmentVsRejectedWithRegression(@PathVariable String state) {

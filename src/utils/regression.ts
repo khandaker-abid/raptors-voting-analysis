@@ -1,6 +1,6 @@
 /**
- * Regression line calculation utilities for GUI-26
- * Implements linear least squares regression for bubble charts
+ * Regression line calculation utilities.
+ * Implements linear and power regression for bubble charts.
  */
 
 export interface Point {

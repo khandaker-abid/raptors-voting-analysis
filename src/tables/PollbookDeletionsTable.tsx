@@ -1,4 +1,3 @@
-// GUI - 8
 import React, { useState, useMemo } from "react";
 import {
     Box,
@@ -156,7 +155,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                     sx={{ minWidth: 180 }}
                 />
             </Box>
-            
+
             {/* These two lines below are the key to getting the table to stay 
                 in its grid spot and not increase in width, causing the lower 
                 few table cells to be hidden from view */}

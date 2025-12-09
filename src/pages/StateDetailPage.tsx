@@ -14,7 +14,6 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ResetButton from "../components/ResetButton";
 
-// Core state helpers
 import {
 	stateData,
 	getStateCenter,
@@ -22,7 +21,6 @@ import {
 } from "../data/stateData";
 import { getCountyCount } from "../data/stateShapes";
 
-// Existing datasets/components
 import {
 	getProvisionalBallotData,
 } from "../data/provisionalBallotData";
@@ -32,7 +30,6 @@ import ActiveVoterTab from "./ActiveVoterTab";
 import StateVoterRegistrationTable from "../tables/StateVoterRegistrationTable";
 import VoterRegistrationChloroplethMap from "../components/VoterRegistrationChloroplethMap";
 
-// NEW (GUI-8/9/16/18) - Note: pollbook/mail fetches handled by Tab components
 import {
 	fetchRegistrationTrends,
 	fetchBlockBubbles,
@@ -44,13 +41,11 @@ import VoterRegistrationTrendChart from "../charts/VoterRegistrationTrendChart";
 import VoterRegistrationBarChart from "../charts/VoterRegistrationBarChart";
 import VoterRegistrationBubbleOverlay from "../components/VoterRegistrationBubbleOverlay";
 
-// New component imports for integration (GUI-10, GUI-19, GUI-24, GUI-27, GUI-28, GUI-29)
 import RegisteredVotersList from "../components/RegisteredVotersList";
 import DropboxBubbleChart from "../charts/DropboxBubbleChart";
 import GinglesChart from "../charts/GinglesChart";
 import EIEquipmentChart from "../charts/EIEquipmentChart";
 import EIRejectedBallotsChart from "../charts/EIRejectedBallotsChart";
-// Types - Note: PollbookDeletionRow/MailRejectionRow used by Tab components
 import type {
 	ActiveVotersRow,
 	RegistrationTrendPayload,
@@ -88,66 +83,48 @@ const StateDetailPage: React.FC = () => {
 	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
 
-	// List of all three detailed states
 	const DETAILED_STATES = ["Arkansas", "Maryland", "Rhode Island"];
 
-	// Get tab value from URL search params - reacts to URL changes
 	const tabValue = useMemo(() => {
 		const tabParam = searchParams.get('tab');
 		return tabParam ? parseInt(tabParam, 10) : 0;
 	}, [searchParams]);
 
-	// Decode the state name from URL
 	const decodedStateName = decodeURIComponent(stateName || "");
 
-	// Get state data
 	const stateInfo = useMemo(() => {
 		return stateData.find((s) => s.name === decodedStateName);
 	}, [decodedStateName]);
 
-	// Get state center for map
 	const stateCenter = useMemo(() => {
 		return getStateCenter(decodedStateName);
 	}, [decodedStateName]);
 
-	// Check if this is a detail state
 	const isDetail = useMemo(() => {
 		return isDetailState(decodedStateName);
 	}, [decodedStateName]);
 
-	// Check if this is a preclearance state (for VRA analysis)
-	// GUI-27, GUI-28, GUI-29: Maryland only (preclearance state)
+	// Maryland is the preclearance state for VRA analysis (Gingles, EI)
 	const isPreclearance = useMemo(() => {
 		return decodedStateName === "Maryland";
 	}, [decodedStateName]);
 
-	// Check if this is a party state (Republican or Democratic dominated)
-	// All three detailed states can support party analysis
 	const isPartyState = useMemo(() => {
 		return isDetail && stateInfo?.party !== undefined;
 	}, [decodedStateName, isDetail, stateInfo]);
 
-	// Get provisional ballot data
 	const provisionalData = useMemo(() => {
 		return getProvisionalBallotData(decodedStateName);
 	}, [decodedStateName]);
 
-	// State for active voters data - will be fetched from API
 	const [activeVotersData, setActiveVotersData] = React.useState<
 		ActiveVotersRow[] | undefined
 	>(undefined);
 	const [activeVotersErr, setActiveVotersErr] = React.useState<string | null>(null);
 
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-		// Update URL with new tab value - tabValue is derived from searchParams
 		setSearchParams({ tab: newValue.toString() });
 	};
-
-	// -------------------------------
-	// GUI-8/9/16/18: data state + fetches
-	// Use `undefined` = loading, `[]` = loaded but empty/error, plus error strings for alerts.
-	// Note: pollbook/mail data now fetched directly by their Tab components
-	// -------------------------------
 
 	const [regTrends, setRegTrends] =
 		React.useState<RegistrationTrendPayload | null>(null);
@@ -156,17 +133,13 @@ const StateDetailPage: React.FC = () => {
 		React.useState<BlockBubblePayload | null>(null);
 	const [showBubbles, setShowBubbles] = React.useState(false);
 
-	// State for RegisteredVotersList dialog (GUI-19)
 	const [selectedRegion, setSelectedRegion] = React.useState<string | null>(null);
 
-	// State for GUI-24: Dropbox Bubble Chart
 	const [dropboxBubbleData, setDropboxBubbleData] = React.useState<any[]>([]);
 	const [dropboxBubbleLoading, setDropboxBubbleLoading] = React.useState(false);
 
-	// State for GUI-17: Voter Registration Data
 	const [voterRegistrationData, setVoterRegistrationData] = React.useState<any[]>([]);
 
-	// State for GUI-27: Gingles Analysis
 	const [ginglesData, setGinglesData] = React.useState<any>(null);
 	const [ginglesLoading, setGinglesLoading] = React.useState(false);
 	const [ginglesError, setGinglesError] = React.useState<string | null>(null);
@@ -174,19 +147,17 @@ const StateDetailPage: React.FC = () => {
 	React.useEffect(() => {
 		if (!decodedStateName) return;
 
-		// reset to loading on state change
 		setActiveVotersData(undefined);
 		setActiveVotersErr(null);
-		// Note: pollbook/mail data reset handled by their respective Tab components
 		setRegTrends(null);
 		setBlockBubbles(null);
 		setShowBubbles(false);
 		setDropboxBubbleData([]);
 		setDropboxBubbleLoading(true);
-		setVoterRegistrationData([]); let alive = true;
-		(async () => {
-			// Note: pollbook/mail data fetched by their respective Tab components
+		setVoterRegistrationData([]);
+		let alive = true;
 
+		(async () => {
 			try {
 				const trends = await fetchRegistrationTrends(decodedStateName);
 				if (alive) setRegTrends(trends);
@@ -201,7 +172,6 @@ const StateDetailPage: React.FC = () => {
 				if (alive) setBlockBubbles(null);
 			}
 
-			// GUI-24: Fetch dropbox bubble data (for all party-affiliated detailed states)
 			if (isDetail && stateInfo?.party !== undefined) {
 				try {
 					const dropboxData = await fetchDropboxBubbles(decodedStateName);
@@ -219,7 +189,6 @@ const StateDetailPage: React.FC = () => {
 				if (alive) setDropboxBubbleLoading(false);
 			}
 
-			// GUI-17: Fetch voter registration data (for detailed states)
 			if (isDetail) {
 				try {
 					const regData = await fetchStateRegisteredVoters(decodedStateName);
@@ -229,7 +198,6 @@ const StateDetailPage: React.FC = () => {
 				}
 			}
 
-			// GUI-27: Fetch Gingles analysis data (for preclearance states: MD, AR, RI)
 			if (["Maryland", "Arkansas", "Rhode Island"].includes(decodedStateName)) {
 				setGinglesLoading(true);
 				try {
@@ -265,7 +233,6 @@ const StateDetailPage: React.FC = () => {
 		);
 	}
 
-	// Robust tab indexing and labels
 	let idx = 0;
 	const IDX_OVERVIEW = idx++;
 	const IDX_PROVISIONAL = isDetail ? idx++ : -1;
@@ -274,12 +241,11 @@ const StateDetailPage: React.FC = () => {
 	const IDX_MAIL = isDetail ? idx++ : -1;
 	const IDX_EQUIPMENT = idx++;
 	const IDX_REG = isDetail ? idx++ : -1;
-	const IDX_DROPBOX = isPartyState ? idx++ : -1; // NEW - GUI-24
-	const IDX_GINGLES = isPreclearance ? idx++ : -1; // NEW - GUI-27
-	const IDX_EI_EQUIPMENT = isPreclearance ? idx++ : -1; // NEW - GUI-28
-	const IDX_EI_REJECTED = isPreclearance ? idx++ : -1; // NEW - GUI-29
+	const IDX_DROPBOX = isPartyState ? idx++ : -1;
+	const IDX_GINGLES = isPreclearance ? idx++ : -1;
+	const IDX_EI_EQUIPMENT = isPreclearance ? idx++ : -1;
+	const IDX_EI_REJECTED = isPreclearance ? idx++ : -1;
 
-	// Build tabs array for dropdown selector
 	const tabOptions: Array<{ index: number; label: string }> = [];
 	tabOptions.push({ index: IDX_OVERVIEW, label: "Overview" });
 	if (isDetail) tabOptions.push({ index: IDX_PROVISIONAL, label: "Provisional Ballot" });
@@ -295,17 +261,14 @@ const StateDetailPage: React.FC = () => {
 
 	return (
 		<Box sx={{ py: 0, px: 0, width: "100%", margin: 0, height: "100%" }}>
-			{/* Organized Content with Category Groups */}
 			<Paper sx={{ width: "100%", mb: 0, height: "100%" }}>
 				<Box sx={{ borderBottom: 1, borderColor: "divider", display: "flex", alignItems: "center", justifyContent: "space-between", p: 0.75 }}>
-					{/* Left side: State selector dropdown */}
 					<FormControl size="small" sx={{ minWidth: 160, '& .MuiInputBase-root': { height: 32 } }}>
 						<Select
 							value={decodedStateName}
 							onChange={(e) => {
 								const newState = e.target.value;
-								// Check if current tab is Maryland-only (EI Equipment/Rejected, Gingles)
-								// If switching to non-Maryland state, redirect to Overview tab
+								// Maryland-only tabs redirect to Overview when switching states
 								if (newState !== "Maryland" && (tabValue === IDX_EI_EQUIPMENT || tabValue === IDX_EI_REJECTED || tabValue === IDX_GINGLES)) {
 									navigate(`/state/${encodeURIComponent(newState)}?tab=0`);
 								} else {
@@ -322,7 +285,6 @@ const StateDetailPage: React.FC = () => {
 						</Select>
 					</FormControl>
 
-					{/* Right side: Home button, Tab dropdown, Reset button */}
 					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 						<Button
 							variant="outlined"
@@ -355,10 +317,8 @@ const StateDetailPage: React.FC = () => {
 					</Box>
 				</Box>
 
-				{/* Overview Tab */}
 				<TabPanel value={tabValue} index={IDX_OVERVIEW}>
 					<Box sx={{ p: 0, height: "calc(100vh - 180px)", display: "flex", flexDirection: "column" }}>
-						{/* Top Section: State Info Cards - Inline and Ultra Compact */}
 						<Box sx={{ display: "flex", gap: 1, flexWrap: "nowrap", flexShrink: 0, mb: 0, px: 0.5, py: 0.5, bgcolor: "background.paper" }}>
 							<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
 								<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem", fontWeight: 500 }}>
@@ -535,172 +495,26 @@ const StateDetailPage: React.FC = () => {
 					</TabPanel>
 				)}
 
-				{/* Pollbook Deletion Tab (GUI-8) */}
+				{/* Pollbook Deletion Tab */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_POLLBOOK}>
 						<PollbookDeletionsTab stateName={decodedStateName} />
 					</TabPanel>
 				)}
 
-				{/* Pollbook Deletions Tab (GUI-8) - Matching Active Voters layout 
-				{isDetail && (
-					<TabPanel value={tabValue} index={IDX_POLLBOOK}>
-						{pollbookRows === undefined ? (
-							<Alert severity="info">Loading pollbook deletions…</Alert>
-						) : pollbookErr ? (
-							<Alert severity="warning">{pollbookErr}</Alert>
-						) : pollbookRows.length === 0 ? (
-							<Alert severity="warning">
-								No pollbook deletions data available. Please ensure the preprocessing scripts have been run to populate the EAVS database.
-							</Alert>
-						) : (
-							<Box
-								sx={{
-									p: 0,
-									display: "flex",
-									flexDirection: "column",
-									gap: 1.5,
-									minHeight: "calc(100vh - 280px)",
-								}}
-							>
-								{pollbookRows[0]?.dataYear && pollbookRows[0].dataYear !== 2024 && (
-									<Alert severity="info">
-										Note: Displaying {pollbookRows[0].dataYear} data (2024 data not available)
-									</Alert>
-								)}
-								<Box
-									sx={{
-										display: "flex",
-										gap: 1.5,
-										flexDirection: { xs: "column", md: "row" },
-										alignItems: "stretch",
-										justifyContent: "space-between",
-										height: { xs: "auto", md: "420px" },
-										flexShrink: 0,
-									}}
-								>
-									<Box
-										sx={{
-											flex: 1,
-											minWidth: { xs: "100%", md: "calc(50% - 8px)" },
-											maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
-											height: "100%",
-										}}
-									>
-										<PollbookDeletionsBarChart
-											data={pollbookRows}
-										/>
-									</Box>
-									<Box
-										sx={{
-											flex: 1,
-											minWidth: { xs: "100%", md: "calc(50% - 8px)" },
-											maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
-											height: "100%",
-										}}
-									>
-										<PercentChoropleth
-											stateName={decodedStateName}
-											data={pollbookRows}
-										/>
-									</Box>
-								</Box>
-
-								<Box sx={{ flex: 1, display: "flex" }}>
-									<PollbookDeletionsTable data={pollbookRows} />
-								</Box>
-							</Box>
-						)}
-					</TabPanel>
-				)}
-				*/}
-				{/* Mail Rejections Tab (GUI-9) */}
+				{/* Mail Rejections Tab */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_MAIL}>
 						<MailRejectionsTab stateName={decodedStateName} />
 					</TabPanel>
 				)}
 
-				{/* Mail Rejections Tab (GUI-9) - Matching Active Voters layout 
-				{isDetail && (
-					<TabPanel value={tabValue} index={IDX_MAIL}>
-						{mailRows === undefined ? (
-							<Alert severity="info">Loading mail rejections…</Alert>
-						) : mailErr ? (
-							<Alert severity="warning">{mailErr}</Alert>
-						) : mailRows.length === 0 ? (
-							<Alert severity="warning">
-								No mail ballot rejections data available. Please ensure the preprocessing scripts have been run to populate the EAVS database.
-							</Alert>
-						) : (
-							<Box sx={{
-								p: 0,
-								display: "flex",
-								flexDirection: "column",
-								gap: 1.5,
-								minHeight: "calc(100vh - 280px)",
-							}}>
-								{mailRows[0]?.dataYear && mailRows[0].dataYear !== 2024 && (
-									<Alert severity="info">
-										Note: Displaying {mailRows[0].dataYear} data (2024 data not available)
-									</Alert>
-								)}
-								<Box
-									sx={{
-										display: "flex",
-										gap: 1.5,
-										flexDirection: { xs: "column", md: "row" },
-										alignItems: "stretch",
-										justifyContent: "space-between",
-										height: { xs: "auto", md: "420px" },
-										flexShrink: 0,
-									}}
-								>
-									<Box
-										sx={{
-											flex: 1,
-											minWidth: { xs: "100%", md: "calc(50% - 8px)" },
-											maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
-											height: "100%",
-										}}
-									>
-										<MailRejectionsBarChart
-											stateName={decodedStateName}
-											data={mailRows}
-										/>
-									</Box>
-									<Box
-										sx={{
-											flex: 1,
-											minWidth: { xs: "100%", md: "calc(50% - 8px)" },
-											maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
-											height: "100%",
-										}}
-									>
-										<PercentChoropleth
-											stateName={decodedStateName}
-											data={mailRows}
-											title="Mail Ballot Rejections Distribution"
-											description="Interactive choropleth map showing mail ballot rejection distribution across counties. Hover over counties for detailed information."
-										/>
-									</Box>
-								</Box>
-
-								<Box sx={{ flex: 1, display: "flex" }}>
-									<MailRejectionsTable data={mailRows} />
-								</Box>
-							</Box>
-						)}
-					</TabPanel>
-				)}
-				*/}
-
-				{/* Voting Equipment Tab (GUI-6) */}
+				{/* Voting Equipment Tab */}
 				<TabPanel value={tabValue} index={IDX_EQUIPMENT}>
 					<VotingEquipmentTab stateName={decodedStateName} />
 				</TabPanel>
 
-				{/* Voter Registration Data Tab (GUI-17) - Matching other tabs layout */}
+				{/* Voter Registration Data Tab */}
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_REG}>
 						<Box sx={{
@@ -765,7 +579,6 @@ const StateDetailPage: React.FC = () => {
 
 							{/* Action buttons for Registration tab */}
 							<Box sx={{ my: 2, display: "flex", gap: 2, flexWrap: "wrap" }}>
-								{/* View Registered Voters button (GUI-19) */}
 								<Button
 									variant="contained"
 									color="primary"
@@ -798,7 +611,6 @@ const StateDetailPage: React.FC = () => {
 					</TabPanel>
 				)}
 
-				{/* NEW: Drop Box Analysis Tab - GUI-24 (Arkansas, Maryland, Rhode Island) */}
 				{isPartyState && IDX_DROPBOX >= 0 && (
 					<TabPanel value={tabValue} index={IDX_DROPBOX}>
 						<Box sx={{ p: 3 }}>
@@ -821,7 +633,6 @@ const StateDetailPage: React.FC = () => {
 					</TabPanel>
 				)}
 
-				{/* NEW: Gingles Analysis Tab - GUI-27 (MD, AR, RI) */}
 				{isPreclearance && IDX_GINGLES >= 0 && (
 					<TabPanel value={tabValue} index={IDX_GINGLES}>
 						<Box sx={{ p: 3 }}>
@@ -847,21 +658,18 @@ const StateDetailPage: React.FC = () => {
 					</TabPanel>
 				)}
 
-				{/* NEW: EI Equipment Tab - GUI-28 (Maryland only) */}
 				{isPreclearance && IDX_EI_EQUIPMENT >= 0 && (
 					<TabPanel value={tabValue} index={IDX_EI_EQUIPMENT}>
 						<EIEquipmentChart stateName={decodedStateName} />
 					</TabPanel>
 				)}
 
-				{/* NEW: EI Rejected Ballots Tab - GUI-29 (Maryland only) */}
 				{isPreclearance && IDX_EI_REJECTED >= 0 && (
 					<TabPanel value={tabValue} index={IDX_EI_REJECTED}>
 						<EIRejectedBallotsChart stateName={decodedStateName} />
 					</TabPanel>
 				)}
 
-				{/* RegisteredVotersList Dialog - GUI-19 */}
 				{selectedRegion && (
 					<RegisteredVotersList
 						open={!!selectedRegion}

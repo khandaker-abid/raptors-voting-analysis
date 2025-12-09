@@ -1,5 +1,3 @@
-// components/EquipmentRejectedBubbleChart.tsx
-// GUI-25 & GUI-26: Bubble chart with non-linear regression lines
 import React, { useMemo } from "react";
 import {
   ResponsiveContainer,
@@ -32,7 +30,6 @@ interface Props {
 }
 
 const EquipmentRejectedBubbleChart: React.FC<Props> = ({ data, regressionLines = [] }) => {
-  // Generate regression curve points from coefficients (GUI-26)
   const regressionData = useMemo(() => {
     if (regressionLines.length === 0) return [];
 
@@ -65,7 +62,7 @@ const EquipmentRejectedBubbleChart: React.FC<Props> = ({ data, regressionLines =
   return (
     <Paper sx={{ p: 3, mt: 3 }}>
       <Typography variant="h6" gutterBottom>
-        Equipment Quality vs Rejected Ballots (GUI-25)
+        Equipment Quality vs Rejected Ballots
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Each bubble represents a county. Red = Republican majority, Blue = Democratic majority.
@@ -76,7 +73,7 @@ const EquipmentRejectedBubbleChart: React.FC<Props> = ({ data, regressionLines =
 
       {regressionLines.length === 0 && (
         <Alert severity="info" sx={{ mb: 2 }}>
-          Calculating regression lines... (GUI-26)
+          Calculating regression lines...
         </Alert>
       )}
 
@@ -156,10 +153,10 @@ const EquipmentRejectedBubbleChart: React.FC<Props> = ({ data, regressionLines =
             shape="circle"
           />
 
-          {/* GUI-26: Republican Regression Line */}
+          {/* Republican Regression Line */}
           {hasRepublicanRegression && (
             <Line
-              name="Republican Regression (GUI-26)"
+              name="Republican Trend"
               data={regressionData}
               type="monotone"
               dataKey="republicanRegression"
@@ -171,10 +168,10 @@ const EquipmentRejectedBubbleChart: React.FC<Props> = ({ data, regressionLines =
             />
           )}
 
-          {/* GUI-26: Democratic Regression Line */}
+          {/* Democratic Regression Line */}
           {hasDemocraticRegression && (
             <Line
-              name="Democratic Regression (GUI-26)"
+              name="Democratic Trend"
               data={regressionData}
               type="monotone"
               dataKey="democraticRegression"

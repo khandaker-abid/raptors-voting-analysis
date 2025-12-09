@@ -1,9 +1,9 @@
-// GUI-27: Display Gingles Chart
-// For preclearance state (Maryland)
-// Shows racially polarized voting patterns
-// Two bubbles per precinct (Democratic % and Republican %)
-// X-axis: % of selected demographic group
-// Y-axis: % of votes for that party
+/**
+ * Gingles Chart for preclearance states showing racially polarized voting patterns.
+ * Two bubbles per precinct (Democratic % and Republican %)
+ * X-axis: % of selected demographic group
+ * Y-axis: % of votes for that party
+ */
 
 import React, { useState, useMemo } from "react";
 import {
@@ -27,6 +27,7 @@ import {
     RadioGroup,
     Alert,
 } from "@mui/material";
+import { CHART_HEIGHTS } from "../constants";
 
 interface PrecinctData {
     precinct: string;
@@ -229,8 +230,8 @@ const GinglesChart: React.FC<Props> = ({
                     No precinct data available for this state.
                 </Alert>
             ) : (
-                <Box sx={{ flex: 1, minHeight: 500, height: 500 }}>
-                    <ResponsiveContainer width="100%" height={500}>
+                <Box sx={{ flex: 1, minHeight: CHART_HEIGHTS.STANDARD, height: CHART_HEIGHTS.STANDARD }}>
+                    <ResponsiveContainer width="100%" height={CHART_HEIGHTS.STANDARD}>
                         <ScatterChart margin={{ top: 8, right: 16, left: 8, bottom: 16 }}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis

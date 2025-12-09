@@ -1,3 +1,9 @@
+/**
+ * Interactive state map component using Leaflet.
+ * Displays county/jurisdiction boundaries with clickable regions.
+ * Supports choropleth overlays and data-driven styling.
+ */
+
 import React, { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import {

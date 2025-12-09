@@ -1,3 +1,9 @@
+/**
+ * Interactive US map component using Leaflet.
+ * Displays all 50 states with clickable regions that navigate to state detail pages.
+ * Detail states (Arkansas, Maryland, Rhode Island) are highlighted.
+ */
+
 import React, { useMemo, useEffect, useState } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { useNavigate } from "react-router-dom";

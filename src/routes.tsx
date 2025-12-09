@@ -6,7 +6,6 @@ import PartyComparisonPage from "./pages/PartyComparisonPage";
 import RegistrationComparisonPage from "./pages/RegistrationComparisonPage";
 import VotingEquipmentSummaryPage from "./pages/VotingEquipmentSummaryPage";
 import EveryStateEquipmentPage from "./pages/EveryStateEquipmentPage";
-// [PATCH] Add VotingEquipmentHistoryPage for GUI-14 (per-state history view)
 import VotingEquipmentHistoryPage from "./pages/VotingEquipmentHistoryPage";
 
 const AppRoutes: React.FC = () => {
@@ -24,7 +23,6 @@ const AppRoutes: React.FC = () => {
 				path="/per-state-voting-equipment"
 				element={<EveryStateEquipmentPage />}
 			/>
-			{/* [PATCH] New route: direct link target from EveryStateEquipmentTable state link */}
 			<Route
 				path="/voting-equipment-history/:stateName"
 				element={<VotingEquipmentHistoryPage />}

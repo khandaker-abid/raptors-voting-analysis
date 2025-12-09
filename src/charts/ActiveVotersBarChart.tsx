@@ -1,3 +1,8 @@
+/**
+ * Bar chart visualizing active vs inactive voter registration.
+ * Shows statewide totals with percentages for voter status breakdown.
+ */
+
 import React, { useMemo } from "react";
 import { Paper, Typography, Box } from "@mui/material";
 import {
@@ -51,7 +56,6 @@ const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 	// Base chart data from your helper
 	const chartData = useMemo(() => getActiveVotersChartData(data), [data]);
 
-	// [PATCH]: Enforce bar order + human-readable Y ticks ----
 	const ORDER = ["Active", "Inactive", "Total"] as const;
 
 	const orderedChartData = useMemo(() => {

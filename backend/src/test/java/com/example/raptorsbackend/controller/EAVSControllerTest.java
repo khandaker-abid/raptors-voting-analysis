@@ -11,8 +11,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Integration tests for EAVS Controller endpoints
- * Tests GUI use cases: GUI-7, GUI-8, GUI-9
+ * Integration tests for EAVS Controller endpoints.
+ * Tests active voters, pollbook deletions, and mail rejection endpoints.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -22,7 +22,7 @@ class EAVSControllerTest {
     private MockMvc mockMvc;
 
     /**
-     * GUI-7: Test active voters endpoint returns JSON
+     * Test active voters endpoint returns JSON.
      */
     @Test
     void getActiveVoters_ShouldReturnJsonArray() throws Exception {
@@ -34,7 +34,7 @@ class EAVSControllerTest {
     }
 
     /**
-     * GUI-7: Test active voters endpoint with different states
+     * Test active voters endpoint with different states.
      */
     @Test
     void getActiveVoters_Arkansas_ShouldReturnJsonArray() throws Exception {
@@ -46,7 +46,7 @@ class EAVSControllerTest {
     }
 
     /**
-     * GUI-7: Test Rhode Island active voters (tests town-to-county aggregation)
+     * Test Rhode Island active voters (verifies town-to-county aggregation).
      */
     @Test
     void getActiveVoters_RhodeIsland_ShouldAggregateToCounties() throws Exception {
@@ -58,7 +58,7 @@ class EAVSControllerTest {
     }
 
     /**
-     * GUI-3/4/5: Test provisional ballots endpoint
+     * Test provisional ballots endpoint returns JSON.
      */
     @Test
     void getProvisionalBallots_ShouldReturnJsonArray() throws Exception {
@@ -70,7 +70,7 @@ class EAVSControllerTest {
     }
 
     /**
-     * GUI-8: Test pollbook deletions endpoint
+     * Test pollbook deletions endpoint returns JSON.
      */
     @Test
     void getPollbookDeletions_ShouldReturnJsonArray() throws Exception {
@@ -82,7 +82,7 @@ class EAVSControllerTest {
     }
 
     /**
-     * GUI-9: Test mail rejections endpoint
+     * Test mail rejections endpoint returns JSON.
      */
     @Test
     void getMailRejections_ShouldReturnJsonArray() throws Exception {

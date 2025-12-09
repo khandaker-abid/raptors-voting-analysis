@@ -1,7 +1,7 @@
-// GUI - 18
 import React, { useMemo } from "react";
 import { MapContainer, TileLayer, CircleMarker } from "react-leaflet";
 import type { BlockBubblePayload } from "../data/types";
+import { CHART_HEIGHTS } from "../constants";
 
 
 interface Props { stateName: string; payload: BlockBubblePayload; }
@@ -26,7 +26,7 @@ const VoterRegistrationBubbleOverlay: React.FC<Props> = ({ payload }) => {
 
 
     return (
-        <MapContainer center={center} zoom={6} style={{ height: 500, width: "100%", borderRadius: 8 }} scrollWheelZoom>
+        <MapContainer center={center} zoom={6} style={{ height: CHART_HEIGHTS.STANDARD, width: "100%", borderRadius: 8 }} scrollWheelZoom>
             <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap & CARTO' />
             {payload.points.map((pt, i) => (
                 <CircleMarker key={i} center={[pt.lat, pt.lng]} radius={radius} pathOptions={{ color: pt.dominantParty === 'R' ? '#ef5350' : '#42a5f5', fillOpacity: 0.85 }} />

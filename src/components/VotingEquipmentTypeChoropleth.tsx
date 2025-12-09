@@ -1,7 +1,7 @@
-// GUI-10: Display type of voting equipment
-// Shows EAVS geographic units colored by equipment type
-// Categories: DRE no VVPAT, DRE with VVPAT, Ballot marking device, Scanner
-// Mixed equipment shows stripe pattern or blended color
+/**
+ * Choropleth map showing voting equipment types by geographic unit.
+ * Categories: DRE no VVPAT, DRE with VVPAT, Ballot marking device, Scanner, Mixed
+ */
 
 import React, { useMemo, useRef, useEffect, useState } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
@@ -415,7 +415,7 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                     />
                 </MapContainer>
             </Box>
-            
+
             {/* Note about mixed equipment types 
             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
                 <strong>Note:</strong> Mixed equipment types are shown when multiple equipment categories are used

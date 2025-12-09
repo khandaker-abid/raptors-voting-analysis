@@ -1,5 +1,3 @@
-// GUI - 14 
-
 import React from "react";
 import { useParams, Link as RouterLink } from "react-router-dom";
 import {

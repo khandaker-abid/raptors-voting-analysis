@@ -10,8 +10,17 @@ import java.text.Normalizer;
 import java.util.*;
 
 /**
- * Controller for EAVS (Election Administration and Voting Survey) data
- * Handles GUI use cases: GUI-7, GUI-8, GUI-9
+ * REST Controller for EAVS (Election Administration and Voting Survey) data.
+ * 
+ * Provides endpoints for:
+ * - Active/inactive voter statistics by jurisdiction
+ * - Provisional ballot data and rejection reasons
+ * - Pollbook deletion records by reason category
+ * - Mail ballot rejection statistics
+ * - Drop box voting bubble chart data
+ * 
+ * Supports GUI use cases: GUI-7, GUI-8, GUI-9
+ * Data sources: EAVS 2016, 2020, 2024 surveys
  */
 @RestController
 @RequestMapping("/api/eavs")

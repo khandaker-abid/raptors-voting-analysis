@@ -9,8 +9,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 /**
- * Controller for preclearance state analysis (Maryland)
- * Handles GUI use cases: GUI-27, GUI-28, GUI-29
+ * REST Controller for preclearance state analysis.
+ * 
+ * Provides endpoints for Voting Rights Act analysis:
+ * - Gingles precondition charts for racially polarized voting
+ * - Ecological inference for equipment quality by demographic
+ * - Ecological inference for ballot rejection by demographic
+ * 
+ * Supports GUI use cases: GUI-10, GUI-11
+ * Focus: Maryland (preclearance state) VRA analysis
  */
 @RestController
 @RequestMapping("/api/preclearance")
@@ -22,8 +29,12 @@ public class PreclearanceController {
     private MongoTemplate mongoTemplate;
 
     /**
-     * GUI-27: Get Gingles chart data (racially polarized voting)
-     * GET /api/preclearance/gingles/{state}?demographic=white
+     * Get Gingles chart data for racially polarized voting analysis.
+     * Returns precinct-level demographic and voting data.
+     * 
+     * @param state       State name (case-sensitive)
+     * @param demographic Demographic group to analyze (default: white)
+     * @return Map with precinct data and regression coefficients
      */
     @GetMapping("/gingles/{state}")
     public Map<String, Object> getGinglesData(
@@ -84,8 +95,12 @@ public class PreclearanceController {
     }
 
     /**
-     * GUI-28: Get Ecological Inference data for equipment quality
-     * GET /api/preclearance/ei-equipment/{state}?demographic=white
+     * Get Ecological Inference data for equipment quality analysis.
+     * Returns probability curves for equipment quality by demographic.
+     * 
+     * @param state       State name (case-sensitive)
+     * @param demographic Demographic group filter (optional)
+     * @return Map with probability curves and statistics
      */
     @GetMapping("/ei-equipment/{state}")
     public Map<String, Object> getEIEquipmentData(
@@ -124,8 +139,12 @@ public class PreclearanceController {
     }
 
     /**
-     * GUI-29: Get Ecological Inference data for rejected ballots
-     * GET /api/preclearance/ei-rejected/{state}?demographic=hispanic
+     * Get Ecological Inference data for rejected ballot analysis.
+     * Returns probability curves for ballot rejection by demographic.
+     * 
+     * @param state       State name (case-sensitive)
+     * @param demographic Demographic group filter (optional)
+     * @return Map with probability curves and statistics
      */
     @GetMapping("/ei-rejected/{state}")
     public Map<String, Object> getEIRejectedData(

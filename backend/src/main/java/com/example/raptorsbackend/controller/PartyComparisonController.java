@@ -7,6 +7,19 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * REST Controller for party comparison analysis.
+ * 
+ * Provides endpoints comparing Republican vs Democratic controlled states:
+ * - Registration rates by party control
+ * - Voter turnout comparisons
+ * - Mail ballot usage patterns
+ * - Drop box availability
+ * - Felony voting policies
+ * 
+ * Supports GUI use cases: GUI-12, GUI-13
+ * Party control based on 2024 state government data
+ */
 @RestController
 @RequestMapping("/api/comparison")
 @CrossOrigin(origins = "*")
@@ -17,16 +30,13 @@ public class PartyComparisonController {
     private MongoTemplate mongoTemplate;
 
     /**
-     * GUI-15 & GUI-22: Compare states by party control
-     * GET /api/comparison/party-states
-     * 
+     * Compare states by party control.
      * Returns metrics comparing Republican-controlled vs Democratic-controlled
      * states:
-     * - Registration rates
-     * - Voter turnout
-     * - Mail ballot usage
-     * - Drop box usage
-     * - Felony voting policies
+     * registration rates, voter turnout, mail ballot usage, drop box usage, and
+     * felony policies.
+     * 
+     * @return Map with comparison metrics by party
      */
     @GetMapping("/party-states")
     public Map<String, Object> getPartyComparison() {

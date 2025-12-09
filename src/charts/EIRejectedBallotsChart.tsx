@@ -1,8 +1,7 @@
-// GUI-29: Ecological Inference - Rejected Ballots Probability
-// For preclearance state (Maryland)
-// Shows probability curves for ballot rejection by demographic group
-// X-axis: Rejection probability (0-100%)
-// Y-axis: Probability density
+/**
+ * Ecological Inference - Rejected Ballots Probability
+ * Shows probability curves for ballot rejection by demographic group.
+ */
 
 import React, { useState, useMemo, useEffect } from "react";
 import {
@@ -253,33 +252,33 @@ const EIRejectedBallotsChart: React.FC<Props> = ({ stateName }) => {
 
             <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
                 <ResponsiveContainer width="75%" height={450} id="ei-rejected-chart">
-                <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                        dataKey="rejectionProbability"
-                        label={{ value: "Ballot Rejection Probability (%)", position: "insideBottom", offset: -5, style: { fontSize: 12, fontWeight: 600 } }}
-                    />
-                    <YAxis
-                        label={{ value: "Probability Density", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 600 } }}
-                    />
-                    <Tooltip
-                        formatter={(value: number) => value.toFixed(4)}
-                        labelFormatter={(label) => `Rejection Rate: ${label}%`}
-                    />
-                    <Legend />
-                    {selectedDemographics.map((demographic) => (
-                        <Line
-                            key={demographic}
-                            type="monotone"
-                            dataKey={demographic}
-                            stroke={DEMOGRAPHIC_COLORS[demographic]}
-                            strokeWidth={2}
-                            dot={false}
-                            name={demographic}
+                    <LineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis
+                            dataKey="rejectionProbability"
+                            label={{ value: "Ballot Rejection Probability (%)", position: "insideBottom", offset: -5, style: { fontSize: 12, fontWeight: 600 } }}
                         />
-                    ))}
-                </LineChart>
-            </ResponsiveContainer>
+                        <YAxis
+                            label={{ value: "Probability Density", angle: -90, position: "insideLeft", style: { fontSize: 12, fontWeight: 600 } }}
+                        />
+                        <Tooltip
+                            formatter={(value: number) => value.toFixed(4)}
+                            labelFormatter={(label) => `Rejection Rate: ${label}%`}
+                        />
+                        <Legend />
+                        {selectedDemographics.map((demographic) => (
+                            <Line
+                                key={demographic}
+                                type="monotone"
+                                dataKey={demographic}
+                                stroke={DEMOGRAPHIC_COLORS[demographic]}
+                                strokeWidth={2}
+                                dot={false}
+                                name={demographic}
+                            />
+                        ))}
+                    </LineChart>
+                </ResponsiveContainer>
 
                 <Box sx={{ width: "25%", display: "flex", flexDirection: "column", gap: 0.5 }}>
                     <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>

@@ -1,7 +1,7 @@
-// GUI-11: Display relative age of voting equipment
-// Choropleth map on splash page showing average equipment age by state
-// Bins: 1-10 years + "older than 10 years"
-// Monochromatic colors with increasing saturation for older devices
+/**
+ * Choropleth map displaying average equipment age by state.
+ * Uses monochromatic colors with increasing saturation for older devices.
+ */
 
 import React, { useMemo, useRef, useEffect } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";

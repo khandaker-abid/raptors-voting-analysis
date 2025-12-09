@@ -44,9 +44,7 @@ const generateActiveVotersData = (
 	});
 };
 
-// -----------------------------
 // County lists
-// -----------------------------
 const rhodeIslandCounties = [
 	"Bristol County",
 	"Kent County",
@@ -160,9 +158,7 @@ const arkansasCounties = [
 	"Yell County",
 ];
 
-// -----------------------------
 // Public API
-// -----------------------------
 export const getActiveVotersData = (
 	stateName: string
 ): ActiveVotersData[] | null => {
@@ -202,11 +198,10 @@ export const getStateActivePercentage = (data: ActiveVotersData[]): number => {
 	return total ? Math.round((totalActive / total) * 1000) / 10 : 0;
 };
 
-// -----------------------------
-// Chart adapter used by <ActiveVotersBarChart />
-// NOTE: We return three categories — "Active", "Inactive", and "Total" —
-// so the component can extract the chip value from the "Total" bar.
-// -----------------------------
+/**
+ * Chart adapter for ActiveVotersBarChart.
+ * Returns three categories: "Active", "Inactive", and "Total"
+ */
 export const getActiveVotersChartData = (data: ActiveVotersData[]) => {
 	const totalActive = getTotalActiveVoters(data);
 	const totalInactive = getTotalInactiveVoters(data);

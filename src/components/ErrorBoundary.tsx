@@ -3,6 +3,7 @@ import type { ErrorInfo, ReactNode } from "react";
 import { Box, Button, Typography, Paper, Alert } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { CHART_HEIGHTS } from "../constants";
 
 interface ErrorBoundaryProps {
     children: ReactNode;
@@ -88,7 +89,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        minHeight: 300,
+                        minHeight: CHART_HEIGHTS.SMALL,
                         p: 3,
                     }}
                 >

@@ -134,7 +134,6 @@ const Navigation: React.FC = () => {
 							Compare Parties
 						</Button>
 
-						{/* New Navigation Link for GUI-21 to GUI-23 */}
 						<Button
 							color="inherit"
 							component={Link}

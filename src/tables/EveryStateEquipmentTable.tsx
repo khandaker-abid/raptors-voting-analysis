@@ -14,7 +14,6 @@ import {
 	InputAdornment,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-// [PATCH]: import RouterLink so the state name can be a link to the history page
 import { Link as RouterLink } from "react-router-dom";
 
 import type { EveryStateEquipmentData } from "../data/everyStateEquipmentData";
@@ -178,7 +177,6 @@ const EveryStateEquipmentTable: React.FC = () => {
 											zIndex: 1,
 										}}
 									>
-										{/* [PATCH]: make the state name a link to the history page per GUI-14 */}
 										<Typography
 											component={RouterLink}
 											to={`/voting-equipment-history/${encodeURIComponent(
