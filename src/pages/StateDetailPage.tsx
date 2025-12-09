@@ -386,11 +386,11 @@ const StateDetailPage: React.FC = () => {
 											EAVS Data Summary
 										</Typography>
 										<Typography variant="body2" color="text.secondary" sx={{ mb: 1.25, fontSize: "0.9rem", lineHeight: 1.45 }}>
-										Comprehensive EAVS data available
-									</Typography>
+											Comprehensive EAVS data available
+										</Typography>
 
-									<Box sx={{ display: "flex", flexDirection: "column", gap: 1.25, overflow: "auto" }}>
-										{provisionalData && provisionalData.length > 0 && (
+										<Box sx={{ display: "flex", flexDirection: "column", gap: 1.25, overflow: "auto" }}>
+											{provisionalData && provisionalData.length > 0 && (
 												<Paper variant="outlined" sx={{ p: 1.25, bgcolor: "rgba(25, 118, 210, 0.08)" }}>
 													<Typography variant="subtitle2" color="primary" fontWeight={600} sx={{ fontSize: "0.85rem" }}>
 														Provisional Ballots (2024)
@@ -493,8 +493,8 @@ const StateDetailPage: React.FC = () => {
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_MAIL}>
 						<MailRejectionsTab stateName={decodedStateName} />
-			</TabPanel>
-		)}
+					</TabPanel>
+				)}
 
 				<TabPanel value={tabValue} index={IDX_EQUIPMENT}>
 					<VotingEquipmentTab stateName={decodedStateName} />
@@ -544,43 +544,43 @@ const StateDetailPage: React.FC = () => {
 										stateName={decodedStateName}
 										data={voterRegistrationData || []}
 									/>
+								</Box>
 							</Box>
-						</Box>
 
-						<Box sx={{ flex: 1, display: "flex" }}>
-							<StateVoterRegistrationTable
+							<Box sx={{ flex: 1, display: "flex" }}>
+								<StateVoterRegistrationTable
 									stateName={stateName ? stateName : ""}
-							/>
-						</Box>
-
-						{regTrends && (
-							<Box sx={{ my: 3 }}>
-								<VoterRegistrationTrendChart trends={regTrends} />
+								/>
 							</Box>
-						)}
 
-						<Box sx={{ my: 2, display: "flex", gap: 2, flexWrap: "wrap" }}>
-							<Button
+							{regTrends && (
+								<Box sx={{ my: 3 }}>
+									<VoterRegistrationTrendChart trends={regTrends} />
+								</Box>
+							)}
+
+							<Box sx={{ my: 2, display: "flex", gap: 2, flexWrap: "wrap" }}>
+								<Button
 									variant="contained"
 									color="primary"
 									onClick={() => setSelectedRegion(decodedStateName)}
 								>
-								View Registered Voters
-							</Button>
+									View Registered Voters
+								</Button>
 
-							{blockBubbles && (
-								<Button
-									variant="outlined"
+								{blockBubbles && (
+									<Button
+										variant="outlined"
 										onClick={() => setShowBubbles((s) => !s)}
 									>
 										{showBubbles ? "Hide" : "Show"} Party Bubble Overlay
 									</Button>
-							)}
-						</Box>
+								)}
+							</Box>
 
-						{showBubbles && blockBubbles && (
-							<Box sx={{ mt: 2 }}>
-								<VoterRegistrationBubbleOverlay
+							{showBubbles && blockBubbles && (
+								<Box sx={{ mt: 2 }}>
+									<VoterRegistrationBubbleOverlay
 										stateName={decodedStateName}
 										payload={blockBubbles}
 									/>

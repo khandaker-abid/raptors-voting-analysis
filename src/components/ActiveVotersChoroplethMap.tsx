@@ -40,11 +40,11 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 	const clearHover = () => {
 		if (hoveredRef.current) {
 			try {
-			geoRef.current?.resetStyle(hoveredRef.current as any);
-			if ((hoveredRef.current as any).closeTooltip) {
+				geoRef.current?.resetStyle(hoveredRef.current as any);
+				if ((hoveredRef.current as any).closeTooltip) {
 					(hoveredRef.current as any).closeTooltip();
 				}
-			} catch {}
+			} catch { }
 			hoveredRef.current = null;
 		}
 	};
@@ -94,43 +94,43 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 			setError(null);
 
 			try {
-			const response = await fetch("/georef-united-states-of-america-county.geojson");
-			if (!response.ok) {
-				throw new Error(`Failed to fetch county data: ${response.statusText}`);
-			}
-
-			const countyData = (await response.json()) as FeatureCollection;
-			if (!countyData || !countyData.features) {
-				throw new Error("County GeoJSON data is invalid or empty");
-			}
-
-			const features = countyData.features.filter(
-				(feature) =>
-					(feature.properties as any)?.ste_name &&
-					(feature.properties as any).ste_name.includes(stateName)
-			);
-			if (features.length === 0) {
-				throw new Error(`No county data found for ${stateName}`);
-			}
-
-			const featureCollection: FeatureCollection = {
-				type: "FeatureCollection",
-				features: features,
-			};
-			const bounds = new L.LatLngBounds([]);
-			features.forEach((feature) => {
-				if (feature.geometry.type === "Polygon") {
-					(feature.geometry as any).coordinates[0].forEach((coord: any) => {
-						bounds.extend([coord[1], coord[0]]); // [lat, lng]
-					});
-				} else if (feature.geometry.type === "MultiPolygon") {
-					(feature.geometry as any).coordinates.forEach((polygon: any) => {
-						polygon[0].forEach((coord: any) => {
-							bounds.extend([coord[1], coord[0]]);
-						});
-					});
+				const response = await fetch("/georef-united-states-of-america-county.geojson");
+				if (!response.ok) {
+					throw new Error(`Failed to fetch county data: ${response.statusText}`);
 				}
-			});
+
+				const countyData = (await response.json()) as FeatureCollection;
+				if (!countyData || !countyData.features) {
+					throw new Error("County GeoJSON data is invalid or empty");
+				}
+
+				const features = countyData.features.filter(
+					(feature) =>
+						(feature.properties as any)?.ste_name &&
+						(feature.properties as any).ste_name.includes(stateName)
+				);
+				if (features.length === 0) {
+					throw new Error(`No county data found for ${stateName}`);
+				}
+
+				const featureCollection: FeatureCollection = {
+					type: "FeatureCollection",
+					features: features,
+				};
+				const bounds = new L.LatLngBounds([]);
+				features.forEach((feature) => {
+					if (feature.geometry.type === "Polygon") {
+						(feature.geometry as any).coordinates[0].forEach((coord: any) => {
+							bounds.extend([coord[1], coord[0]]); // [lat, lng]
+						});
+					} else if (feature.geometry.type === "MultiPolygon") {
+						(feature.geometry as any).coordinates.forEach((polygon: any) => {
+							polygon[0].forEach((coord: any) => {
+								bounds.extend([coord[1], coord[0]]);
+							});
+						});
+					}
+				});
 
 				// Add 25% padding for tooltip space at edges
 				const paddedBounds = bounds.pad(0.25);
@@ -202,7 +202,7 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
       	${activePercentage === 0
 				? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">No data available</div>'
 				: ""
-		}
+			}
 		`;
 
 		bindResponsiveTooltip(layer, tooltipContent, mapRef.current);
@@ -229,7 +229,7 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 				if (hoveredRef.current === e.target) hoveredRef.current = null;
 				try {
 					(e.target as L.Path).closeTooltip();
-				} catch {}
+				} catch { }
 			},
 		});
 	};
@@ -356,10 +356,10 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 									height: "100%",
 								}}
 							/>
-					))}
-				</Box>
+						))}
+					</Box>
 
-				<Box sx={{ position: "relative", height: "1.5rem" }}>
+					<Box sx={{ position: "relative", height: "1.5rem" }}>
 						{Array.from({ length: COLOR_PALETTE.length + 1 }, (_, i) => {
 							const ratio = i / COLOR_PALETTE.length;
 							const value = minPercentage === maxPercentage ? minPercentage : minPercentage + ratio * (maxPercentage - minPercentage);
