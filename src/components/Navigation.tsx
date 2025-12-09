@@ -50,13 +50,15 @@ const Navigation: React.FC = () => {
 								opacity: 0.85,
 							},
 						}}>
+						{/*
 						<Box
 							component="img"
 							src="/toronto-raptors-logo.png"
 							alt="Toronto Raptors Logo"
 							sx={{ height: 60, width: 60, mr: 1.5, display: "inline-block", verticalAlign: "middle", borderRadius: "50%", objectFit: 'cover', flexShrink: 0 }}
 						/>
-						Raptors Electoral Insight Hub
+						*/}
+						Thunder Electoral Insight Hub
 					</Typography>
 					<Box sx={{ display: "flex", gap: 1, alignItems: "center", flexShrink: 0 }}>
 						<Button
@@ -133,7 +135,7 @@ const Navigation: React.FC = () => {
 							Compare Parties
 						</Button>
 
-						{/* ✅ New Navigation Link for GUI-21 to GUI-23 */}
+						{/* New Navigation Link for GUI-21 to GUI-23 */}
 						<Button
 							color="inherit"
 							component={Link}
@@ -162,7 +164,9 @@ const Navigation: React.FC = () => {
 							}}>
 							Registration Comparison
 						</Button>
+						{/*
 						<ResetButton />
+						*/}
 					</Box>
 				</Toolbar>
 			</Container>

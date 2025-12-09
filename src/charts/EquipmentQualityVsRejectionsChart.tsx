@@ -8,7 +8,7 @@ import {
     Tooltip,
     Legend,
     ResponsiveContainer,
-    Line,
+    Cell,
 } from "recharts";
 import { Paper, Typography, Box, CircularProgress, Alert } from "@mui/material";
 
@@ -19,24 +19,15 @@ interface EquipmentQualityDataPoint {
     party: "R" | "D";
 }
 
-interface RegressionLine {
-    party: "R" | "D";
-    coefficients: { a: number; b: number };
-    r2: number;
-}
-
 interface Props {
     stateName: string;
     data?: EquipmentQualityDataPoint[];
-    regressionLines?: RegressionLine[];
 }
 
 const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length > 0) {
-        // Get the data from the first payload entry
         const dataPoint = payload[0]?.payload;
         
-        // Only show tooltip if we have actual scatter point data (must have county and party)
         if (!dataPoint || !dataPoint.county || !dataPoint.party) {
             return null;
         }
@@ -69,25 +60,11 @@ const CustomTooltip = ({ active, payload }: any) => {
     return null;
 };
 
-// Generate regression line points
-const generateRegressionPoints = (
-    coefficients: { a: number; b: number },
-    xMin: number,
-    xMax: number
-) => {
-    const points = [];
-    const step = (xMax - xMin) / 50;
-    for (let x = xMin; x <= xMax; x += step) {
-        const y = coefficients.a * Math.pow(x, coefficients.b);
-        points.push({ x, y });
-    }
-    return points;
-};
+
 
 const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
     stateName,
     data,
-    regressionLines,
 }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -101,8 +78,8 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
 
                 if (data) {
                     setChartData(data);
+                    console.log("data prop provided:", data);
                 } else {
-                    // Fetch from API if not provided
                     const response = await fetch(
                         `http://localhost:8080/api/equipment/vs-rejected/${encodeURIComponent(stateName)}`
                     );
@@ -111,7 +88,6 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
                     }
                     const result = await response.json();
 
-                    // Transform backend data to match chart interface
                     const transformedData = result.map((item: any) => ({
                         county: item.county,
                         equipmentQuality: item.equipmentQuality, // Keep on 0-100 scale for better display
@@ -168,47 +144,22 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
         );
     }
 
-    // Separate data by party
-    const republicanData = chartData.filter((d) => d.party === "R");
-    const democraticData = chartData.filter((d) => d.party === "D");
-
-    // Use full scale for equipment quality (0-100)
-    const xMin = 0;
+    // Calculate X-axis range based on data
+    const quality = chartData.map((d) => d.equipmentQuality);
+    const qualityMin = Math.min(...quality);
+    const xMin = Math.floor(qualityMin / 10) * 10; // Round down to nearest 10
     const xMax = 100;
 
-    // Calculate Y-axis range based on data with reasonable padding
+    // Calculate Y-axis range based on data 
     const rejections = chartData.map((d) => d.rejectionRate);
     const maxRejection = Math.max(...rejections);
-
-    // Use a tighter range to reduce whitespace, with minimum floor of 0
     const yMax = Math.max(maxRejection * 1.15, 1); // At least 1% range, 15% padding at top
 
-    // Generate regression line data if provided
-    // Note: Regression lines are currently not provided by backend (GUI-26 - preferred feature)
-    const republicanRegression = regressionLines?.find((r) => r.party === "R");
-    const democraticRegression = regressionLines?.find((r) => r.party === "D");
-
-    const republicanRegressionPoints = republicanRegression
-        ? generateRegressionPoints(republicanRegression.coefficients, xMin, xMax)
-        : [];
-
-    const democraticRegressionPoints = democraticRegression
-        ? generateRegressionPoints(democraticRegression.coefficients, xMin, xMax)
-        : [];
-
     return (
-        // The line below is the key to getting huge cut off components to fit in
-        // grid views without expanding their size and cutting off content
         <Paper sx={{ p: 0.5, height: "100%", display: "flex", flexDirection: "column" }}>
             <Typography variant="h6" gutterBottom fontWeight={600} sx={{ fontSize: "0.95rem" }}>
                 Equipment Quality vs Ballot Rejection Rate
             </Typography>
-
-            {/*  
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Each bubble represents a county, colored by political party majority
-            </Typography>
-            */}
 
             <Box sx={{ flex: 1, minHeight: 0 }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -225,8 +176,8 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
                             offset: -15,
                             style: { fontSize: 12, fontWeight: 600 }
                         }}
-                        tickFormatter={(value) => `${value}`}
-                        ticks={[0, 20, 40, 60, 80, 100]}
+                        tickFormatter={(value) => value.toFixed(1)}
+                        allowDataOverflow={false}
                     />
                     <YAxis
                         type="number"
@@ -241,7 +192,6 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
                             style: { fontSize: 12, fontWeight: 600, textAnchor: 'middle' }
                         }}
                         tickFormatter={(value) => value.toFixed(1)}
-                        width={75}
                         allowDataOverflow={false}
                     />
                     <Tooltip content={<CustomTooltip />} />
@@ -250,70 +200,54 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
                         height={36}
                         iconType="circle"
                         iconSize={10}
+                        content={() => {
+                            return (
+                                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mb: 1 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                        <Box
+                                            sx={{
+                                                width: 10,
+                                                height: 10,
+                                                borderRadius: '50%',
+                                                bgcolor: '#1976d2',
+                                                opacity: 0.75
+                                            }}
+                                        />
+                                        <Typography variant="body2">Democratic Counties</Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                        <Box
+                                            sx={{
+                                                width: 10,
+                                                height: 10,
+                                                borderRadius: '50%',
+                                                bgcolor: '#d32f2f',
+                                                opacity: 0.75
+                                            }}
+                                        />
+                                        <Typography variant="body2">Republican Counties</Typography>
+                                    </Box>
+                                </Box>
+                            );
+                        }}
                     />
-
-                    {/* Democratic counties - uniform bubble size */}
-                    {democraticData.length > 0 && (
-                        <Scatter
-                            name="Democratic Counties"
-                            data={democraticData}
-                            fill="#1976d2"
-                            fillOpacity={0.75}
-                            shape="circle"
-                            isAnimationActive={false}
-                        />
-                    )}
-
-                    {/* Republican counties - uniform bubble size */}
-                    {republicanData.length > 0 && (
-                        <Scatter
-                            name="Republican Counties"
-                            data={republicanData}
-                            fill="#d32f2f"
-                            fillOpacity={0.75}
-                            shape="circle"
-                            isAnimationActive={false}
-                        />
-                    )}
-
-                    {/* Regression lines */}
-                    {republicanRegressionPoints.length > 0 && (
-                        <Line
-                            type="monotone"
-                            dataKey="y"
-                            data={republicanRegressionPoints}
-                            stroke="#d32f2f"
-                            strokeWidth={2}
-                            dot={false}
-                            name={`Republican Trend (R²=${republicanRegression?.r2.toFixed(3)})`}
-                        />
-                    )}
-
-                    {democraticRegressionPoints.length > 0 && (
-                        <Line
-                            type="monotone"
-                            dataKey="y"
-                            data={democraticRegressionPoints}
-                            stroke="#1976d2"
-                            strokeWidth={2}
-                            dot={false}
-                            name={`Democratic Trend (R²=${democraticRegression?.r2.toFixed(3)})`}
-                        />
-                    )}
+                    <Scatter
+                        name="Counties"
+                        data={chartData}
+                        fillOpacity={0.75}
+                        shape="circle"
+                        isAnimationActive={false}
+                    >
+                        {chartData.map((entry, index) => (
+                            <Cell
+                                key={`cell-${index}`}
+                                fill={entry.party === "R" ? "#d32f2f" : "#1976d2"}
+                            />
+                        ))}
+                    </Scatter>
                 </ScatterChart>
                 </ResponsiveContainer>
             </Box>
-            
-            {/*  
-            <Box sx={{ mt: 2 }}>
-                <Typography variant="caption" color="text.secondary">
-                    <strong>Note:</strong> Equipment quality is measured on a 0-100 scale
-                    considering age, certification, OS, scan rate, error rate, and
-                    reliability. Rejection rate includes mail-in, provisional, and UOCAVA
-                    ballots.
-                </Typography>
-            </Box>
-            */}
         </Paper>
     );
 };

@@ -11,13 +11,15 @@ interface VotingEquipmentTabProps {
 
 const VotingEquipmentTab = ({ stateName }: VotingEquipmentTabProps) => {
     const [equipmentTypesData, setEquipmentTypesData] = useState<any[]>([]);
+    const [equipmentQualityData, setEquipmentQualityData] = useState<any[]>([]);
 
-    // Fetch equipment types data when stateName changes
+    // Fetch equipment data when stateName changes
     useEffect(() => {
         if (!stateName) return;
 
         // Reset state when stateName changes
         setEquipmentTypesData([]);
+        setEquipmentQualityData([]);
 
         let alive = true;
         (async () => {
@@ -27,6 +29,20 @@ const VotingEquipmentTab = ({ stateName }: VotingEquipmentTabProps) => {
             } catch (e: any) {
                 if (alive) {
                     setEquipmentTypesData([]); // stop loading spinner
+                }
+            }
+
+            try {
+                const response = await fetch(
+                    `http://localhost:8080/api/equipment/vs-rejected/${encodeURIComponent(stateName)}`
+                );
+                if (response.ok) {
+                    const result = await response.json();
+                    if (alive) setEquipmentQualityData(result);
+                }
+            } catch (e: any) {
+                if (alive) {
+                    setEquipmentQualityData([]); // stop loading spinner
                 }
             }
         })();
@@ -58,7 +74,15 @@ const VotingEquipmentTab = ({ stateName }: VotingEquipmentTabProps) => {
 
             {/* Equipment Quality Chart - Top Right */}
             <Box sx={{ gridColumn: "2", gridRow: "1", overflow: "hidden" }}>
-                <EquipmentQualityVsRejectionsChart stateName={stateName} />
+                <EquipmentQualityVsRejectionsChart 
+                    stateName={stateName} 
+                    data={equipmentQualityData.length > 0 ? equipmentQualityData.map((item: any) => ({
+                        county: item.county,
+                        equipmentQuality: item.equipmentQuality,
+                        rejectionRate: item.rejectedPct > 1 ? item.rejectedPct : item.rejectedPct * 100,
+                        party: item.party,
+                    })) : undefined}
+                />
             </Box>
 
             {/* Equipment Table - Bottom Spanning Both Columns */}
