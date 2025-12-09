@@ -46,7 +46,6 @@ interface StateMapProps {
 	isDetailState: boolean;
 }
 
-// Detail states that have county data
 const detailStates = ["Rhode Island", "Maryland", "Arkansas"];
 
 const StateMap: React.FC<StateMapProps> = ({
@@ -60,7 +59,6 @@ const StateMap: React.FC<StateMapProps> = ({
 	const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
 	const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
-	// Refs to manage highlight + map container events
 	const mapRef = useRef<L.Map | null>(null);
 	const geoJsonRef = useRef<L.GeoJSON<any> | null>(null);
 	const hoveredLayerRef = useRef<L.Path | null>(null);
@@ -86,7 +84,6 @@ const StateMap: React.FC<StateMapProps> = ({
 			gj.getLayers().forEach((l) => {
 				try {
 					gj.resetStyle(l as any);
-					// Close tooltip for each layer
 					if ((l as any).closeTooltip) {
 						(l as any).closeTooltip();
 					}
@@ -121,7 +118,6 @@ const StateMap: React.FC<StateMapProps> = ({
 				let features: (CountyFeature | StateFeature)[];
 
 				if (isDetailState && detailStates.includes(stateName)) {
-					// Load county data from /public
 					const response = await fetch(
 						"/georef-united-states-of-america-county.geojson"
 					);
@@ -138,7 +134,6 @@ const StateMap: React.FC<StateMapProps> = ({
 							feature.properties.ste_name.includes(stateName)
 					);
 				} else {
-					// Load state boundary data from /public
 					const response = await fetch("/us-state-boundaries.geojson");
 					if (!response.ok) {
 						throw new Error(`Failed to fetch state data: ${response.statusText}`);
@@ -163,7 +158,6 @@ const StateMap: React.FC<StateMapProps> = ({
 					features,
 				};
 
-				// Compute padded bounds for pan constraints
 				const bounds = new L.LatLngBounds([]);
 				features.forEach((feature) => {
 					if (feature.geometry.type === "Polygon") {
@@ -191,19 +185,15 @@ const StateMap: React.FC<StateMapProps> = ({
 
 		loadMapData();
 
-		// Cleanup on state swap/unmount
 		return () => clearHover(true);
 	}, [stateName, isDetailState]);
 
-	// Add robust "mouseleave" handling on the map container.
-	// Attach after the map mounts and whenever geoData changes
 	useEffect(() => {
 		const map = mapRef.current;
 		if (!map) return;
 
 		const container = map.getContainer();
 		const handleLeave = () => {
-			// Only clear if dialog is not open
 			if (!selectedRegion) {
 				clearHover(true);
 			}
@@ -220,29 +210,24 @@ const StateMap: React.FC<StateMapProps> = ({
 		};
 	}, [geoData, selectedRegion]);
 
-	// Clear all highlights and close all tooltips when dialog state changes
 	useEffect(() => {
-		// Always clear when dialog opens OR closes
 		clearHover(true);
 	}, [selectedRegion]);
 
-	// Style function for map features
 	const getFeatureStyle = (feature?: Feature) => {
 		if (!feature) return {};
 
 		if (isDetailState && detailStates.includes(stateName)) {
-			// County styling for detail states - grayscale/monochrome
 			return {
-				fillColor: "#757575", // Medium gray
+				fillColor: "#757575",
 				weight: 1,
 				opacity: 1,
-				color: "#424242", // Dark gray border
+				color: "#424242",
 				dashArray: "",
 				fillOpacity: 0.3,
-				className: "no-outline", // Remove focus outline
+				className: "no-outline",
 			};
 		} else {
-			// State boundary styling for non-detail states
 			return {
 				fillColor: "#e0e0e0",
 				weight: 2,
@@ -250,15 +235,13 @@ const StateMap: React.FC<StateMapProps> = ({
 				color: "#bdbdbd",
 				dashArray: "",
 				fillOpacity: 0.2,
-				className: "no-outline", // Remove focus outline
+				className: "no-outline",
 			};
 		}
 	};
 
-	// Event handlers for map features
 	const onEachFeature = (feature: Feature, layer: L.Layer) => {
 		if (isDetailState && detailStates.includes(stateName)) {
-			// County feature handling
 			const countyFeature = feature as CountyFeature;
 			const countyName =
 				countyFeature.properties.coty_name_long?.[0] ||
@@ -274,7 +257,6 @@ const StateMap: React.FC<StateMapProps> = ({
 
 			layer.on({
 				mouseover: (e: any) => {
-					// Don't highlight if dialog is open
 					if (selectedRegion) return;
 
 					hoveredLayerRef.current = e.target;
@@ -285,18 +267,13 @@ const StateMap: React.FC<StateMapProps> = ({
 						dashArray: "",
 						fillOpacity: 0.5,
 					});
-					e.target.bringToFront();
-					// Ensure tooltip opens
-					if (!e.target.isTooltipOpen()) {
+						e.target.bringToFront();
+						if (!e.target.isTooltipOpen()) {
 						e.target.openTooltip();
 					}
 				},
-				mouseout: (e: any) => {
-					// Don't process if dialog is open
-					if (selectedRegion) return;
-
-					clearHover();
-					// Ensure tooltip closes
+					mouseout: (e: any) => {
+						if (selectedRegion) return;					clearHover();
 					try {
 						e.target.closeTooltip();
 					} catch {
@@ -304,28 +281,22 @@ const StateMap: React.FC<StateMapProps> = ({
 					}
 				},
 				click: (e: any) => {
-					// Immediately reset the clicked layer's style to remove hover highlight
 					const gj = geoJsonRef.current;
 					if (gj && e.target) {
 						gj.resetStyle(e.target);
 					}
-					// Close tooltip on the clicked element
 					try {
 						e.target.closeTooltip();
 					} catch {
 						/* ignore */
 					}
-					// Clear all hover state
 					clearHover(true);
-					// Clear refs immediately
 					hoveredLayerRef.current = null;
 					lastHoveredFeatureRef.current = undefined;
-					// Open dialog
 					setSelectedRegion(countyName);
 				},
 			});
 		} else {
-			// State feature handling (non-detail states)
 			const tooltipContent = `${stateName} - EAVS data available in other tabs`;
 			layer.bindTooltip(tooltipContent, {
 				permanent: false,
@@ -336,7 +307,6 @@ const StateMap: React.FC<StateMapProps> = ({
 
 			layer.on({
 				mouseover: (e: any) => {
-					// Don't highlight if dialog is open
 					if (selectedRegion) return;
 
 					hoveredLayerRef.current = e.target;
@@ -348,17 +318,14 @@ const StateMap: React.FC<StateMapProps> = ({
 						fillOpacity: 0.4,
 					});
 					e.target.bringToFront();
-					// Ensure tooltip opens
 					if (!e.target.isTooltipOpen()) {
 						e.target.openTooltip();
 					}
 				},
 				mouseout: (e: any) => {
-					// Don't process if dialog is open
 					if (selectedRegion) return;
 
 					clearHover();
-					// Ensure tooltip closes
 					try {
 						e.target.closeTooltip();
 					} catch {
@@ -400,33 +367,26 @@ const StateMap: React.FC<StateMapProps> = ({
 	}
 
 	const handleClose = () => {
-		// Immediately and forcefully close all tooltips and reset all styles
 		const gj = geoJsonRef.current;
 		const map = mapRef.current;
 
 		if (gj) {
 			gj.eachLayer((layer: any) => {
 				try {
-					// Force close any open tooltip first
 					if (layer.closeTooltip) {
 						layer.closeTooltip();
 					}
-					// Make sure tooltip is really closed
 					if (layer.isTooltipOpen && layer.isTooltipOpen()) {
 						layer.closeTooltip();
 					}
-					// Reset style to default - this should remove the highlight
 					gj.resetStyle(layer);
-					// Force the layer to re-apply its original style
 					if (layer.setStyle) {
 						const defaultStyle = getFeatureStyle(layer.feature);
 						layer.setStyle(defaultStyle);
 					}
-					// Force Leaflet to redraw this specific layer
 					if (layer._updatePath) {
 						layer._updatePath();
 					}
-					// Alternative: force redraw by removing and re-adding to map
 					if (layer.redraw) {
 						layer.redraw();
 					}
@@ -435,17 +395,13 @@ const StateMap: React.FC<StateMapProps> = ({
 				}
 			});
 
-			// Force the entire GeoJSON layer to redraw
 			if (map) {
-				// Invalidate the map size to force a complete redraw
 				map.invalidateSize({ pan: false });
 			}
 		}
 
-		// Clear refs
 		hoveredLayerRef.current = null;
 		lastHoveredFeatureRef.current = undefined;
-		// Close the dialog
 		setSelectedRegion(null);
 	};
 

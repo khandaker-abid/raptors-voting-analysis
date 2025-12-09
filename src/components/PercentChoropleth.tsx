@@ -1,4 +1,3 @@
-// Reusable Leaflet choropleth for GUI‑8/9. Expects percentOfTotal 0..100.
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { Paper, Typography, Box, Chip } from "@mui/material";
@@ -10,11 +9,9 @@ import { createCountyLookupMap, normalizeCountyName } from "../utils/countyNameN
 
 interface Props {
     stateName: string;
-    // Accept either simplified format or full row data (PollbookDeletionRow or MailRejectionRow)
     data: Array<{ geographicUnit: string; percentOfTotal: number }>
     | Array<{ geographicUnit: string; deletionPercentage?: number; rejectionPercentage?: number;[key: string]: any }>;
     title?: string;
-    /** Optional description - reserved for future use */
     description?: string;
 }
 
@@ -29,7 +26,6 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
     const [geoData, setGeoData] = useState<FeatureCollection | null>(null);
     const [bounds, setBounds] = useState<L.LatLngBounds | null>(null);
 
-    // Track map + GeoJSON + hovered layer for proper highlight clearing
     const mapRef = useRef<L.Map | null>(null);
     const geoRef = useRef<L.GeoJSON | null>(null);
     const hoveredRef = useRef<L.Path | null>(null);
@@ -38,19 +34,15 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
         if (hoveredRef.current) {
             try {
                 geoRef.current?.resetStyle(hoveredRef.current as any);
-                // Close tooltip
                 if ((hoveredRef.current as any).closeTooltip) {
                     (hoveredRef.current as any).closeTooltip();
                 }
             } catch {
-                // layer might be detached; ignore
             }
             hoveredRef.current = null;
         }
     };
 
-
-    // Calculate percentages early so we can use them in the lookup
     const calculatedPercentages = useMemo(() => {
         const percentages = data.map((d) => {
             if ('percentOfTotal' in d && d.percentOfTotal !== undefined) return d.percentOfTotal;
@@ -58,14 +50,13 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
             if ('rejectionPercentage' in d && d.rejectionPercentage !== undefined) {
                 const hasTotal = 'total' in d && typeof d.total === 'number';
                 if (d.rejectionPercentage === 0 && hasTotal) {
-                    return -1; // marker for recalculation
+                    return -1;
                 }
                 return d.rejectionPercentage;
             }
             return 0;
         });
 
-        // Recalculate if all are 0 but totals exist
         const needsRecalc = percentages.every(p => p === 0 || p === -1) &&
             data.every(d => 'total' in d);
 
@@ -86,8 +77,6 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
         return percentages;
     }, [data]);
 
-    // Uses centralized normalization to handle apostrophes, periods, etc.
-    // Create enriched data with calculated percentages for lookup
     const lookup = useMemo(() => {
         const enrichedData = data.map((item, index) => ({
             ...item,
@@ -101,21 +90,18 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
         );
     }, [data, calculatedPercentages]);
 
-
-    // Gray color palette for visual consistency
     const COLOR_PALETTE = useMemo(() => {
         return [
-            "#e8e8e8", // Very light gray
-            "#d0d0d0", // Light gray
-            "#b8b8b8", // Medium-light gray
-            "#a0a0a0", // Medium gray
-            "#888888", // Medium-dark gray
-            "#707070", // Dark gray
-            "#585858", // Very dark gray
+            "#e8e8e8",
+            "#d0d0d0",
+            "#b8b8b8",
+            "#a0a0a0",
+            "#888888",
+            "#707070",
+            "#585858",
         ];
     }, []);
 
-    // Calculate min and max from calculatedPercentages (not original data)
     const { minPercent, maxPercent } = useMemo(() => {
         if (calculatedPercentages.length === 0) return { minPercent: 0, maxPercent: 100 };
         return {
@@ -124,16 +110,13 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
         };
     }, [calculatedPercentages]);
 
-    // Color function that maps actual data range to color palette
     const color = (p: number) => {
         const stops = COLOR_PALETTE;
 
-        // Handle edge cases
         if (p === 0 || maxPercent === minPercent) {
-            return stops[0]; // Lightest gray for no data or uniform data
+            return stops[0];
         }
 
-        // Map the percentage to the color palette based on actual data range
         const normalized = (p - minPercent) / (maxPercent - minPercent);
         const idx = Math.max(0, Math.min(stops.length - 1, Math.floor(normalized * stops.length)));
         return stops[idx];
@@ -145,18 +128,15 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
         const f = feature as CountyFeature;
         const raw = f.properties.coty_name_long?.[0] || f.properties.coty_name?.[0] || "";
 
-        // Use centralized normalization for consistent matching
         const key = normalizeCountyName(raw);
         const p = lookup.get(key) ?? 0;
         return { fillColor: color(p), weight: 1, color: "#fff", fillOpacity: .75 } as L.PathOptions;
     };
 
-    // Add event handlers to each feature
     const onEachFeature = (feature: Feature, layer: L.Layer) => {
         const f = feature as CountyFeature;
         const displayName = f.properties.coty_name_long?.[0] || f.properties.coty_name?.[0] || "Unknown";
 
-        // Use centralized normalization for consistent matching
         const key = normalizeCountyName(displayName);
         const hasData = lookup.has(key);
         const p = lookup.get(key) ?? 0;
@@ -167,7 +147,6 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
             ${!hasData ? '<div style="color: #ff9800; font-size: 11px; margin-top: 2px;">No data available</div>' : ''}
         `;
 
-        // Bind tooltip directly - no need to check mapRef.current
         bindResponsiveTooltip(layer, tooltipContent, mapRef.current);
 
         layer.on({
@@ -183,7 +162,6 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
                 if ((targetLayer as any).bringToFront) {
                     (targetLayer as any).bringToFront();
                 }
-                // Ensure tooltip opens
                 if (!targetLayer.isTooltipOpen()) {
                     targetLayer.openTooltip();
                 }
@@ -191,7 +169,6 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
             mouseout: (e: any) => {
                 geoRef.current?.resetStyle(e.target as any);
                 if (hoveredRef.current === e.target) hoveredRef.current = null;
-                // Ensure tooltip closes
                 try {
                     (e.target as L.Path).closeTooltip();
                 } catch {
@@ -229,7 +206,6 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
                     return;
                 }
 
-                // Increase padding to 0.25 (25%) to give more space for tooltips at edges
                 setBounds(fb.pad(0.25));
                 setGeoData({ type: "FeatureCollection", features: feats });
             } catch (error) {
@@ -238,10 +214,8 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
         })();
     }, [stateName]);
 
-    // Force GeoJSON to re-render when data changes by adding a key based on data length
     const geoJsonKey = useMemo(() => `geojson-${stateName}-${data.length}`, [stateName, data.length]);
 
-    // Clear hover when cursor leaves the map container
     useEffect(() => {
         const map = mapRef.current;
         if (!map) return;
@@ -268,19 +242,14 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
     const maxPercentage = calculatedPercentages.length > 0 ? Math.max(...calculatedPercentages) : 0;
     const minPercentage = calculatedPercentages.length > 0 ? Math.min(...calculatedPercentages) : 0;
 
-    // Check if all data is zero (no data reported) - but only if we have data
     const allZero = calculatedPercentages.length > 0 && calculatedPercentages.every(p => p === 0);
 
-    // Note: Rhode Island data is now aggregated to county level by the backend,
-    // so we no longer need to show the town-level warning
     const isRhodeIslandTownData = false;
 
-    // Detect data type and set appropriate title
     const dataType = data.length > 0
         ? ('deletionPercentage' in data[0] ? 'pollbook' : 'rejection')
         : 'pollbook';
 
-    // Use custom title/description or defaults (without state name suffix - user already knows the state)
     const displayTitle = title || (dataType === 'pollbook'
         ? `Pollbook Deletions Distribution`
         : `Mail Rejections Distribution`);
@@ -311,7 +280,6 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
                 </Box>
             </Box>
 
-            {/* Map Container */}
             <Box
                 sx={{
                     flex: 1,
@@ -348,13 +316,11 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
                 </MapContainer>
             </Box>
 
-            {/* Color Legend */}
             <Box>
                 <Typography variant="body2" gutterBottom fontWeight={600} fontSize="0.85rem">
                     Color Scale (Percentage)
                 </Typography>
                 <Box>
-                    {/* Color bar */}
                     <Box
                         display="flex"
                         height={24}
@@ -375,7 +341,6 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
                         ))}
                     </Box>
 
-                    {/* Boundary values at dividing lines between segments */}
                     <Box sx={{ position: "relative", height: "1.5rem" }}>
                         {Array.from({ length: COLOR_PALETTE.length + 1 }, (_, i) => {
                             const ratio = i / COLOR_PALETTE.length;
@@ -403,7 +368,6 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
                         })}
                     </Box>
                 </Box>
-                {/* Note for states that use town-level data */}
                 {(stateName === "Rhode Island" || stateName === "Vermont" || stateName === "Connecticut" || stateName === "Massachusetts") && (
                     <Typography variant="caption" color="primary.main" display="block" mt={0.5} fontSize="0.7rem" fontStyle="italic">
                         Note: {stateName} reports data at the town level. Values shown have been aggregated to county level for map display consistency.

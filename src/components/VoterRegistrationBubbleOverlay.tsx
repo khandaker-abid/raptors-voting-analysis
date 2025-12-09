@@ -8,15 +8,12 @@ interface Props { stateName: string; payload: BlockBubblePayload; }
 
 
 const VoterRegistrationBubbleOverlay: React.FC<Props> = ({ payload }) => {
-    // auto radius selection to reduce overlap: proportional to inverse sqrt of density
     const radius = useMemo(() => {
         const n = Math.max(1, payload.points.length);
-        // simple heuristic tuned for state-level: tweak multiplier as needed
         return Math.max(1.5, Math.min(6, 80 / Math.sqrt(n)));
     }, [payload.points.length]);
 
 
-    // center on mean of points (fallback handled by parent)
     const center = useMemo(() => {
         if (!payload.points.length) return [37.5, -96.9] as [number, number];
         const lat = payload.points.reduce((s, p) => s + p.lat, 0) / payload.points.length;

@@ -56,7 +56,6 @@ const RegisteredVotersList: React.FC<Props> = ({
     const [rowsPerPage, setRowsPerPage] = useState(25);
     const [partyFilter, setPartyFilter] = useState<string>("All");
 
-    // Fetch voters when dialog opens
     useEffect(() => {
         if (!open) return;
 
@@ -68,7 +67,6 @@ const RegisteredVotersList: React.FC<Props> = ({
             .then(res => res.json())
             .then(data => {
                 if (data && data.voters) {
-                    // Map backend response to frontend format
                     const mappedVoters: RegisteredVoter[] = data.voters.map((v: any) => ({
                         id: v.id || `voter-${v.firstName}-${v.lastName}`,
                         firstName: v.firstName || "N/A",
@@ -79,7 +77,6 @@ const RegisteredVotersList: React.FC<Props> = ({
                     }));
                     setVoters(mappedVoters);
                 } else {
-                    // No voters found
                     console.warn("No voters found for this location");
                     setVoters([]);
                 }
@@ -92,7 +89,6 @@ const RegisteredVotersList: React.FC<Props> = ({
             });
     }, [open, stateName, geographicUnit]);
 
-    // Filter voters by party
     useEffect(() => {
         if (partyFilter === "All") {
             setFilteredVoters(voters);

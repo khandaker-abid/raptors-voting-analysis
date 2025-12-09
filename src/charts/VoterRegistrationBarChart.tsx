@@ -16,7 +16,6 @@ interface VoterRegistrationBarChartProps {
     data: StateVoterRegistrationData[];
 }
 
-// Helper function to transform API data to chart data
 function getVoterRegistrationChartData(data: StateVoterRegistrationData[]) {
     const totalRegistered = data.reduce((sum, d) => sum + (d.registeredVoterCount || 0), 0);
     const totalRepublican = data.reduce((sum, d) => sum + (d.republicanCount || 0), 0);
@@ -30,25 +29,25 @@ function getVoterRegistrationChartData(data: StateVoterRegistrationData[]) {
             category: "Registered Voter Count",
             count: totalRegistered,
             percentage: 100,
-            color: "#757575", // Grayscale
+            color: "#757575",
         },
         {
             category: "Republican Count",
             count: totalRepublican,
             percentage: pct(totalRepublican, totalRegistered),
-            color: "#d32f2f", // Red for Republican (consistent with app)
+            color: "#d32f2f",
         },
         {
             category: "Democratic Count",
             count: totalDemocratic,
             percentage: pct(totalDemocratic, totalRegistered),
-            color: "#1976d2", // Blue for Democratic (consistent with app)
+            color: "#1976d2",
         },
         {
             category: "Unaffiliated Party Count",
             count: totalUnaffiliated,
             percentage: pct(totalUnaffiliated, totalRegistered),
-            color: "#757575", // Gray for Unaffiliated (matching Registered Voter Count)
+            color: "#757575",
         },
     ];
 }
@@ -56,10 +55,8 @@ function getVoterRegistrationChartData(data: StateVoterRegistrationData[]) {
 const VoterRegistrationBarChart: React.FC<VoterRegistrationBarChartProps> = ({
     data,
 }) => {
-    // Base chart data from helper
     const chartData = useMemo(() => getVoterRegistrationChartData(data), [data]);
 
-    // Enforce bar order
     const ORDER = ["Registered Voter Count", "Republican Count", "Democratic Count", "Unaffiliated Party Count"] as const;
 
     const orderedChartData = useMemo(() => {

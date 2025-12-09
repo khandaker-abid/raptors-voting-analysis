@@ -45,7 +45,6 @@ const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = 
 		const fetchData = async () => {
 			try {
 				setLoading(true);
-				// Fetch from real backend API for the specific state and county/region
 				const response = await fetchRegisteredVoters(
 					stateName,
 					geographicUnitName,
@@ -55,7 +54,6 @@ const RegionRegisteredVotersTable: React.FC<RegionRegisteredVotersTableProps> = 
 				);
 
 				if (response && response.voters) {
-					// Map backend response to frontend format
 					const voters: RegionRegisteredVotersData[] = response.voters.map((v: any) => ({
 						id: v.id || `${v.firstName}-${v.lastName}`,
 						firstName: v.firstName,

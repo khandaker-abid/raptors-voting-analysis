@@ -47,7 +47,6 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 		fetchData();
 	}, [stateName]);
 
-	// Helper function to normalize county names (fix all-caps issue)
 	const normalizeCountyName = (name: string): string => {
 		return name
 			.split(' ')
@@ -64,7 +63,6 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 		);
 	}, [data, searchTerm]);
 
-	// Calculate totals for all data
 	const totals = useMemo(() => {
 		return {
 			registeredVoterCount: data.reduce((sum, row) => sum + (row.registeredVoterCount || 0), 0),
@@ -74,7 +72,6 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 		};
 	}, [data]);
 
-	// Sort data based on selected column and order
 	const sortedData = useMemo(() => {
 		const sorted = [...filteredData];
 		sorted.sort((a, b) => {
@@ -344,7 +341,6 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 								</TableRow>
 							))}
 
-						{/* TOTAL Row */}
 						<TableRow sx={{ backgroundColor: "#f5f5f5", fontWeight: "bold" }}>
 							<TableCell
 								sx={{

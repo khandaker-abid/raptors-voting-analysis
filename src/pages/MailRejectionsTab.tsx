@@ -13,11 +13,9 @@ interface MailRejectionsTabProps {
 const MailRejectionsTab = ({ stateName }: MailRejectionsTabProps) => {
     const [data, setData] = useState<MailRejectionRow[] | undefined>(undefined);
 
-    // Fetch mail rejections data when stateName changes
     useEffect(() => {
         if (!stateName) return;
 
-        // Reset state when stateName changes
         setData(undefined);
 
         let alive = true;

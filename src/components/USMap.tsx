@@ -23,7 +23,6 @@ const USMap: React.FC = () => {
 		[],
 	);
 
-	// Load GeoJSON data
 	useEffect(() => {
 		fetch("/us-state-boundaries.geojson")
 			.then((response) => response.json())
@@ -31,7 +30,6 @@ const USMap: React.FC = () => {
 			.catch((error) => console.error("Error loading GeoJSON:", error));
 	}, []);
 
-	// Style function for GeoJSON features
 	const getFeatureStyle = (feature?: Feature) => {
 		if (!feature) return {};
 		const stateFeature = feature as StateFeature;
@@ -47,7 +45,6 @@ const USMap: React.FC = () => {
 		};
 	};
 
-	// Event handlers for GeoJSON features
 	const onEachFeature = (feature: Feature, layer: L.Layer) => {
 		const stateFeature = feature as StateFeature;
 		const isDetailState = detailStates.includes(stateFeature.properties.name);
@@ -89,7 +86,6 @@ const USMap: React.FC = () => {
 				});
 			},
 			click: (e) => {
-				// Reset style to remove hover effect before navigating
 				const targetLayer = e.target;
 				targetLayer.setStyle({
 					fillColor: isDetailState ? theme.palette.primary.main : "#e0e0e0",

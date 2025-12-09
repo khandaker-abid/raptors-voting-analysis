@@ -62,12 +62,10 @@ const DEMOGRAPHIC_COLORS: Record<string, string> = {
     "Other": "#c2185b", // Pink
 };
 
-// Map display names to backend format
 const toBackendFormat = (demographic: string): string => {
     return demographic.toLowerCase().replace(/ /g, '_');
 };
 
-// Map API demographic names to UI-friendly names
 const API_TO_UI_DEMOGRAPHIC: Record<string, string> = {
     "white": "White",
     "african_american": "African American",
@@ -77,10 +75,8 @@ const API_TO_UI_DEMOGRAPHIC: Record<string, string> = {
     "other": "Other",
 };
 
-// Generate normal distribution probability density curve for rejection rates
 const generateNormalCurve = (mean: number, stdDev: number): ProbabilityCurvePoint[] => {
     const points: ProbabilityCurvePoint[] = [];
-    // Rejection probabilities range from 0-15% typically
     for (let x = 0; x <= 15; x += 0.3) {
         const exponent = -Math.pow(x - mean, 2) / (2 * Math.pow(stdDev, 2));
         const probability = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
@@ -89,9 +85,7 @@ const generateNormalCurve = (mean: number, stdDev: number): ProbabilityCurvePoin
     return points;
 };
 
-// Generate mock EI rejected ballots data for demonstration when real data unavailable
 const generateMockData = (state: string): EIRejectedData => {
-    // Mock parameters - different demographics have different rejection rate patterns
     const mockParams: Record<string, { mean: number; stdDev: number }> = {
         "White": { mean: 2.5, stdDev: 1.2 },
         "African American": { mean: 5.8, stdDev: 2.1 },
@@ -121,10 +115,8 @@ const EIRejectedBallotsChart: React.FC<Props> = ({ stateName }) => {
             setError(null);
 
             try {
-                // Use Vite proxy for API calls
                 const response = await fetch(`/api/preclearance/ei-rejected/${encodeURIComponent(stateName)}`);
                 if (!response.ok) {
-                    // If no data exists, use mock data for demonstration
                     if (response.status === 404 || response.status === 500) {
                         console.warn("EI Rejected data not available, using mock data");
                         setData(generateMockData(stateName));
@@ -134,15 +126,12 @@ const EIRejectedBallotsChart: React.FC<Props> = ({ stateName }) => {
                 }
                 const result = await response.json();
 
-                // Check if backend returned empty data
                 if (!result.curves || result.curves.length === 0) {
                     console.warn("Backend returned empty curves, using mock data");
                     setData(generateMockData(stateName));
                     return;
                 }
 
-                // Transform backend data to match component interface
-                // Normalize demographic names from API format (snake_case) to UI format (Title Case)
                 const transformedData: EIRejectedData = {
                     state: stateName,
                     curves: result.curves.map((curve: any) => ({
@@ -157,7 +146,6 @@ const EIRejectedBallotsChart: React.FC<Props> = ({ stateName }) => {
                 setData(transformedData);
             } catch (err) {
                 console.error("Error fetching EI rejected data:", err);
-                // Fallback to mock data on error
                 setData(generateMockData(stateName));
             } finally {
                 setLoading(false);
@@ -177,11 +165,9 @@ const EIRejectedBallotsChart: React.FC<Props> = ({ stateName }) => {
         });
     };
 
-    // Combine data for all selected demographics
     const chartData = useMemo(() => {
         if (!data) return [];
 
-        // Get all unique rejection probabilities
         const allRejectionProbs = new Set<number>();
         data.curves.forEach(curve => {
             curve.data.forEach(point => {

@@ -30,7 +30,6 @@ const EveryStateEquipmentTable: React.FC = () => {
 		const fetchData = async () => {
 			try {
 				const response = await fetchEquipmentAllStates();
-				// Map backend response to frontend format
 				const mappedData: EveryStateEquipmentData[] = response.map((item: any, index: number) => ({
 					id: index + 1,
 					stateName: item.state,
@@ -41,7 +40,6 @@ const EveryStateEquipmentTable: React.FC = () => {
 				}));
 				setData(mappedData);
 			} catch (err) {
-				// Error handled silently in production - data remains empty
 				console.error("Failed to fetch equipment data:", err);
 			}
 		};

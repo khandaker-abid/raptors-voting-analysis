@@ -17,7 +17,6 @@ export const ResponsiveChartWrapper: React.FC<ResponsiveChartWrapperProps> = ({
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
 
-    // Adjust chart height based on screen size
     const chartHeight = isMobile ? 300 : isTablet ? 400 : 500;
 
     return (
@@ -28,9 +27,7 @@ export const ResponsiveChartWrapper: React.FC<ResponsiveChartWrapperProps> = ({
                 height: `${chartHeight}px`,
                 overflowX: 'auto',
                 overflowY: 'visible',
-                // Ensure touch scrolling works smoothly on mobile
                 WebkitOverflowScrolling: 'touch',
-                // Add padding on mobile for better touch targets
                 px: isMobile ? 1 : 2,
                 py: isMobile ? 1 : 2,
             }}

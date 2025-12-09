@@ -52,12 +52,10 @@ const canonicalizeCountyName = (raw?: string | null): string => {
 			.replace(/\./g, " ")
 	);
 
-	// Harmonise common abbreviations so "Saint" and "St" map together, likewise "Ft" -> "Fort".
 	cleaned = cleaned
 		.replace(/\bsaint\b/g, "st")
 		.replace(/\bft\b/g, "fort");
 
-	// Drop standard geographic suffixes so "County", "Parish", etc. do not break matches.
 	const suffixes = [
 		"county",
 		"parish",
@@ -88,18 +86,15 @@ const VoterRegistrationChloroplethMap: React.FC<
 	const [error, setError] = useState<string | null>(null);
 	const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
 
-	// Refs to manage hover state and reset styles reliably
 	const mapRef = useRef<L.Map | null>(null);
 	const geoRef = useRef<L.GeoJSON | null>(null);
 	const hoveredRef = useRef<L.Path | null>(null);
 
 	const clearHover = () => {
 		if (hoveredRef.current) {
-			// resetStyle needs the same layer reference used by GeoJSON
 			try {
 				geoRef.current?.resetStyle(hoveredRef.current as any);
 			} catch {
-				// no-op if layer isn't part of current GeoJSON
 			}
 			hoveredRef.current = null;
 		}
@@ -117,7 +112,6 @@ const VoterRegistrationChloroplethMap: React.FC<
 		fetchData();
 	}, [stateName]);
 
-	// Calculate color scale for registered voters (5 bins for compact legend)
 	const colorScale = useMemo(() => {
 		if (!data || data.length === 0) return null;
 
@@ -125,7 +119,6 @@ const VoterRegistrationChloroplethMap: React.FC<
 		const maxValue = Math.max(...values);
 		const minValue = Math.min(...values);
 
-		// Grayscale palette with 5 bins for compact display (NO BLUE - blue is reserved for Democratic party only)
 		const range = [
 			"#e0e0e0",
 			"#9e9e9e",
@@ -142,7 +135,6 @@ const VoterRegistrationChloroplethMap: React.FC<
 		};
 	}, [data]);
 
-	// Create a data lookup map for efficient county data retrieval
 	const dataLookup = useMemo(() => {
 		const lookup = new Map<string, number>();
 
@@ -196,7 +188,6 @@ const VoterRegistrationChloroplethMap: React.FC<
 					throw new Error("County GeoJSON data is invalid or empty");
 				}
 
-				// Filter counties by state name
 				const features = countyData.features.filter(
 					(feature: CountyFeature) =>
 						feature.properties.ste_name &&
@@ -212,7 +203,6 @@ const VoterRegistrationChloroplethMap: React.FC<
 					features: features,
 				};
 
-				// Calculate bounds for the map
 				const bounds = new L.LatLngBounds([]);
 				features.forEach((feature) => {
 					if (feature.geometry.type === "Polygon") {
@@ -243,7 +233,6 @@ const VoterRegistrationChloroplethMap: React.FC<
 		loadMapData();
 	}, [stateName]);
 
-	// Style function for counties based on registered voter data
 	const getFeatureStyle = (feature?: Feature) => {
 		if (!feature || !colorScale) {
 			return {
@@ -280,7 +269,6 @@ const VoterRegistrationChloroplethMap: React.FC<
 		};
 	};
 
-	// Event handlers for county features — now with robust hover reset
 	const onEachFeature = (feature: Feature, layer: L.Layer) => {
 		const countyFeature = feature as CountyFeature;
 		const displayCountyName =
@@ -309,7 +297,6 @@ const VoterRegistrationChloroplethMap: React.FC<
 			}
     `;
 
-		// Bind tooltip directly - no need to check mapRef.current
 		bindResponsiveTooltip(layer, tooltipContent, mapRef.current);
 
 		layer.on({
@@ -325,30 +312,24 @@ const VoterRegistrationChloroplethMap: React.FC<
 				if ((targetLayer as any).bringToFront) {
 					(targetLayer as any).bringToFront();
 				}
-				// Ensure tooltip opens
 				if (!targetLayer.isTooltipOpen()) {
 					targetLayer.openTooltip();
 				}
 			},
 			mouseout: (e: any) => {
-				// Reset just this layer's style
 				geoRef.current?.resetStyle(e.target as any);
 				if (hoveredRef.current === e.target) hoveredRef.current = null;
-				// Ensure tooltip closes
 				try {
 					(e.target as L.Path).closeTooltip();
 				} catch {
-					/* ignore */
 				}
 			},
 			click: () => {
-				// Opening your dialog typically prevents mouseout from firing; clear highlight proactively
 				clearHover();
 			},
 		});
 	};
 
-	// Clear hover when the cursor leaves the map container (e.g., a dialog pops up)
 	useEffect(() => {
 		const node = mapRef.current?.getContainer();
 		if (!node) return;
@@ -357,7 +338,6 @@ const VoterRegistrationChloroplethMap: React.FC<
 		return () => node.removeEventListener("mouseleave", handler);
 	}, [mapRef.current]);
 
-	// Optional: allow parent to force-clear when the dialog closes
 	useEffect(() => {
 		clearHover();
 	}, [resetHoverKey]);
@@ -399,11 +379,8 @@ const VoterRegistrationChloroplethMap: React.FC<
 	const maxValue = Math.max(...data.map((d) => d.registeredVoterCount));
 	const minValue = Math.min(...data.map((d) => d.registeredVoterCount));
 
-	// Check if all data is zero (no data reported)
 	const allZero = data.every((d) => d.registeredVoterCount === 0);
 
-	// Note: Rhode Island data is now aggregated to county level by the backend,
-	// so we no longer need to show the town-level warning
 	const isRhodeIslandTownData = false;
 
 	return (
@@ -505,12 +482,6 @@ const VoterRegistrationChloroplethMap: React.FC<
 						{maxValue.toLocaleString()}
 					</Typography>
 				</Box>
-				{/*
-				<Typography variant="caption" color="text.secondary" display="block" mt={0.5} fontSize="0.7rem">
-					Interactive choropleth map showing voter registration distribution across counties. Hover over counties for detailed information.
-				</Typography>
-				*/}
-				{/* Note for states that use town-level data */}
 				{(stateName === "Rhode Island" || stateName === "Vermont" || stateName === "Connecticut" || stateName === "Massachusetts") && (
 					<Typography variant="caption" color="primary.main" display="block" mt={0.5} fontSize="0.7rem" fontStyle="italic">
 						Note: {stateName} reports data at the town level. Values shown have been aggregated to county level for map display consistency.

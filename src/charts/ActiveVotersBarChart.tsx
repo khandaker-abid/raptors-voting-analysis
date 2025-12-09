@@ -23,7 +23,7 @@ interface ActiveVotersBarChartProps {
 	stateName?: string;
 }
 
-// Helper function to transform API data to chart data
+// Transform API data to chart data
 function getActiveVotersChartData(data: ActiveVotersRow[]) {
 	const totalActive = data.reduce((sum, d) => sum + (d.activeVoters || 0), 0);
 	const totalInactive = data.reduce((sum, d) => sum + (d.inactiveVoters || 0), 0);
@@ -53,7 +53,6 @@ function getActiveVotersChartData(data: ActiveVotersRow[]) {
 const ActiveVotersBarChart: React.FC<ActiveVotersBarChartProps> = ({
 	data,
 }) => {
-	// Base chart data from your helper
 	const chartData = useMemo(() => getActiveVotersChartData(data), [data]);
 
 	const ORDER = ["Active", "Inactive", "Total"] as const;

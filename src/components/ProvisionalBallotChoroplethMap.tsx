@@ -44,7 +44,6 @@ const ProvisionalBallotChoroplethMap: React.FC<
 	const [error, setError] = useState<string | null>(null);
 	const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
 
-	// Track map + GeoJSON + hovered layer so we can reliably clear highlight
 	const mapRef = useRef<L.Map | null>(null);
 	const geoRef = useRef<L.GeoJSON | null>(null);
 	const hoveredRef = useRef<L.Path | null>(null);
@@ -53,28 +52,24 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		if (hoveredRef.current) {
 			try {
 				geoRef.current?.resetStyle(hoveredRef.current as any);
-				// Close tooltip
 				if ((hoveredRef.current as any).closeTooltip) {
 					(hoveredRef.current as any).closeTooltip();
 				}
 			} catch {
-				// layer might be detached; ignore
 			}
 			hoveredRef.current = null;
 		}
 	};
 
-	// Gray color palette for visual consistency with State Map tab
-	// Neutral grayscale avoids political colors (no blue/red)
 	const COLOR_PALETTE = useMemo(() => {
 		return [
-			"#e8e8e8", // Very light gray
-			"#d0d0d0", // Light gray
-			"#b8b8b8", // Medium-light gray
-			"#a0a0a0", // Medium gray
-			"#888888", // Medium-dark gray
-			"#707070", // Dark gray
-			"#585858", // Very dark gray
+			"#e8e8e8",
+			"#d0d0d0",
+			"#b8b8b8",
+			"#a0a0a0",
+			"#888888",
+			"#707070",
+			"#585858",
 		];
 	}, []);
 
@@ -94,8 +89,6 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		};
 	}, [data, COLOR_PALETTE]);
 
-	// Create a data lookup map for efficient county data retrieval
-	// Uses centralized normalization to handle apostrophes, periods, etc.
 	const dataLookup = useMemo(() => {
 		return createCountyLookupMap(
 			data,
@@ -123,10 +116,9 @@ const ProvisionalBallotChoroplethMap: React.FC<
 				const countyData = (await response.json()) as CountyGeoJSONData;
 
 				if (!countyData || !countyData.features) {
-					throw new Error("County GeoJSON data is invalid or empty");
+				throw new Error("County GeoJSON data is invalid or empty");
 				}
 
-				// Filter counties by state name
 				const features = countyData.features.filter(
 					(feature: CountyFeature) =>
 						feature.properties.ste_name &&
@@ -137,13 +129,11 @@ const ProvisionalBallotChoroplethMap: React.FC<
 					throw new Error(`No county data found for ${stateName}`);
 				}
 
-				// Create FeatureCollection for the map
 				const featureCollection: FeatureCollection = {
 					type: "FeatureCollection",
 					features: features,
 				};
 
-				// Calculate bounds for the map
 				const bounds = new L.LatLngBounds([]);
 				features.forEach((feature) => {
 					if (feature.geometry.type === "Polygon") {
@@ -159,7 +149,6 @@ const ProvisionalBallotChoroplethMap: React.FC<
 					}
 				});
 
-				// Increase padding to 0.25 (25%) to give more space for tooltips at edges
 				setMapBounds(bounds.pad(0.25));
 				setGeoData(featureCollection);
 				setLoading(false);
@@ -173,7 +162,6 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		loadMapData();
 	}, [stateName]);
 
-	// Style function for counties based on provisional ballot data
 	const getFeatureStyle = (feature?: Feature) => {
 		if (!feature || !colorScale) {
 			return {
@@ -191,7 +179,6 @@ const ProvisionalBallotChoroplethMap: React.FC<
 			countyFeature.properties.coty_name?.[0] ||
 			"Unknown County";
 
-		// Use centralized normalization for consistent matching
 		const normalizedName = normalizeCountyName(countyName);
 		const ballotCount = dataLookup.get(normalizedName) || 0;
 
@@ -207,7 +194,6 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		};
 	};
 
-	// Event handlers for county features — with robust hover clearing
 	const onEachFeature = (feature: Feature, layer: L.Layer) => {
 		const countyFeature = feature as CountyFeature;
 		const displayCountyName =
@@ -215,7 +201,6 @@ const ProvisionalBallotChoroplethMap: React.FC<
 			countyFeature.properties.coty_name?.[0] ||
 			"Unknown County";
 
-		// Use centralized normalization for consistent matching
 		const normalizedCountyName = normalizeCountyName(displayCountyName);
 		const ballotCount = dataLookup.get(normalizedCountyName) || 0;
 
@@ -228,7 +213,6 @@ const ProvisionalBallotChoroplethMap: React.FC<
 			}
     `;
 
-		// Bind tooltip directly - no need to check mapRef.current
 		bindResponsiveTooltip(layer, tooltipContent, mapRef.current);
 
 		layer.on({
@@ -244,7 +228,6 @@ const ProvisionalBallotChoroplethMap: React.FC<
 				if ((targetLayer as any).bringToFront) {
 					(targetLayer as any).bringToFront();
 				}
-				// Ensure tooltip opens
 				if (!targetLayer.isTooltipOpen()) {
 					targetLayer.openTooltip();
 				}
@@ -252,17 +235,14 @@ const ProvisionalBallotChoroplethMap: React.FC<
 			mouseout: (e: any) => {
 				geoRef.current?.resetStyle(e.target as any);
 				if (hoveredRef.current === e.target) hoveredRef.current = null;
-				// Ensure tooltip closes
 				try {
 					(e.target as L.Path).closeTooltip();
 				} catch {
-					/* ignore */
 				}
 			},
 		});
 	};
 
-	// Clear hover when cursor leaves the map container (covers dialog-open cases)
 	useEffect(() => {
 		const map = mapRef.current;
 		if (!map) return;
@@ -277,7 +257,6 @@ const ProvisionalBallotChoroplethMap: React.FC<
 		};
 	}, [geoData]);
 
-	// Allow parent to force-clear when a dialog closes
 	useEffect(() => {
 		clearHover();
 	}, [resetHoverKey]); if (!data || data.length === 0) {
@@ -317,11 +296,8 @@ const ProvisionalBallotChoroplethMap: React.FC<
 	const maxValue = Math.max(...data.map((d) => d.E1a));
 	const minValue = Math.min(...data.map((d) => d.E1a));
 
-	// Check if all data is zero (no data reported)
 	const allZero = data.every((d) => d.E1a === 0);
 
-	// Note: Rhode Island data is now aggregated to county level by the backend,
-	// so we no longer need to show the town-level warning
 	const isRhodeIslandTownData = false;
 
 	return (

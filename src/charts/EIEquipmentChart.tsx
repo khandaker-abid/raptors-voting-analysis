@@ -62,12 +62,10 @@ const DEMOGRAPHIC_COLORS: Record<string, string> = {
     "Other": "#c2185b", // Pink
 };
 
-// Map display names to backend format
 const toBackendFormat = (demographic: string): string => {
     return demographic.toLowerCase().replace(/ /g, '_');
 };
 
-// Map API demographic names to UI-friendly names
 const API_TO_UI_DEMOGRAPHIC: Record<string, string> = {
     "white": "White",
     "african_american": "African American",
@@ -77,7 +75,6 @@ const API_TO_UI_DEMOGRAPHIC: Record<string, string> = {
     "other": "Other",
 };
 
-// Generate normal distribution probability density curve
 const generateNormalCurve = (mean: number, stdDev: number): ProbabilityCurvePoint[] => {
     const points: ProbabilityCurvePoint[] = [];
     for (let x = 0; x <= 100; x += 2) {
@@ -88,9 +85,7 @@ const generateNormalCurve = (mean: number, stdDev: number): ProbabilityCurvePoin
     return points;
 };
 
-// Generate mock EI equipment data for demonstration when real data unavailable
 const generateMockData = (state: string): EIEquipmentData => {
-    // Mock parameters - different demographics have different equipment quality access patterns
     const mockParams: Record<string, { mean: number; stdDev: number }> = {
         "White": { mean: 72, stdDev: 12 },
         "African American": { mean: 58, stdDev: 15 },
@@ -120,10 +115,8 @@ const EIEquipmentChart: React.FC<Props> = ({ stateName }) => {
             setError(null);
 
             try {
-                // Use Vite proxy for API calls
                 const response = await fetch(`/api/preclearance/ei-equipment/${encodeURIComponent(stateName)}`);
                 if (!response.ok) {
-                    // If no data exists, use mock data for demonstration
                     if (response.status === 404 || response.status === 500) {
                         console.warn("EI Equipment data not available, using mock data");
                         setData(generateMockData(stateName));
@@ -133,15 +126,12 @@ const EIEquipmentChart: React.FC<Props> = ({ stateName }) => {
                 }
                 const result = await response.json();
 
-                // Check if backend returned empty data
                 if (!result.curves || result.curves.length === 0) {
                     console.warn("Backend returned empty curves, using mock data");
                     setData(generateMockData(stateName));
                     return;
                 }
 
-                // Transform backend data to match component interface
-                // Normalize demographic names from API format (snake_case) to UI format (Title Case)
                 const transformedData: EIEquipmentData = {
                     state: stateName,
                     curves: result.curves.map((curve: any) => ({
@@ -156,7 +146,6 @@ const EIEquipmentChart: React.FC<Props> = ({ stateName }) => {
                 setData(transformedData);
             } catch (err) {
                 console.error("Error fetching EI equipment data:", err);
-                // Fallback to mock data on error
                 setData(generateMockData(stateName));
             } finally {
                 setLoading(false);
@@ -176,7 +165,6 @@ const EIEquipmentChart: React.FC<Props> = ({ stateName }) => {
         });
     };
 
-    // Combine data for all selected demographics
     const chartData = useMemo(() => {
         if (!data) return [];
 

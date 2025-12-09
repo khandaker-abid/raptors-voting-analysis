@@ -23,14 +23,12 @@ import type { EquipmentHistorySeries } from "../data/types";
 
 type Point = { year: number; value: number };
 
-// Keep years as a literal tuple for stricter typing
 const YEARS = [2016, 2018, 2020, 2022, 2024] as const;
 type YearKey = typeof YEARS[number];
 
 const CHART_HEIGHT = 220;
 
 function makeSeriesPoints(series: EquipmentHistorySeries): Point[] {
-    // Cast to numeric indexable map to avoid TS index error
     const byYear = series.byYear as Record<number, number | undefined>;
     return YEARS.map((y: YearKey) => ({ year: y, value: Number(byYear[y] ?? 0) }));
 }
@@ -71,7 +69,6 @@ function ChartCard({
                             formatter={(v: any) => v.toLocaleString()}
                             labelFormatter={(l: any) => `Year ${l}`}
                         />
-                        {/* 🔵 Blue bars to match the rest of the app */}
                         <Bar dataKey="value" fill={barColor} barSize={22} radius={[6, 6, 0, 0]} />
                     </BarChart>
                 </ResponsiveContainer>
@@ -125,7 +122,6 @@ const VotingEquipmentHistoryPage: React.FC = () => {
         );
     }
 
-    // Keep a predictable category order
     const order = ["DRE no VVPAT", "DRE with VVPAT", "Ballot Marking Device", "Scanner"];
     const sorted = [...rows].sort(
         (a, b) => order.indexOf(a.category) - order.indexOf(b.category)
@@ -142,8 +138,7 @@ const VotingEquipmentHistoryPage: React.FC = () => {
                 </Typography>
             </Box>
 
-            {/* ✅ No MUI Grid — pure CSS Grid via Box; avoids type issues.
-          2×2 layout at md+, one column on small screens. */}
+            {/* CSS Grid layout - 2×2 at md+, single column on small screens */}
             <Box
                 sx={{
                     display: "grid",

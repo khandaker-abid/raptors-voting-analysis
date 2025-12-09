@@ -14,7 +14,6 @@ import { createCountyLookupMap, normalizeCountyName } from "../utils/countyNameN
 interface EquipmentTypeData {
     geographicUnit: string;
     primaryEquipmentType: "DRE_NO_VVPAT" | "DRE_WITH_VVPAT" | "BALLOT_MARKING" | "SCANNER" | "MIXED";
-    // Optional: breakdown of equipment counts for mixed determination
     equipmentBreakdown?: {
         dreNoVVPAT: number;
         dreWithVVPAT: number;
@@ -66,13 +65,11 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
     stateName,
     data,
 }) => {
-    // State for boundary data loading
     const [geoData, setGeoData] = useState<FeatureCollection | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
 
-    // Track map + GeoJSON + hovered layer for proper highlight clearing
     const mapRef = useRef<L.Map | null>(null);
     const geoRef = useRef<L.GeoJSON | null>(null);
     const hoveredRef = useRef<L.Path | null>(null);
@@ -86,13 +83,11 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                     (hoveredRef.current as any).closeTooltip();
                 }
             } catch {
-                // ignore if layer is detached
             }
             hoveredRef.current = null;
         }
     };
 
-    // Load boundary data
     useEffect(() => {
         const loadMapData = async () => {
             if (!stateName) return;
@@ -116,7 +111,6 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                     throw new Error("County GeoJSON data is invalid or empty");
                 }
 
-                // Filter counties by state name
                 const features = countyData.features.filter(
                     (feature: CountyFeature) =>
                         feature.properties.ste_name &&
@@ -127,13 +121,11 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                     throw new Error(`No county data found for ${stateName}`);
                 }
 
-                // Create FeatureCollection for the map
                 const featureCollection: FeatureCollection = {
                     type: "FeatureCollection",
                     features: features,
                 };
 
-                // Calculate bounds for the map
                 const bounds = new L.LatLngBounds([]);
                 features.forEach((feature) => {
                     if (feature.geometry.type === "Polygon") {
@@ -162,8 +154,6 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
         loadMapData();
     }, [stateName]);
 
-    // Create lookup map for equipment type by geographic unit
-    // Uses centralized normalization to handle apostrophes, periods, etc.
     const equipmentLookup = useMemo(() => {
         return createCountyLookupMap(
             data,
@@ -172,7 +162,6 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
         );
     }, [data]);
 
-    // Style function for GeoJSON features
     const getFeatureStyle = (feature?: Feature) => {
         if (!feature || !feature.properties) {
             return {
@@ -184,8 +173,6 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
             };
         }
 
-        // Get county name from GeoJSON properties
-        // The georef-united-states-of-america-county.geojson uses coty_name_long
         const countyNameArray = feature.properties.coty_name_long ||
             feature.properties.coty_name ||
             [feature.properties.name] ||
@@ -194,7 +181,6 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
             [""];
         const unitName = Array.isArray(countyNameArray) ? countyNameArray[0] : countyNameArray;
 
-        // Use centralized normalization for consistent matching
         const normalizedName = normalizeCountyName(unitName);
         const equipmentData = equipmentLookup.get(normalizedName);
 
@@ -220,11 +206,9 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
         };
     };
 
-    // Event handlers for interactive features
     const onEachFeature = (feature: Feature, layer: L.Layer) => {
         if (!feature.properties) return;
 
-        // Get county name from GeoJSON properties
         const countyNameArray = feature.properties.coty_name_long ||
             feature.properties.coty_name ||
             [feature.properties.name] ||
@@ -242,11 +226,9 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
             tooltipContent = `<div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${displayName}</div>`;
             tooltipContent += `<div style="font-size: 12px;">Equipment: <strong>${EQUIPMENT_LABELS[equipmentData.primaryEquipmentType]}</strong></div>`;
 
-            // If equipment type is MIXED, show breakdown with percentages
             if (equipmentData.primaryEquipmentType === "MIXED" && equipmentData.equipmentBreakdown) {
                 const breakdown = equipmentData.equipmentBreakdown as any;
 
-                // Check if we have equipmentTypeCounts (Rhode Island aggregated data)
                 if (breakdown.equipmentTypeCounts) {
                     const counts = breakdown.equipmentTypeCounts;
                     const total = Object.values(counts).reduce((sum: number, val) => sum + (val as number), 0);
@@ -261,7 +243,6 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                         tooltipContent += `</div>`;
                     }
                 }
-                // Check if we have markingMethod and tabulationMethod (Arkansas/Maryland data)
                 else if (breakdown.markingMethod || breakdown.tabulationMethod) {
                     tooltipContent += `<div style="font-size: 11px; margin-top: 4px; color: #ddd;">`;
                     if (breakdown.markingMethod) {
@@ -278,7 +259,6 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
          <div style="font-size: 13px; color: #ff9800;">No equipment data available</div>`;
         }
 
-        // Use responsive tooltip helper to avoid cutoff
         bindResponsiveTooltip(layer, tooltipContent, mapRef.current);
 
         layer.on({
@@ -293,7 +273,6 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                     (targetLayer as any).bringToFront();
                 }
 
-                // Open tooltip
                 if (!(targetLayer as any).isTooltipOpen()) {
                     (targetLayer as any).openTooltip();
                 }
@@ -302,7 +281,6 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                 geoRef.current?.resetStyle(e.target as any);
                 if (hoveredRef.current === e.target) hoveredRef.current = null;
 
-                // Close tooltip
                 try {
                     (e.target as L.Path).closeTooltip();
                 } catch {
@@ -312,7 +290,6 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
         });
     };
 
-    // Clear hover when cursor leaves the map container
     useEffect(() => {
         const map = mapRef.current;
         if (!map) return;
@@ -327,7 +304,6 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
         };
     }, [geoData]);
 
-    // Show loading state
     if (loading) {
         return (
             <Paper sx={{ p: 3, textAlign: "center" }}>
@@ -339,7 +315,6 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
         );
     }
 
-    // Show error state
     if (error) {
         return (
             <Paper sx={{ p: 3 }}>
@@ -350,7 +325,6 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
         );
     }
 
-    // Show no data message
     if (!geoData) {
         return (
             <Paper sx={{ p: 3, textAlign: "center" }}>
@@ -362,8 +336,6 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
     }
 
     return (
-        // The line below is the key to getting huge cut off components to fit in
-        // grid views without expanding their size and cutting off content
         <Paper sx={{ p: 0.5, height: "100%", display: "flex", flexDirection: "column" }}>
             <Typography variant="h6" gutterBottom fontWeight={600} sx={{ fontSize: "0.95rem" }}>
                 Voting Equipment Types by Region

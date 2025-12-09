@@ -22,9 +22,7 @@ export const ResponsiveTableWrapper: React.FC<ResponsiveTableWrapperProps> = ({
                 maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight,
                 overflowX: 'auto',
                 overflowY: 'auto',
-                // Smooth scrolling on touch devices
                 WebkitOverflowScrolling: 'touch',
-                // Make horizontal scroll more obvious on mobile
                 '&::-webkit-scrollbar': {
                     height: isMobile ? 8 : 6,
                     width: isMobile ? 8 : 6,
@@ -36,7 +34,6 @@ export const ResponsiveTableWrapper: React.FC<ResponsiveTableWrapperProps> = ({
                 '&::-webkit-scrollbar-track': {
                     backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
                 },
-                // Add shadow to indicate scrollable content
                 background: isMobile
                     ? `
             linear-gradient(90deg, white 30%, rgba(255,255,255,0)),

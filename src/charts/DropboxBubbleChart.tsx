@@ -162,7 +162,6 @@ const DropBoxBubbleChart: React.FC<Props> = ({ data, regressionLines = [] }) => 
         ? ` (Data Years: ${dataYears.join(", ")})`
         : "";
 
-    // Add context for very low usage with more detail
     if (maxDropBox < 0.02 && maxDropBox > 0) {
       return `Drop Box % vs. Republican Vote % by County${yearInfo} - Note: Very low drop box usage in this state (max ${maxDropBox.toFixed(4)}%)`;
     }
@@ -181,11 +180,9 @@ const DropBoxBubbleChart: React.FC<Props> = ({ data, regressionLines = [] }) => 
     if (maxY <= 0) {
       return [0, 0.1];
     }
-    // For very small percentages (< 0.01%), use finer granularity
     if (maxY < 0.01) {
       return [0, Math.max(0.02, maxY * 1.5)];
     }
-    // For small percentages (< 0.1%), cap at reasonable value
     if (maxY < 0.1) {
       return [0, Math.max(0.2, maxY * 1.5)];
     }
@@ -199,7 +196,6 @@ const DropBoxBubbleChart: React.FC<Props> = ({ data, regressionLines = [] }) => 
     return [0, Math.min(100, padded)];
   }, [normalizedData]);
 
-  // Precompute line points from coefficients (non-linear y = a * x^b)
   const { dLine, rLine } = useMemo(() => {
     const pointsFor = (a: number, b: number) => {
       const pts: Array<{ republicanPct: number; dropBoxPct: number }> = [];
@@ -250,7 +246,6 @@ const DropBoxBubbleChart: React.FC<Props> = ({ data, regressionLines = [] }) => 
         {subtitle}
       </Typography>
 
-      {/* Spacer to align with Gingles chart's demographic selection */}
       <Box sx={{ mb: 2, height: 72 }} />
 
       <Box sx={{ flex: 1, minHeight: CHART_HEIGHTS.STANDARD, height: CHART_HEIGHTS.STANDARD }}>
@@ -370,7 +365,6 @@ const DropBoxBubbleChart: React.FC<Props> = ({ data, regressionLines = [] }) => 
               />
               <Legend verticalAlign="bottom" align="center" />
 
-              {/* Bubbles */}
               <Scatter name="Democratic counties" data={democraticData} fill="#1976d2" fillOpacity={0.7} />
               <Scatter name="Republican counties" data={republicanData} fill="#d32f2f" fillOpacity={0.7} />
               {unknownData.length > 0 && (
@@ -382,7 +376,6 @@ const DropBoxBubbleChart: React.FC<Props> = ({ data, regressionLines = [] }) => 
                 />
               )}
 
-              {/* Regression lines (non-linear) */}
               {dLine.length > 0 && (
                 <Line
                   name="Democratic regression"

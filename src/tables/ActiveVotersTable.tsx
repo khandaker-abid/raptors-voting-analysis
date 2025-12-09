@@ -30,7 +30,6 @@ interface ActiveVotersTableProps {
 	stateName?: string;
 }
 
-// Helper functions to calculate totals
 const getTotalActiveVoters = (data: ActiveVotersRow[]): number =>
 	data.reduce((total, c) => total + (c.activeVoters || 0), 0);
 
@@ -49,7 +48,6 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 	const [sortColumn, setSortColumn] = useState<SortableColumn>('geographicUnit');
 	const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
-	// Helper function to normalize county names (fix all-caps issue)
 	const normalizeCountyName = (name: string): string => {
 		return name
 			.split(' ')
@@ -66,7 +64,6 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 		);
 	}, [data, searchTerm]);
 
-	// Sort data based on selected column and order
 	const sortedData = useMemo(() => {
 		const sorted = [...filteredData];
 		sorted.sort((a, b) => {
@@ -104,7 +101,7 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 			setSortColumn(column);
 			setSortOrder('asc');
 		}
-		setPage(0); // Reset to first page when sorting
+		setPage(0); 
 	};
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
@@ -377,7 +374,6 @@ const ActiveVotersTable: React.FC<ActiveVotersTableProps> = ({
 					page={page}
 					onPageChange={handleChangePage}
 					rowsPerPage={rowsPerPage}
-					rowsPerPageOptions={[]}
 					labelDisplayedRows={({ from, to, count }) => `${from}–${to} of ${count}`}
 					sx={{ minHeight: 0, height: 36, p: 0, overflow: "hidden", '& .MuiToolbar-root': { minHeight: 36, height: 36, padding: '0 8px' } }}
 				/>

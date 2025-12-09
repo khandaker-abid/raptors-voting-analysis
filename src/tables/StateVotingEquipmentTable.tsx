@@ -39,8 +39,6 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 		}
 	}, [stateName]);
 
-	// Helper function to get certification grayscale intensity
-	// Darker = better certification
 	const getCertificationColor = (cert: string) => {
 		if (cert.includes("2.0 certified")) return "#212121"; // Darkest - best
 		if (cert.includes("2.0 applied")) return "#424242"; // Dark
@@ -186,7 +184,6 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 					<TableBody>
 						{sortedData.map((row, index) => {
 							const isUnavailable = row.isAvailable === false;
-							// Use grayscale striping
 							const rowBg = index % 2 === 0 ? "white" : "#fafafa";
 
 							return (
@@ -267,12 +264,11 @@ const StateVotingEquipmentTable: React.FC<StateVotingEquipmentTableProps> = ({
 
 									<TableCell align="right">
 										<Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 1 }}>
-											<Typography
-												variant="body2"
-												sx={{
-													fontWeight: 500,
-													// Darker text for older equipment
-													color: row.age > 10 ? "#212121" : row.age > 7 ? "#424242" : "text.secondary"
+										<Typography
+											variant="body2"
+											sx={{
+												fontWeight: 500,
+												color: row.age > 10 ? "#212121" : row.age > 7 ? "#424242" : "text.secondary"
 												}}
 											>
 												{row.age}

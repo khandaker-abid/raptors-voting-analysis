@@ -34,14 +34,12 @@ interface ProvisionalBallotBarChartProps {
 	categories: Array<{ key: string; label: string; description: string }>;
 }
 
-// Single consistent black color for all bars (matching Active Voters & Pollbook Deletions charts)
-const CATEGORY_COLOR = "#424242"; // Dark gray/black for consistency
+const CATEGORY_COLOR = "#424242";
 
 const ProvisionalBallotBarChart: React.FC<ProvisionalBallotBarChartProps> = ({
 	data,
 	categories,
 }) => {
-	// Aggregate data across all counties
 	const aggregatedData = useMemo(() => {
 		if (!data || data.length === 0) return [];
 

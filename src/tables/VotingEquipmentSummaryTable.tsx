@@ -23,7 +23,6 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 		const fetchData = async () => {
 			try {
 				const response = await fetchEquipmentSummary();
-				// Map backend response to frontend format
 				const mappedData: VotingEquipmentSummaryData[] = response.map((item: any, index: number) => ({
 					id: index + 1,
 					equipmentProvider: item.provider || "Unknown",

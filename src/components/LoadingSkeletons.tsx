@@ -15,13 +15,10 @@ export const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
 }) => {
     return (
         <Box sx={{ width: '100%', p: 2 }}>
-            {/* Title */}
             <Skeleton variant="text" width="60%" height={32} sx={{ mb: 2 }} />
 
-            {/* Subtitle/Description */}
             <Skeleton variant="text" width="40%" height={20} sx={{ mb: 3 }} />
 
-            {/* Legend (optional) */}
             {showLegend && (
                 <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                     <Skeleton variant="rectangular" width={80} height={20} />
@@ -30,7 +27,6 @@ export const ChartSkeleton: React.FC<ChartSkeletonProps> = ({
                 </Box>
             )}
 
-            {/* Chart area */}
             <Skeleton
                 variant="rectangular"
                 width="100%"
@@ -55,7 +51,6 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({
 }) => {
     return (
         <Box sx={{ width: '100%', p: 2 }}>
-            {/* Table header */}
             <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                 {Array.from({ length: columns }).map((_, i) => (
                     <Skeleton
@@ -67,7 +62,6 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({
                 ))}
             </Box>
 
-            {/* Table rows */}
             {Array.from({ length: rows }).map((_, rowIndex) => (
                 <Box key={`row-${rowIndex}`} sx={{ display: 'flex', gap: 2, mb: 1 }}>
                     {Array.from({ length: columns }).map((_, colIndex) => (
@@ -94,13 +88,11 @@ interface MapSkeletonProps {
 export const MapSkeleton: React.FC<MapSkeletonProps> = ({ height = 500 }) => {
     return (
         <Box sx={{ width: '100%', p: 2 }}>
-            {/* Map controls */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                 <Skeleton variant="rectangular" width={150} height={40} />
                 <Skeleton variant="rectangular" width={100} height={40} />
             </Box>
 
-            {/* Map area with grid pattern to simulate map tiles */}
             <Box
                 sx={{
                     width: '100%',
@@ -126,7 +118,6 @@ export const MapSkeleton: React.FC<MapSkeletonProps> = ({ height = 500 }) => {
                     overflow: 'hidden',
                 }}
             >
-                {/* Animated shimmer effect */}
                 <Box
                     sx={{
                         position: 'absolute',

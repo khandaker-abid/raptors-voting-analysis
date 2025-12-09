@@ -13,11 +13,9 @@ const VotingEquipmentTab = ({ stateName }: VotingEquipmentTabProps) => {
     const [equipmentTypesData, setEquipmentTypesData] = useState<any[]>([]);
     const [equipmentQualityData, setEquipmentQualityData] = useState<any[]>([]);
 
-    // Fetch equipment data when stateName changes
     useEffect(() => {
         if (!stateName) return;
 
-        // Reset state when stateName changes
         setEquipmentTypesData([]);
         setEquipmentQualityData([]);
 

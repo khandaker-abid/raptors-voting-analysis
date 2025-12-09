@@ -45,7 +45,6 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 	const [sortColumn, setSortColumn] = useState<SortableColumn>('county');
 	const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
-	// Helper function to normalize county names (fix all-caps issue)
 	const normalizeCountyName = (name: string): string => {
 		return name
 			.split(' ')
@@ -53,7 +52,6 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 			.join(' ');
 	};
 
-	// Get category mappings
 	const categories = useMemo(() => getProvisionalBallotCategories(), []);
 	const categoryMap = useMemo(() => {
 		const map: Record<string, string> = {};
@@ -72,7 +70,6 @@ const ProvisionalBallotTable: React.FC<ProvisionalBallotTableProps> = ({
 		);
 	}, [data, searchTerm]);
 
-	// Add sorting logic
 	const sortedData = useMemo(() => {
 		const sorted = [...filteredData];
 		sorted.sort((a, b) => {

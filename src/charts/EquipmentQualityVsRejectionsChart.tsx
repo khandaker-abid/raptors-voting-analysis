@@ -80,20 +80,16 @@ const generateRegressionPoints = (
     const points = [];
     const step = (xMax - xMin) / 50;
 
-    // Start from a small positive value to avoid log(0) issues
     const startX = type === "power" ? Math.max(xMin, 1) : xMin;
 
     for (let x = startX; x <= xMax; x += step) {
         let y: number;
         if (type === "linear") {
-            // Linear: y = a + b*x (a is intercept, b is slope)
             y = coefficients.a + coefficients.b * x;
         } else {
-            // Power: y = a * x^b
             y = coefficients.a * Math.pow(x, coefficients.b);
         }
 
-        // Only add points with valid y values
         if (isFinite(y) && y >= 0) {
             points.push({ x, y });
         }
@@ -131,7 +127,6 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
                     }
                     const result = await response.json();
 
-                    // Transform backend data to match chart interface
                     const dataPoints = result.dataPoints || result;
                     const transformedData = (Array.isArray(dataPoints) ? dataPoints : []).map((item: any) => ({
                         county: item.county,
@@ -199,7 +194,6 @@ const EquipmentQualityVsRejectionsChart: React.FC<Props> = ({
         );
     }
 
-    // Calculate X-axis range based on data
     const quality = chartData.map((d) => d.equipmentQuality);
     const qualityMin = Math.min(...quality);
     const xMin = Math.floor(qualityMin / 10) * 10; // Round down to nearest 10

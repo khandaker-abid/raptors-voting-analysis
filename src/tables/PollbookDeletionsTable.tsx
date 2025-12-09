@@ -31,7 +31,6 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
     const [sortColumn, setSortColumn] = useState<SortableColumn>('geographicUnit');
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
-    // Helper function to normalize county names (fix all-caps issue)
     const normalizeCountyName = (name: string): string => {
         return name
             .split(' ')
@@ -48,7 +47,6 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
         );
     }, [data, searchTerm]);
 
-    // Sort data based on selected column and order
     const sortedData = useMemo(() => {
         const sorted = [...filteredData];
         sorted.sort((a, b) => {
@@ -90,7 +88,6 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
         setPage(newPage);
     };
 
-    // Calculate totals
     const totals = useMemo(() => {
         if (!data || data.length === 0) {
             return {
@@ -429,7 +426,6 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                 );
                             })}
 
-                        {/* Totals Row */}
                         <TableRow sx={{ backgroundColor: "#f5f5f5", fontWeight: "bold" }}>
                             <TableCell
                                 sx={{

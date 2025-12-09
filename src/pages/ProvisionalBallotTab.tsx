@@ -19,11 +19,9 @@ const ProvisionalBallotTab = ({ stateName }: ProvisionalBallotTabProps) => {
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(true);
 
-	// Fetch provisional ballot data when stateName changes
 	useEffect(() => {
 		if (!stateName) return;
 
-		// Reset state when stateName changes
 		setData(undefined);
 		setError(null);
 		setLoading(true);
@@ -51,12 +49,10 @@ const ProvisionalBallotTab = ({ stateName }: ProvisionalBallotTabProps) => {
 		};
 	}, [stateName]);
 
-	// Get choropleth data (shared with Registration tab)
 	const choroplethData = useMemo(() => {
 		return getChoroplethData(stateName);
 	}, [stateName]);
 
-	// Show loading state
 	if (loading) {
 		return (
 			<Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "calc(100vh - 60px)" }}>
@@ -65,7 +61,6 @@ const ProvisionalBallotTab = ({ stateName }: ProvisionalBallotTabProps) => {
 		);
 	}
 
-	// Show error state
 	if (error) {
 		return (
 			<Box sx={{ p: 2 }}>

@@ -13,20 +13,16 @@ const ResetButton: React.FC = () => {
   const location = useLocation();
 
   const handleReset = () => {
-    // If on home page, do nothing (already at starting state)
     if (location.pathname === "/") {
       return;
     }
 
-    // If on a detail/data page, reload to reset state
-    // This clears all filters, selections, and resets to default tab
     if (location.pathname.startsWith("/state") ||
       location.pathname.startsWith("/voting-equipment") ||
       location.pathname.startsWith("/party-comparison") ||
       location.pathname.startsWith("/registration-comparison")) {
       window.location.reload();
     } else {
-      // For other pages, navigate to home
       navigate("/");
     }
   };

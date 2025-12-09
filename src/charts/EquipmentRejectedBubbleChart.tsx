@@ -33,13 +33,11 @@ const EquipmentRejectedBubbleChart: React.FC<Props> = ({ data, regressionLines =
   const regressionData = useMemo(() => {
     if (regressionLines.length === 0) return [];
 
-    // Generate points for smooth curves
     const points: any[] = [];
     for (let x = 0; x <= 100; x += 1) {
       const point: any = { equipmentQuality: x };
 
       regressionLines.forEach((line) => {
-        // Power regression: y = a * x^b
         const y = line.coefficients.a * Math.pow(x, line.coefficients.b);
         const key = line.party === "R" ? "republicanRegression" : "democraticRegression";
         point[key] = Math.max(0, Math.min(100, y)); // Clamp to 0-100
@@ -51,11 +49,9 @@ const EquipmentRejectedBubbleChart: React.FC<Props> = ({ data, regressionLines =
     return points;
   }, [regressionLines]);
 
-  // Separate data by party
   const republicanData = useMemo(() => data.filter((d) => d.party === "R"), [data]);
   const democraticData = useMemo(() => data.filter((d) => d.party === "D"), [data]);
 
-  // Check if we have regression lines
   const hasRepublicanRegression = regressionLines.some((l) => l.party === "R");
   const hasDemocraticRegression = regressionLines.some((l) => l.party === "D");
 
@@ -105,7 +101,6 @@ const EquipmentRejectedBubbleChart: React.FC<Props> = ({ data, regressionLines =
 
               const data = payload[0].payload;
 
-              // Check if this is a bubble or regression line
               if (data.county) {
                 return (
                   <Box sx={{ bgcolor: "white", p: 1.5, border: "1px solid #ccc", borderRadius: 1 }}>
@@ -135,7 +130,6 @@ const EquipmentRejectedBubbleChart: React.FC<Props> = ({ data, regressionLines =
             wrapperStyle={{ paddingBottom: "10px" }}
           />
 
-          {/* Republican Bubbles */}
           <Scatter
             name="Republican Counties"
             data={republicanData}
@@ -144,7 +138,6 @@ const EquipmentRejectedBubbleChart: React.FC<Props> = ({ data, regressionLines =
             shape="circle"
           />
 
-          {/* Democratic Bubbles */}
           <Scatter
             name="Democratic Counties"
             data={democraticData}
@@ -153,7 +146,6 @@ const EquipmentRejectedBubbleChart: React.FC<Props> = ({ data, regressionLines =
             shape="circle"
           />
 
-          {/* Republican Regression Line */}
           {hasRepublicanRegression && (
             <Line
               name="Republican Trend"
@@ -168,7 +160,6 @@ const EquipmentRejectedBubbleChart: React.FC<Props> = ({ data, regressionLines =
             />
           )}
 
-          {/* Democratic Regression Line */}
           {hasDemocraticRegression && (
             <Line
               name="Democratic Trend"
@@ -185,7 +176,6 @@ const EquipmentRejectedBubbleChart: React.FC<Props> = ({ data, regressionLines =
         </ComposedChart>
       </ResponsiveContainer>
 
-      {/* Regression Statistics */}
       {regressionLines.length > 0 && (
         <Box sx={{ mt: 2, p: 2, bgcolor: "background.default", borderRadius: 1 }}>
           <Typography variant="subtitle2" gutterBottom>

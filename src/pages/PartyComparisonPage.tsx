@@ -92,7 +92,6 @@ const PartyComparisonPage: React.FC = () => {
 		);
 	}
 
-	// Prepare chart data
 	const chartData = [
 		{
 			metric: 'Registration Rate (%)',

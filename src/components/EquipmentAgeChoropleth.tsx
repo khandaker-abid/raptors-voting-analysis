@@ -21,7 +21,6 @@ interface Props {
     onClose?: () => void; // Callback to return to normal map view
 }
 
-// Age bins and corresponding colors (monochromatic blue with increasing saturation)
 const AGE_BINS = [
     { max: 1, label: "0-1 years", color: "#f5f5f5" },
     { max: 2, label: "1-2 years", color: "#e0e0e0" },
@@ -59,7 +58,6 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
     geoJsonData,
     onClose,
 }) => {
-    // Track map + GeoJSON + hovered layer for proper highlight clearing
     const mapRef = useRef<L.Map | null>(null);
     const geoRef = useRef<L.GeoJSON | null>(null);
     const hoveredRef = useRef<L.Path | null>(null);
@@ -72,13 +70,11 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
                     (hoveredRef.current as any).closeTooltip();
                 }
             } catch {
-                // ignore if layer is detached
             }
             hoveredRef.current = null;
         }
     };
 
-    // Create lookup map for equipment age by state
     const ageLookup = useMemo(() => {
         const lookup = new Map<string, number>();
         data.forEach((item) => {
@@ -87,7 +83,6 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
         return lookup;
     }, [data]);
 
-    // Style function for GeoJSON features
     const getFeatureStyle = (feature?: Feature) => {
         if (!feature || !feature.properties) {
             return {
@@ -126,7 +121,6 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
         };
     };
 
-    // Event handlers for interactive features
     const onEachFeature = (feature: Feature, layer: L.Layer) => {
         if (!feature.properties) return;
 
@@ -146,7 +140,6 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
                 : `<div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${feature.properties.name || feature.properties.NAME}</div>
          <div style="font-size: 13px; color: #ff9800;">No equipment age data available</div>`;
 
-        // Use responsive tooltip helper to avoid cutoff
         bindResponsiveTooltip(layer, tooltipContent, mapRef.current);
 
         layer.on({
@@ -162,7 +155,6 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
                     (targetLayer as any).bringToFront();
                 }
 
-                // Open tooltip
                 if (!(targetLayer as any).isTooltipOpen()) {
                     (targetLayer as any).openTooltip();
                 }
@@ -171,7 +163,6 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
                 geoRef.current?.resetStyle(e.target as any);
                 if (hoveredRef.current === e.target) hoveredRef.current = null;
 
-                // Close tooltip
                 try {
                     (e.target as L.Path).closeTooltip();
                 } catch {
@@ -181,7 +172,6 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
         });
     };
 
-    // Clear hover when cursor leaves the map container
     useEffect(() => {
         const map = mapRef.current;
         if (!map) return;
@@ -208,7 +198,6 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
 
     return (
         <Box sx={{ position: "relative", height: "100%", width: "100%" }}>
-            {/* Close button to return to normal view */}
             {onClose && (
                 <Button
                     variant="contained"
@@ -224,7 +213,6 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
                 </Button>
             )}
 
-            {/* Legend - repositioned to bottom-left to avoid zoom controls */}
             <Paper
                 sx={{
                     position: "absolute",
@@ -256,7 +244,6 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
                 </Box>
             </Paper>
 
-            {/* Map */}
             <MapContainer
                 ref={(m) => { mapRef.current = m; }}
                 center={[39.5, -96.0]}

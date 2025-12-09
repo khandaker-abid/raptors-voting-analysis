@@ -31,10 +31,8 @@ import { CHART_HEIGHTS } from "../constants";
 
 interface PrecinctData {
     precinct: string;
-    // Vote percentages
     democraticPct: number;
     republicanPct: number;
-    // Demographic percentages
     whitePct: number;
     hispanicPct: number;
     africanAmericanPct: number;
@@ -55,7 +53,6 @@ interface RegressionCoefficients {
 interface Props {
     stateName: string;
     data: PrecinctData[];
-    // Regression coefficients: y = a * x^b
     democraticRegression?: RegressionCoefficients;
     republicanRegression?: RegressionCoefficients;
 }
@@ -65,17 +62,14 @@ const GinglesChart: React.FC<Props> = ({
     democraticRegression,
     republicanRegression,
 }) => {
-    // Only allow ONE demographic to be selected at a time
     const [selectedDemographic, setSelectedDemographic] = useState<"white" | "hispanic" | "africanAmerican">("white");
 
     const demographicKey = selectedDemographic;
 
-    // Transform data for charting
     const chartData = useMemo(() => {
         const points: GinglesDataPoint[] = [];
 
         data.forEach((precinct) => {
-            // Get the selected demographic percentage based on radio button
             let demographicPct: number;
             if (demographicKey === "white") {
                 demographicPct = precinct.whitePct;
@@ -85,7 +79,6 @@ const GinglesChart: React.FC<Props> = ({
                 demographicPct = precinct.africanAmericanPct;
             }
 
-            // Add Democratic bubble
             points.push({
                 precinct: precinct.precinct,
                 demographicPct,
@@ -93,7 +86,6 @@ const GinglesChart: React.FC<Props> = ({
                 party: "D",
             });
 
-            // Add Republican bubble
             points.push({
                 precinct: precinct.precinct,
                 demographicPct,
@@ -105,7 +97,6 @@ const GinglesChart: React.FC<Props> = ({
         return points;
     }, [data, demographicKey]);
 
-    // Generate regression lines
     const regressionLines = useMemo(() => {
         const lines: {
             party: "D" | "R";
@@ -169,7 +160,6 @@ const GinglesChart: React.FC<Props> = ({
                 flexDirection: "column",
             }}
         >
-            {/* Centered Title */}
             <Typography
                 variant="subtitle1"
                 align="center"

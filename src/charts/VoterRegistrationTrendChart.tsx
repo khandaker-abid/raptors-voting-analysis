@@ -11,7 +11,6 @@ interface Props { trends: RegistrationTrendPayload; }
 
 
 const VoterRegistrationTrendChart: React.FC<Props> = ({ trends }) => {
-    // X axis is the order of EAVS units sorted by 2024 ascending
     const labels = useMemo(() => trends.geographicUnitOrder2024.map((_, i) => `${i + 1}`), [trends]);
 
 

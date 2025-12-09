@@ -43,11 +43,9 @@ const RegistrationComparisonPage: React.FC = () => {
 
         setOptInOutData(optInOut);
 
-        // Extract only the three relevant states from party comparison
         if (party && party.stateDetails) {
           const relevantStates = [];
 
-          // Find Rhode Island and Maryland (Democratic)
           if (party.stateDetails.Democratic) {
             const ri = party.stateDetails.Democratic.find((s: any) => s.state && s.state.toUpperCase().includes("RHODE ISLAND"));
             const md = party.stateDetails.Democratic.find((s: any) => s.state && s.state.toUpperCase().includes("MARYLAND"));
@@ -55,7 +53,6 @@ const RegistrationComparisonPage: React.FC = () => {
             if (md) relevantStates.push({ state: `${md.state} (Democratic)`, registrationRate: md.registrationRate, turnoutRate: md.turnout });
           }
 
-          // Find Arkansas (Republican)
           if (party.stateDetails.Republican) {
             const ar = party.stateDetails.Republican.find((s: any) => s.state && s.state.toUpperCase().includes("ARKANSAS"));
             if (ar) relevantStates.push({ state: `${ar.state} (Republican)`, registrationRate: ar.registrationRate, turnoutRate: ar.turnout });
