@@ -1,6 +1,7 @@
 package com.example.raptorsbackend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -23,21 +24,23 @@ public class RegistrationController {
     }
 
     @GetMapping("/state/{state}")
+    @Cacheable(value = "stateRegistration", key = "#state")
     public List<Map<String, Object>> getStateRegistrationSummary(@PathVariable String state) {
         String normalizedState = state; // voter_registration uses title case
 
         Query query = new Query();
         query.addCriteria(Criteria.where("state").is(normalizedState));
-        
+
         List<Map> voters = mongoTemplate.find(query, Map.class, "voter_registration");
-        
+
         // Aggregate by county
         Map<String, Map<String, Integer>> countyData = new HashMap<>();
-        
+
         for (Map voter : voters) {
             String county = (String) voter.get("county");
-            if (county == null) continue;
-            
+            if (county == null)
+                continue;
+
             countyData.computeIfAbsent(county, k -> {
                 Map<String, Integer> counts = new HashMap<>();
                 counts.put("total", 0);
@@ -46,10 +49,10 @@ public class RegistrationController {
                 counts.put("unaffiliated", 0);
                 return counts;
             });
-            
+
             Map<String, Integer> counts = countyData.get(county);
             counts.put("total", counts.get("total") + 1);
-            
+
             String party = (String) voter.get("party");
             if ("Democratic".equalsIgnoreCase(party)) {
                 counts.put("democratic", counts.get("democratic") + 1);
@@ -59,7 +62,7 @@ public class RegistrationController {
                 counts.put("unaffiliated", counts.get("unaffiliated") + 1);
             }
         }
-        
+
         // Convert to response format
         List<Map<String, Object>> result = new ArrayList<>();
         int id = 0;
@@ -74,14 +77,15 @@ public class RegistrationController {
             row.put("unaffiliatedPartyCount", entry.getValue().get("unaffiliated"));
             result.add(row);
         }
-        
+
         // Sort by county name
         result.sort((a, b) -> ((String) a.get("regionName")).compareTo((String) b.get("regionName")));
-        
+
         return result;
     }
 
     @GetMapping("/trends/{state}")
+    @Cacheable(value = "registrationTrends", key = "#state + '-' + #years")
     public Map<String, Object> getRegistrationTrends(
             @PathVariable String state,
             @RequestParam(defaultValue = "2016,2020,2024") String years) {
@@ -115,7 +119,8 @@ public class RegistrationController {
         for (String year : yearArray) {
             Query query = new Query();
 
-            query.addCriteria(Criteria.where("stateFull").is(normalizedState).and("year").is(Integer.parseInt(year.trim())));
+            query.addCriteria(
+                    Criteria.where("stateFull").is(normalizedState).and("year").is(Integer.parseInt(year.trim())));
             List<Map> yearData = mongoTemplate.find(query, Map.class, "eavsData");
 
             Map<String, Integer> lookup = new HashMap<>();
@@ -140,6 +145,7 @@ public class RegistrationController {
     }
 
     @GetMapping("/blocks/{state}")
+    @Cacheable(value = "blockBubbles", key = "#state")
     public Map<String, Object> getBlockBubbles(@PathVariable String state) {
         String normalizedState = normalizeStateName(state);
         Query query = new Query();
@@ -168,6 +174,7 @@ public class RegistrationController {
     }
 
     @GetMapping("/voters/{state}/{region}")
+    @Cacheable(value = "registeredVoters", key = "#state + '-' + #region + '-' + #party + '-' + #page + '-' + #size")
     public Map<String, Object> getRegisteredVoters(
             @PathVariable String state,
             @PathVariable String region,
@@ -210,6 +217,7 @@ public class RegistrationController {
     }
 
     @GetMapping("/opt-in-out-comparison")
+    @Cacheable("optInOutComparison")
     public List<Map<String, Object>> getOptInOutComparison() {
         String[] states = { "RHODE ISLAND", "MARYLAND", "ARKANSAS" };
         String[] stateDisplay = { "Rhode Island", "Maryland", "Arkansas" };
@@ -263,6 +271,7 @@ public class RegistrationController {
     }
 
     @GetMapping("/early-voting/comparison")
+    @Cacheable("earlyVotingComparison")
     public List<Map<String, Object>> getEarlyVotingComparison() {
         String[] states = { "RHODE ISLAND", "MARYLAND", "ARKANSAS" };
         String[] stateDisplay = { "Rhode Island", "Maryland", "Arkansas" };
