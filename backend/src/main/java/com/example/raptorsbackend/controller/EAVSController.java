@@ -150,6 +150,7 @@ public class EAVSController {
             @RequestParam(defaultValue = "2024") int year) {
 
         Query query = new Query();
+
         // Case-insensitive state matching
         query.addCriteria(Criteria.where("stateFull").regex("^" + state + "$", "i").and("year").is(year));
 
@@ -195,6 +196,7 @@ public class EAVSController {
             @RequestParam(defaultValue = "2024") int year) {
 
         Query query = new Query();
+
         // Case-insensitive state matching
         query.addCriteria(Criteria.where("stateFull").regex("^" + state + "$", "i").and("year").is(year));
 
@@ -325,6 +327,7 @@ public class EAVSController {
 
         for (int tryYear : Arrays.asList(year, 2020, 2016)) {
             Query query = new Query();
+
             // Case-insensitive state matching
             query.addCriteria(Criteria.where("stateFull").regex("^" + state + "$", "i").and("year").is(tryYear));
 
