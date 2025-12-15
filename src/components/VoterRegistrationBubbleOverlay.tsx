@@ -2,7 +2,6 @@ import React, { useMemo, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, CircleMarker, useMap } from "react-leaflet";
 import { Paper, Typography, Box } from "@mui/material";
 import type { BlockBubblePayload } from "../data/types";
-import { CHART_HEIGHTS } from "../constants";
 import L from "leaflet";
 
 interface Props { 

@@ -215,6 +215,12 @@ const GinglesChart: React.FC<Props> = ({
                                 name={`${getDemographicLabel()} %`}
                                 domain={[0, 100]}
                                 tickFormatter={(v) => `${v}%`}
+                                label={{
+                                    value: `${getDemographicLabel()} % of Precinct`,
+                                    position: 'insideBottom',
+                                    offset: -5,
+                                    style: { textAnchor: 'middle', fontWeight: 500 }
+                                }}
                             />
                             <YAxis
                                 type="number"
@@ -222,6 +228,12 @@ const GinglesChart: React.FC<Props> = ({
                                 name="Vote %"
                                 domain={[0, 100]}
                                 tickFormatter={(v) => `${v}%`}
+                                label={{
+                                    value: 'Candidate Vote %',
+                                    angle: -90,
+                                    position: 'insideLeft',
+                                    style: { textAnchor: 'middle', fontWeight: 500 }
+                                }}
                             />
                             <Tooltip
                                 cursor={{ strokeDasharray: "3 3" }}

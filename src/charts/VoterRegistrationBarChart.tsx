@@ -52,9 +52,6 @@ function getVoterRegistrationChartData(data: StateVoterRegistrationData[]) {
     ];
 }
 
-// Bar order constant
-const ORDER = ["Registered Voter Count", "Republican Count", "Democratic Count", "Unaffiliated Party Count"] as const;
-
 const VoterRegistrationBarChart: React.FC<VoterRegistrationBarChartProps> = ({
     data,
 }) => {

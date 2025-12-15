@@ -288,13 +288,19 @@ const DropBoxBubbleChart: React.FC<Props> = ({ data, regressionLines = [] }) => 
           </Box>
         ) : (
           <ResponsiveContainer width="100%" height={500}>
-            <ScatterChart margin={{ top: 8, right: 16, left: 8, bottom: 16 }}>
+            <ScatterChart margin={{ top: -20, right: 16, left: 8, bottom: 30 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 type="number"
                 dataKey="republicanPct"
                 domain={[0, 100]}
                 tickFormatter={(v) => `${v}%`}
+                label={{
+                  value: 'Republican Vote %',
+                  position: 'insideBottom',
+                  offset: -5,
+                  style: { textAnchor: 'middle', fontWeight: 500 }
+                }}
               />
               <YAxis
                 type="number"
@@ -313,6 +319,12 @@ const DropBoxBubbleChart: React.FC<Props> = ({ data, regressionLines = [] }) => 
                             ? `${v.toFixed(1)}%`
                             : `${Math.round(v)}%`
                 }
+                label={{
+                  value: 'Drop Box Usage %',
+                  angle: -90,
+                  position: 'insideLeft',
+                  style: { textAnchor: 'middle', fontWeight: 500 }
+                }}
               />
               <ZAxis range={[150, 400]} dataKey="bubbleScale" />
               <Tooltip
