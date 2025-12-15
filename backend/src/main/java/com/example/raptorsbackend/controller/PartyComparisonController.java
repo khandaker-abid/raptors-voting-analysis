@@ -1,7 +1,10 @@
 package com.example.raptorsbackend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -9,7 +12,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/comparison")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = { "http://localhost:3000", "http://localhost:5173" })
 @SuppressWarnings("unchecked")
 public class PartyComparisonController {
 
@@ -17,12 +20,13 @@ public class PartyComparisonController {
     private MongoTemplate mongoTemplate;
 
     @GetMapping("/party-states")
+    @Cacheable("partyComparison")
     public Map<String, Object> getPartyComparison() {
 
         Map<String, String> statePartyControl = getStatePartyControl();
 
-        org.springframework.data.mongodb.core.query.Query eavsQuery = new org.springframework.data.mongodb.core.query.Query();
-        eavsQuery.addCriteria(org.springframework.data.mongodb.core.query.Criteria.where("year").is(2024));
+        Query eavsQuery = new Query();
+        eavsQuery.addCriteria(Criteria.where("year").is(2024));
         List<Map<String, Object>> eavsData = (List<Map<String, Object>>) (List<?>) mongoTemplate.find(eavsQuery,
                 Map.class, "eavsData");
 

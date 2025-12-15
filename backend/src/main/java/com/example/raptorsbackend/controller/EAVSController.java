@@ -1,6 +1,7 @@
 package com.example.raptorsbackend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -123,6 +124,7 @@ public class EAVSController {
     }
 
     @GetMapping("/{state}/active-voters")
+    @Cacheable(value = "activeVoters", key = "#state + '-' + #year")
     public List<Map<String, Object>> getActiveVoters(
             @PathVariable String state,
             @RequestParam(defaultValue = "2024") int year) {
@@ -162,6 +164,7 @@ public class EAVSController {
     }
 
     @GetMapping("/{state}/provisional-ballots")
+    @Cacheable(value = "provisionalBallots", key = "#state + '-' + #year")
     public List<Map<String, Object>> getProvisionalBallots(
             @PathVariable String state,
             @RequestParam(defaultValue = "2024") int year) {
@@ -196,6 +199,7 @@ public class EAVSController {
     }
 
     @GetMapping("/{state}/pollbook-deletions")
+    @Cacheable(value = "pollbookDeletions", key = "#state + '-' + #year")
     public List<Map<String, Object>> getPollbookDeletions(
             @PathVariable String state,
             @RequestParam(defaultValue = "2024") int year) {
@@ -267,6 +271,7 @@ public class EAVSController {
     }
 
     @GetMapping("/{state}/mail-rejections")
+    @Cacheable(value = "mailRejections", key = "#state + '-' + #year")
     public List<Map<String, Object>> getMailRejections(
             @PathVariable String state,
             @RequestParam(defaultValue = "2024") int year) {
@@ -619,6 +624,7 @@ public class EAVSController {
     }
 
     @GetMapping("/dropbox-bubbles/{state}")
+    @Cacheable(value = "dropboxBubbles", key = "#state + '-' + #year")
     public List<Map<String, Object>> getDropboxBubbles(
             @PathVariable String state,
             @RequestParam(defaultValue = "2024") int year) {

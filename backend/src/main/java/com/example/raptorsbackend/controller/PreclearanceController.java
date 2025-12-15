@@ -1,6 +1,7 @@
 package com.example.raptorsbackend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -18,6 +19,7 @@ public class PreclearanceController {
     private MongoTemplate mongoTemplate;
 
     @GetMapping("/gingles/{state}")
+    @Cacheable(value = "ginglesData", key = "#state + '-' + #demographic")
     public Map<String, Object> getGinglesData(
             @PathVariable String state,
             @RequestParam(required = false, defaultValue = "white") String demographic) {
@@ -72,6 +74,7 @@ public class PreclearanceController {
     }
 
     @GetMapping("/ei-equipment/{state}")
+    @Cacheable(value = "eiEquipmentData", key = "#state + '-' + #demographic")
     public Map<String, Object> getEIEquipmentData(
             @PathVariable String state,
             @RequestParam(required = false) String demographic) {
@@ -108,6 +111,7 @@ public class PreclearanceController {
     }
 
     @GetMapping("/ei-rejected/{state}")
+    @Cacheable(value = "eiRejectedData", key = "#state + '-' + #demographic")
     public Map<String, Object> getEIRejectedData(
             @PathVariable String state,
             @RequestParam(required = false) String demographic) {

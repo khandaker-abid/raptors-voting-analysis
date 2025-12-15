@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -24,6 +25,7 @@ public class EquipmentController {
     private MongoTemplate mongoTemplate;
 
     @GetMapping("/{state}/types")
+    @Cacheable(value = "equipmentTypes", key = "#state")
     public List<Map<String, Object>> getEquipmentTypes(@PathVariable String state) {
         String stateAbbr = getStateAbbreviation(state);
 
@@ -210,6 +212,7 @@ public class EquipmentController {
     }
 
     @GetMapping("/state/{state}/details")
+    @Cacheable(value = "equipmentDetails", key = "#state")
     public List<Map<String, Object>> getStateEquipmentDetails(@PathVariable String state) {
         String stateAbbr = getStateAbbreviation(state);
 
@@ -410,6 +413,7 @@ public class EquipmentController {
     }
 
     @GetMapping("/age/all-states")
+    @Cacheable("equipmentAgeAllStates")
     public List<Map<String, Object>> getAllStatesEquipmentAge() {
         Query query = new Query();
         query.addCriteria(Criteria.where("recordType").is("equipment_detail"));
@@ -470,6 +474,7 @@ public class EquipmentController {
     }
 
     @GetMapping("/history/{state}")
+    @Cacheable(value = "equipmentHistory", key = "#state")
     public List<Map<String, Object>> getEquipmentHistory(@PathVariable String state) {
 
         List<Map<String, Object>> series = new ArrayList<>();
@@ -506,6 +511,7 @@ public class EquipmentController {
     }
 
     @GetMapping("/all-states")
+    @Cacheable("equipmentAllStates")
     public List<Map<String, Object>> getAllStatesEquipment() {
         Query query = new Query();
         query.addCriteria(Criteria.where("recordType").is("equipment_detail"));
@@ -590,6 +596,7 @@ public class EquipmentController {
     }
 
     @GetMapping("/summary")
+    @Cacheable("equipmentSummary")
     public List<Map<String, Object>> getEquipmentSummary() {
         Query query = new Query();
         query.addCriteria(Criteria.where("recordType").is("equipment_detail")
@@ -890,6 +897,7 @@ public class EquipmentController {
     }
 
     @GetMapping("/vs-rejected/{state}")
+    @Cacheable(value = "equipmentVsRejected", key = "#state")
     public List<Map<String, Object>> getEquipmentVsRejected(@PathVariable String state) {
         String stateAbbr = getStateAbbreviation(state);
 
@@ -1153,6 +1161,7 @@ public class EquipmentController {
     }
 
     @GetMapping("/vs-rejected-with-regression/{state}")
+    @Cacheable(value = "equipmentVsRejectedRegression", key = "#state")
     public Map<String, Object> getEquipmentVsRejectedWithRegression(@PathVariable String state) {
         List<Map<String, Object>> dataPoints = getEquipmentVsRejected(state);
 
