@@ -26,25 +26,25 @@ function getVoterRegistrationChartData(data: StateVoterRegistrationData[]) {
 
     return [
         {
-            category: "Registered Voter Count",
+            category: "Total",
             count: totalRegistered,
             percentage: 100,
             color: "#757575",
         },
         {
-            category: "Republican Count",
+            category: "Republican",
             count: totalRepublican,
             percentage: pct(totalRepublican, totalRegistered),
             color: "#d32f2f",
         },
         {
-            category: "Democratic Count",
+            category: "Democratic",
             count: totalDemocratic,
             percentage: pct(totalDemocratic, totalRegistered),
             color: "#1976d2",
         },
         {
-            category: "Unaffiliated Party Count",
+            category: "Unaffiliated",
             count: totalUnaffiliated,
             percentage: pct(totalUnaffiliated, totalRegistered),
             color: "#757575",
@@ -60,7 +60,7 @@ const VoterRegistrationBarChart: React.FC<VoterRegistrationBarChartProps> = ({
 }) => {
     const chartData = useMemo(() => getVoterRegistrationChartData(data), [data]);
 
-    const ORDER = ["Registered Voter Count", "Republican Count", "Democratic Count", "Unaffiliated Party Count"] as const;
+    const ORDER = ["Total", "Republican", "Democratic", "Unaffiliated"] as const;
 
     const orderedChartData = useMemo(() => {
         const byCat = new Map(chartData.map((d) => [d.category, d]));
@@ -123,11 +123,8 @@ const VoterRegistrationBarChart: React.FC<VoterRegistrationBarChartProps> = ({
     return (
         <Paper sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
             <Box mb={1}>
-                <Typography variant="h6" gutterBottom fontWeight={600}>
+                <Typography variant="h6" gutterBottom fontWeight={600} sx={{ fontSize: "0.95rem" }}>
                     Voter Registration Categories Analysis
-                </Typography>
-                <Typography variant="caption" color="text.secondary" display="block" fontSize="0.7rem">
-                    Counts of Registered Voters by party affiliation. Hover over bars for detailed information.
                 </Typography>
             </Box>
 
@@ -135,7 +132,7 @@ const VoterRegistrationBarChart: React.FC<VoterRegistrationBarChartProps> = ({
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                         data={orderedChartData}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                        margin={{ top: 0, right: 0, left: 0, bottom: -30 }}
                     >
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                         <XAxis
@@ -153,6 +150,7 @@ const VoterRegistrationBarChart: React.FC<VoterRegistrationBarChartProps> = ({
                                 value: "Number of Voters",
                                 angle: -90,
                                 position: "insideLeft",
+                                dy: 50,
                                 style: { fontSize: 12, fontWeight: 600 },
                             }}
                         />

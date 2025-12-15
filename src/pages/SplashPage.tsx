@@ -36,17 +36,30 @@ const SplashPage: React.FC = () => {
 
 			Promise.all([
 				fetchEquipmentAgeAllStates(),
-				fetch("/us-state-boundaries.geojson").then(r => r.json())
+				fetch("/us-state-boundaries.geojson").then(r => r.json()).catch(() => null)
 			])
-				.then(([ageData, geoJson]) => {
+				.then(async ([ageData, geoJson]) => {
 					const transformedData = Array.isArray(ageData)
 						? ageData.map((item: any) => ({
 							state: item.state || item.stateName || "",
 							averageAge: item.averageAge || item.avgAge || item.age || 0
 						}))
 						: [];
+
+					// Fallback: if local GeoJSON is missing or has no features, load a public states GeoJSON
+					let resolvedGeo = geoJson;
+					if (!resolvedGeo || !Array.isArray(resolvedGeo.features) || resolvedGeo.features.length === 0) {
+						try {
+							const resp = await fetch("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json");
+							if (resp.ok) {
+								resolvedGeo = await resp.json();
+							}
+						} catch (_) {
+							// ignore, will show map data not available inside choropleth
+						}
+					}
 					setEquipmentAgeData(transformedData);
-					setGeoJsonData(geoJson);
+					setGeoJsonData(resolvedGeo);
 					setLoading(false);
 				})
 				.catch(err => {
@@ -84,19 +97,26 @@ const SplashPage: React.FC = () => {
 		>
 			{/* Control panel for map view toggle and navigation */}
 			<Paper
-				elevation={3}
+				elevation={2}
 				sx={{
 					position: "absolute",
-					bottom: 100,
-					right: 20,
+					bottom: 20,
+					right: 12,
 					zIndex: 1000,
-					p: 1.5,
-					borderRadius: 2,
-					backgroundColor: "rgba(255, 255, 255, 0.95)",
-					backdropFilter: "blur(10px)",
+					p: 1,
+					borderRadius: 1.5,
+					backgroundColor: "rgba(255, 255, 255, 0.9)",
+					backdropFilter: "blur(8px)",
+					minWidth: 340,
+					width: 360,
+					minHeight: 200,
+					boxSizing: "border-box",
+					display: "flex",
+					flexDirection: "column",
+					gap: 1,
 				}}
 			>
-				<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1, fontWeight: 600 }}>
+				<Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.25, fontWeight: 600, fontSize: 14 }}>
 					Map View
 				</Typography>
 				<ToggleButtonGroup
@@ -104,14 +124,14 @@ const SplashPage: React.FC = () => {
 					exclusive
 					onChange={handleViewChange}
 					size="small"
-					sx={{ mb: 1.5 }}
+					sx={{ mb: 1.25, gap: 1, width: "100%" }}
 				>
-					<ToggleButton value="states" sx={{ px: 2 }}>
-						<MapIcon sx={{ mr: 0.5 }} fontSize="small" />
+					<ToggleButton value="states" sx={{ px: 2, py: 0.75, fontSize: 14, flex: 1, justifyContent: "center", whiteSpace: "nowrap" }}>
+						<MapIcon sx={{ mr: 0.75 }} fontSize="small" />
 						States
 					</ToggleButton>
-					<ToggleButton value="equipmentAge" sx={{ px: 2 }}>
-						<AccessTimeIcon sx={{ mr: 0.5 }} fontSize="small" />
+					<ToggleButton value="equipmentAge" sx={{ px: 2, py: 0.75, fontSize: 14, flex: 1, justifyContent: "center", whiteSpace: "nowrap" }}>
+						<AccessTimeIcon sx={{ mr: 0.75 }} fontSize="small" />
 						Equipment Age
 					</ToggleButton>
 				</ToggleButtonGroup>
@@ -122,7 +142,7 @@ const SplashPage: React.FC = () => {
 					fullWidth
 					startIcon={<TableChartIcon />}
 					onClick={() => navigate("/per-state-voting-equipment")}
-					sx={{ textTransform: "none", fontWeight: 600, mb: 1 }}
+					sx={{ textTransform: "none", fontWeight: 600, mb: 1, fontSize: 14, py: 0.9 }}
 				>
 					Per-State Equipment Table
 				</Button>
@@ -136,7 +156,7 @@ const SplashPage: React.FC = () => {
 					startIcon={<RestartAltIcon />}
 					onClick={handleReset}
 					disabled={viewMode === "states"}
-					sx={{ textTransform: "none", fontWeight: 600 }}
+					sx={{ textTransform: "none", fontWeight: 600, fontSize: 14, py: 0.9 }}
 				>
 					Reset View
 				</Button>

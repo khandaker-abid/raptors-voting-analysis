@@ -10,7 +10,7 @@ import { createCountyLookupMap, normalizeCountyName } from "../utils/countyNameN
 interface ActiveVotersChoroplethMapProps {
 	stateName: string;
 	data: ActiveVotersRow[];
-	/** Change value when external dialog closes to force-clear hover */
+	/** Change value to force-clear hover */
 	resetHoverKey?: number;
 }
 

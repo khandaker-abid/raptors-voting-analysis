@@ -123,6 +123,7 @@ backend/.settings/
 # Documentation (keep only README.md)
 *.md
 !README.md
+docs/
 
 # Temporary files
 *.tmp

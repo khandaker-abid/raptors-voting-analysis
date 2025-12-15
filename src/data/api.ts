@@ -174,3 +174,19 @@ export async function fetchEIRejectedData(state: string, demographic?: string): 
     const demoParam = demographic ? `?demographic=${encodeURIComponent(demographic)}` : "";
     return fetchApi<any>(`${API_BASE}/preclearance/ei-rejected/${s}${demoParam}`);
 }
+
+// ============================================================================
+// Boundary Endpoints
+// Backend: BoundaryController - /api/boundaries/...
+// ============================================================================
+
+export async function fetchStateMetadata(state: string): Promise<{
+    state: string;
+    centerLng?: number;
+    centerLat?: number;
+    zoomLevel?: number;
+    error?: string;
+}> {
+    const s = encodeURIComponent(state);
+    return fetchApi<any>(`${API_BASE}/boundaries/state/${s}/metadata`);
+}

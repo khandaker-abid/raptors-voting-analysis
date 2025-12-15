@@ -124,268 +124,273 @@ const StateVoterRegistrationTable: React.FC<StateVoterRegistrationTableProps> = 
 		);
 	}
 
-	return (
-		<Paper sx={{ p: 2, display: "flex", flexDirection: "column", width: "100%" }}>
-			<Box
-				mb={1.5}
-				display="flex"
-				justifyContent="space-between"
-				alignItems="center"
-				flexWrap="wrap"
-				gap={1}
-			>
-				<Typography variant="h6" fontWeight={600}>
-					Voter Registration Data
-				</Typography>
-				<TextField
-					size="small"
-					placeholder="Search county/town..."
-					value={searchTerm}
-					onChange={(e) => setSearchTerm(e.target.value)}
-					InputProps={{
-						startAdornment: (
-							<InputAdornment position="start">
-								<SearchIcon fontSize="small" />
-							</InputAdornment>
-						),
-					}}
-					sx={{ minWidth: 200 }}
-				/>
-			</Box>
+		return (
+			<Paper sx={{ pt: 0.5, px: 0.5, pb: 0, width: "100%" }}>
+				<Box mb={0.5} display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
+					<Typography variant="subtitle1" fontWeight={600} sx={{ fontSize: "0.95rem" }}>
+						Voter Registration Data
+					</Typography>
+					<TextField
+						size="small"
+						placeholder="Search region..."
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
+						InputProps={{
+							startAdornment: (
+								<InputAdornment position="start">
+									<SearchIcon fontSize="small" />
+								</InputAdornment>
+							),
+							sx: { fontSize: "0.85rem", height: "32px" }
+						}}
+						sx={{ minWidth: 180 }}
+					/>
+				</Box>
 
-			<TableContainer sx={{ position: "relative", overflow: "visible" }}>
-				<Table size="small">
-					<TableHead>
-						<TableRow>
-							<TableCell
-								sx={{
-									fontWeight: "bold",
-									backgroundColor: "#616161",
-									color: "white",
-									py: 1.5,
-									cursor: "pointer",
-								}}>
-								<TableSortLabel
-									active={sortColumn === 'regionName'}
-									direction={sortColumn === 'regionName' ? sortOrder : 'asc'}
-									onClick={() => handleSort('regionName')}
+				<TableContainer sx={{ mb: 0, overflowX: "auto", overflowY: "hidden" }}>
+					<Table size="small" sx={{ width: "max-content", minWidth: "100%" }}>
+						<TableHead>
+							<TableRow>
+								<TableCell
 									sx={{
-										color: 'white !important',
-										'&:hover': { color: 'white !important' },
-										'&.Mui-active': { color: 'white !important' },
-										'& .MuiTableSortLabel-icon': {
+										fontWeight: "bold",
+										backgroundColor: "#616161",
+										color: "white",
+										py: 0.85,
+										fontSize: "0.95rem",
+										cursor: "pointer",
+									}}>
+									<TableSortLabel
+										active={sortColumn === 'regionName'}
+										direction={sortColumn === 'regionName' ? sortOrder : 'asc'}
+										onClick={() => handleSort('regionName')}
+										sx={{
 											color: 'white !important',
-										},
+											'&:hover': { color: 'white !important' },
+											'&.Mui-active': { color: 'white !important' },
+											'& .MuiTableSortLabel-icon': {
+												color: 'white !important',
+											},
+										}}
+									>
+										Region Name
+									</TableSortLabel>
+								</TableCell>
+								<TableCell
+									align="right"
+									sx={{
+										fontWeight: "bold",
+										backgroundColor: "#616161",
+										color: "white",
+										py: 0.85,
+										fontSize: "0.95rem",
+										cursor: "pointer",
+									}}>
+									<TableSortLabel
+										active={sortColumn === 'registeredVoterCount'}
+										direction={sortColumn === 'registeredVoterCount' ? sortOrder : 'asc'}
+										onClick={() => handleSort('registeredVoterCount')}
+										sx={{
+											color: 'white !important',
+											'&:hover': { color: 'white !important' },
+											'&.Mui-active': { color: 'white !important' },
+											'& .MuiTableSortLabel-icon': {
+												color: 'white !important',
+											},
+											flexDirection: 'row-reverse',
+										}}
+									>
+										   Total
+									</TableSortLabel>
+								</TableCell>
+								<TableCell
+									align="right"
+									sx={{
+										fontWeight: "bold",
+										backgroundColor: "#616161",
+										color: "white",
+										py: 0.85,
+										fontSize: "0.95rem",
+										cursor: "pointer",
+									}}>
+									<TableSortLabel
+										active={sortColumn === 'republicanCount'}
+										direction={sortColumn === 'republicanCount' ? sortOrder : 'asc'}
+										onClick={() => handleSort('republicanCount')}
+										sx={{
+											color: 'white !important',
+											'&:hover': { color: 'white !important' },
+											'&.Mui-active': { color: 'white !important' },
+											'& .MuiTableSortLabel-icon': {
+												color: 'white !important',
+											},
+											flexDirection: 'row-reverse',
+										}}
+									>
+										   Republican
+									</TableSortLabel>
+								</TableCell>
+								<TableCell
+									align="right"
+									sx={{
+										fontWeight: "bold",
+										backgroundColor: "#616161",
+										color: "white",
+										py: 0.85,
+										fontSize: "0.95rem",
+										cursor: "pointer",
+									}}>
+									<TableSortLabel
+										active={sortColumn === 'democraticCount'}
+										direction={sortColumn === 'democraticCount' ? sortOrder : 'asc'}
+										onClick={() => handleSort('democraticCount')}
+										sx={{
+											color: 'white !important',
+											'&:hover': { color: 'white !important' },
+											'&.Mui-active': { color: 'white !important' },
+											'& .MuiTableSortLabel-icon': {
+												color: 'white !important',
+											},
+											flexDirection: 'row-reverse',
+										}}
+									>
+										   Democratic
+									</TableSortLabel>
+								</TableCell>
+								<TableCell
+									align="right"
+									sx={{
+										fontWeight: "bold",
+										backgroundColor: "#616161",
+										color: "white",
+										py: 0.85,
+										fontSize: "0.95rem",
+										cursor: "pointer",
+									}}>
+									<TableSortLabel
+										active={sortColumn === 'unaffiliatedPartyCount'}
+										direction={sortColumn === 'unaffiliatedPartyCount' ? sortOrder : 'asc'}
+										onClick={() => handleSort('unaffiliatedPartyCount')}
+										sx={{
+											color: 'white !important',
+											'&:hover': { color: 'white !important' },
+											'&.Mui-active': { color: 'white !important' },
+											'& .MuiTableSortLabel-icon': {
+												color: 'white !important',
+											},
+											flexDirection: 'row-reverse',
+										}}
+									>
+										   Unaffiliated
+									</TableSortLabel>
+								</TableCell>
+							</TableRow>
+						</TableHead>
+						<TableBody>
+							{sortedData
+								.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+								.map((row) => (
+									<TableRow
+										key={row.regionName}
+										hover
+										sx={{ "&:nth-of-type(odd)": { backgroundColor: "#fafafa" } }}>
+										<TableCell
+											component="th"
+											scope="row"
+											sx={{
+												fontWeight: 500,
+												fontSize: "0.95rem",
+												py: 0.7,
+											}}>
+											{row.regionName} County
+										</TableCell>
+
+										<TableCell
+											align="right"
+											sx={{
+												fontWeight: "bold",
+												fontSize: "0.95rem",
+												py: 0.7,
+											}}>
+											{row.registeredVoterCount.toLocaleString()}
+										</TableCell>
+
+										<TableCell
+											align="right"
+											sx={{
+												fontWeight: "bold",
+												color: "#d32f2f",
+												fontSize: "0.95rem",
+												py: 0.7,
+											}}>
+											{row.republicanCount.toLocaleString()}
+										</TableCell>
+
+										<TableCell
+											align="right"
+											sx={{
+												fontWeight: "bold",
+												color: "#1976d2",
+												fontSize: "0.95rem",
+												py: 0.7,
+											}}>
+											{row.democraticCount.toLocaleString()}
+										</TableCell>
+
+										<TableCell
+											align="right"
+											sx={{
+												fontWeight: "bold",
+												color: "#757575",
+												fontSize: "0.95rem",
+												py: 0.7,
+											}}>
+											{row.unaffiliatedPartyCount.toLocaleString()}
+										</TableCell>
+									</TableRow>
+								))}
+
+							<TableRow sx={{ backgroundColor: "#f5f5f5", fontWeight: "bold" }}>
+								<TableCell
+									sx={{
+										fontWeight: "bold",
+										backgroundColor: "#f5f5f5",
+										fontSize: "0.95rem",
+										py: 0.7,
 									}}
 								>
-									Region Name
-								</TableSortLabel>
-							</TableCell>
-							<TableCell
-								align="right"
-								sx={{
-									fontWeight: "bold",
-									backgroundColor: "#616161",
-									color: "white",
-									py: 1.5,
-									cursor: "pointer",
-								}}>
-								<TableSortLabel
-									active={sortColumn === 'registeredVoterCount'}
-									direction={sortColumn === 'registeredVoterCount' ? sortOrder : 'asc'}
-									onClick={() => handleSort('registeredVoterCount')}
-									sx={{
-										color: 'white !important',
-										'&:hover': { color: 'white !important' },
-										'&.Mui-active': { color: 'white !important' },
-										'& .MuiTableSortLabel-icon': {
-											color: 'white !important',
-										},
-										flexDirection: 'row-reverse',
-									}}
-								>
-									Registered Voter Count
-								</TableSortLabel>
-							</TableCell>
-							<TableCell
-								align="right"
-								sx={{
-									fontWeight: "bold",
-									backgroundColor: "#616161",
-									color: "white",
-									py: 1.5,
-									cursor: "pointer",
-								}}>
-								<TableSortLabel
-									active={sortColumn === 'republicanCount'}
-									direction={sortColumn === 'republicanCount' ? sortOrder : 'asc'}
-									onClick={() => handleSort('republicanCount')}
-									sx={{
-										color: 'white !important',
-										'&:hover': { color: 'white !important' },
-										'&.Mui-active': { color: 'white !important' },
-										'& .MuiTableSortLabel-icon': {
-											color: 'white !important',
-										},
-										flexDirection: 'row-reverse',
-									}}
-								>
-									Republican Count
-								</TableSortLabel>
-							</TableCell>
-							<TableCell
-								align="right"
-								sx={{
-									fontWeight: "bold",
-									backgroundColor: "#616161",
-									color: "white",
-									py: 1.5,
-									cursor: "pointer",
-								}}>
-								<TableSortLabel
-									active={sortColumn === 'democraticCount'}
-									direction={sortColumn === 'democraticCount' ? sortOrder : 'asc'}
-									onClick={() => handleSort('democraticCount')}
-									sx={{
-										color: 'white !important',
-										'&:hover': { color: 'white !important' },
-										'&.Mui-active': { color: 'white !important' },
-										'& .MuiTableSortLabel-icon': {
-											color: 'white !important',
-										},
-										flexDirection: 'row-reverse',
-									}}
-								>
-									Democratic Count
-								</TableSortLabel>
-							</TableCell>
-							<TableCell
-								align="right"
-								sx={{
-									fontWeight: "bold",
-									backgroundColor: "#616161",
-									color: "white",
-									py: 1.5,
-									cursor: "pointer",
-								}}>
-								<TableSortLabel
-									active={sortColumn === 'unaffiliatedPartyCount'}
-									direction={sortColumn === 'unaffiliatedPartyCount' ? sortOrder : 'asc'}
-									onClick={() => handleSort('unaffiliatedPartyCount')}
-									sx={{
-										color: 'white !important',
-										'&:hover': { color: 'white !important' },
-										'&.Mui-active': { color: 'white !important' },
-										'& .MuiTableSortLabel-icon': {
-											color: 'white !important',
-										},
-										flexDirection: 'row-reverse',
-									}}
-								>
-									Unaffiliated Party Count
-								</TableSortLabel>
-							</TableCell>
-						</TableRow>
-					</TableHead>
-					<TableBody>
-						{sortedData
-							.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-							.map((row) => (
-								<TableRow
-									key={row.regionName}
-									hover
-									sx={{ "&:nth-of-type(odd)": { backgroundColor: "#fafafa" } }}>
-									<TableCell
-										component="th"
-										scope="row"
-										sx={{
-											fontWeight: 500,
-										}}>
-										{row.regionName} County
-									</TableCell>
+									TOTAL
+								</TableCell>
+								<TableCell align="right" sx={{ fontWeight: "bold", fontSize: "0.95rem", py: 0.7 }}>
+									{totals.registeredVoterCount.toLocaleString()}
+								</TableCell>
+								<TableCell align="right" sx={{ fontWeight: "bold", color: "#d32f2f", fontSize: "0.95rem", py: 0.7 }}>
+									{totals.republicanCount.toLocaleString()}
+								</TableCell>
+								<TableCell align="right" sx={{ fontWeight: "bold", color: "#1976d2", fontSize: "0.95rem", py: 0.7 }}>
+									{totals.democraticCount.toLocaleString()}
+								</TableCell>
+								<TableCell align="right" sx={{ fontWeight: "bold", color: "#757575", fontSize: "0.95rem", py: 0.7 }}>
+									{totals.unaffiliatedPartyCount.toLocaleString()}
+								</TableCell>
+							</TableRow>
+						</TableBody>
+					</Table>
+				</TableContainer>
 
-									<TableCell
-										align="right"
-										sx={{
-											fontWeight: "bold",
-										}}>
-										{row.registeredVoterCount.toLocaleString()}
-									</TableCell>
-
-									<TableCell
-										align="right"
-										sx={{
-											fontWeight: "bold",
-											color: "#d32f2f"
-										}}>
-										{row.republicanCount.toLocaleString()}
-									</TableCell>
-
-									<TableCell
-										align="right"
-										sx={{
-											fontWeight: "bold",
-											color: "#1976d2"
-										}}>
-										{row.democraticCount.toLocaleString()}
-									</TableCell>
-
-									<TableCell
-										align="right"
-										sx={{
-											fontWeight: "bold",
-											color: "#757575"
-										}}>
-										{row.unaffiliatedPartyCount.toLocaleString()}
-									</TableCell>
-								</TableRow>
-							))}
-
-						<TableRow sx={{ backgroundColor: "#f5f5f5", fontWeight: "bold" }}>
-							<TableCell
-								sx={{
-									fontWeight: "bold",
-									backgroundColor: "#f5f5f5",
-								}}
-							>
-								TOTAL
-							</TableCell>
-							<TableCell align="right" sx={{ fontWeight: "bold" }}>
-								{totals.registeredVoterCount.toLocaleString()}
-							</TableCell>
-							<TableCell align="right" sx={{ fontWeight: "bold", color: "#d32f2f" }}>
-								{totals.republicanCount.toLocaleString()}
-							</TableCell>
-							<TableCell align="right" sx={{ fontWeight: "bold", color: "#1976d2" }}>
-								{totals.democraticCount.toLocaleString()}
-							</TableCell>
-							<TableCell align="right" sx={{ fontWeight: "bold", color: "#757575" }}>
-								{totals.unaffiliatedPartyCount.toLocaleString()}
-							</TableCell>
-						</TableRow>
-					</TableBody>
-				</Table>
-			</TableContainer>
-
-			<Box
-				sx={{
-					flexShrink: 0,
-					borderTop: "1px solid #e0e0e0",
-					backgroundColor: "white",
-				}}
-			>
-				<TablePagination
-					component="div"
-					count={sortedData.length}
-					page={page}
-					onPageChange={handleChangePage}
-					rowsPerPage={rowsPerPage}
-					rowsPerPageOptions={[]}
-					labelDisplayedRows={({ from, to, count }) => `${from}–${to} of ${count}`}
-					sx={{ minHeight: 52 }}
-				/>
-			</Box>
-		</Paper>
+				<Box sx={{ flexShrink: 0, borderTop: "1px solid #e0e0e0", backgroundColor: "white" }}>
+					<TablePagination
+						component="div"
+						count={sortedData.length}
+						page={page}
+						onPageChange={handleChangePage}
+						rowsPerPage={rowsPerPage}
+						rowsPerPageOptions={[]}
+						labelDisplayedRows={({ from, to, count }) => `${from}–${to} of ${count}`}
+						sx={{ overflow: "hidden", minHeight: 0, height: 36, p: 0, '& .MuiToolbar-root': { minHeight: 36, height: 36, padding: '0 8px' } }}
+					/>
+				</Box>
+			</Paper>
 	);
 }
 

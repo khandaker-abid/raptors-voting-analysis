@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
-import { Paper, Typography, Box, Alert, Chip } from "@mui/material";
+import { Paper, Typography, Box, Alert, Button } from "@mui/material";
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import type { StateVoterRegistrationData } from "../data/stateVoterRegistrationData";
@@ -16,6 +16,10 @@ interface VoterRegistrationChloroplethMapProps {
 		lng?: number;
 	}>;
 	resetHoverKey?: number;
+	onCountyClick?: (countyName: string) => void;
+	blockBubbles?: any;
+	showBubbles?: boolean;
+	setShowBubbles?: (show: boolean) => void;
 }
 
 type CountyFeature = Feature<
@@ -78,7 +82,14 @@ const canonicalizeCountyName = (raw?: string | null): string => {
 
 const VoterRegistrationChloroplethMap: React.FC<
 	VoterRegistrationChloroplethMapProps
-> = ({ stateName, resetHoverKey }) => {
+> = ({
+	stateName,
+	resetHoverKey,
+	onCountyClick,
+	blockBubbles,
+	showBubbles,
+	setShowBubbles,
+}) => {
 	const [data, setData] = useState<StateVoterRegistrationData[]>([]);
 	const [geoData, setGeoData] = useState<FeatureCollection | null>(null);
 	const [loading, setLoading] = useState(false);
@@ -119,15 +130,18 @@ const VoterRegistrationChloroplethMap: React.FC<
 		const minValue = Math.min(...values);
 
 		const range = [
-			"#e0e0e0",
-			"#9e9e9e",
-			"#757575",
-			"#616161",
-			"#424242",
+			"#e8e8e8",
+			"#d0d0d0",
+			"#b8b8b8",
+			"#a0a0a0",
+			"#888888",
+			"#707070",
+			"#585858",
 		];
 
 		return (value: number) => {
 			if (value === 0) return "#f5f5f5";
+			if (maxValue === minValue) return range[range.length - 1];
 			const ratio = (value - minValue) / (maxValue - minValue || 1);
 			const index = Math.floor(ratio * (range.length - 1));
 			return range[Math.min(index, range.length - 1)];
@@ -325,6 +339,13 @@ const VoterRegistrationChloroplethMap: React.FC<
 			},
 			click: () => {
 				clearHover();
+				if (onCountyClick) {
+					// Strip "County", "Parish", etc. suffixes to match MongoDB field format
+					const cleanCountyName = displayCountyName
+						.replace(/\s+(County|Parish|Borough|Census Area|Municipality|Municipio)$/i, '')
+						.trim();
+					onCountyClick(cleanCountyName);
+				}
 			},
 		});
 	};
@@ -379,34 +400,31 @@ const VoterRegistrationChloroplethMap: React.FC<
 	const maxValue = Math.max(...data.map((d) => d.registeredVoterCount));
 	const minValue = Math.min(...data.map((d) => d.registeredVoterCount));
 
-	const allZero = data.every((d) => d.registeredVoterCount === 0);
-
-	const isRhodeIslandTownData = false;
-
 	return (
-		<Paper sx={{ p: 0.5, height: "100%", display: "flex", flexDirection: "column" }}>
-			<Box mb={1}>
-				<Typography variant="h6" gutterBottom fontWeight={600} sx={{ fontSize: "0.95rem" }}>
+		<Paper sx={{ p: 0.5, px: 2, height: "100%", display: "flex", flexDirection: "column" }}>
+			<Box mb={0.5} display="flex" alignItems="center" gap={1}>
+				<Typography variant="h6" gutterBottom fontWeight={600} sx={{ fontSize: "0.95rem", mb: 0 }}>
 					Registered Voters Distribution
 				</Typography>
-				<Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
-					{allZero && (
-						<Chip
-							label="⚠️ No data reported for 2024"
-							size="small"
-							color="warning"
-							sx={{ fontWeight: 600 }}
-						/>
-					)}
-					{isRhodeIslandTownData && (
-						<Chip
-							label="ℹ️ Data reported at town level (39 towns) - county map shows 5 counties only"
-							size="small"
-							color="info"
-							sx={{ fontWeight: 600 }}
-						/>
-					)}
-				</Box>
+				{blockBubbles && setShowBubbles && typeof showBubbles !== 'undefined' && (
+					<Button
+						variant="outlined"
+						size="small"
+						sx={{
+							ml: 1,
+							px: 1.2,
+							py: 0.2,
+							minWidth: 0,
+							fontSize: '0.70rem',
+							height: 24,
+							lineHeight: 1,
+							fontWeight: 600,
+						}}
+						onClick={() => setShowBubbles(!showBubbles)}
+					>
+						{showBubbles ? "Hide" : "Show"} Party Bubble Overlay
+					</Button>
+				)}
 			</Box>
 
 			<Box
@@ -448,24 +466,16 @@ const VoterRegistrationChloroplethMap: React.FC<
 				<Typography variant="body2" gutterBottom fontWeight={600} fontSize="0.85rem">
 					Color Scale (Total Registered Voters)
 				</Typography>
-				<Box display="flex" alignItems="center" gap={0.5}>
-					<Typography variant="caption" sx={{ minWidth: 45, fontSize: "0.75rem" }}>
-						{minValue.toLocaleString()}
-					</Typography>
-					<Box
-						display="flex"
-						height={24}
-						flex={1}
-						border="1px solid #e0e0e0"
-						borderRadius={1}
-						overflow="hidden"
-					>
+				<Box sx={{ position: "relative", width: "100%" }}>
+					<Box display="flex" height={24} border="1px solid #e0e0e0" borderRadius={1} overflow="hidden" mb={0.5}>
 						{[
-							"#e0e0e0",
-							"#9e9e9e",
-							"#757575",
-							"#616161",
-							"#424242",
+							"#e8e8e8",
+							"#d0d0d0",
+							"#b8b8b8",
+							"#a0a0a0",
+							"#888888",
+							"#707070",
+							"#585858",
 						].map((color, index) => (
 							<Box
 								key={index}
@@ -477,9 +487,31 @@ const VoterRegistrationChloroplethMap: React.FC<
 							/>
 						))}
 					</Box>
-					<Typography variant="caption" sx={{ minWidth: 45, textAlign: "right", fontSize: "0.75rem" }}>
-						{maxValue.toLocaleString()}
-					</Typography>
+					{/* Tick labels at each color boundary */}
+					<Box sx={{ position: "relative", height: "1.5rem" }}>
+						{Array.from({ length: 8 }, (_, i) => {
+							const ratio = i / 7;
+							const value = minValue === maxValue ? minValue : Math.round(minValue + ratio * (maxValue - minValue));
+							const percentPosition = ratio * 100;
+							return (
+								<Typography
+									key={i}
+									variant="caption"
+									sx={{
+										position: "absolute",
+										left: `${percentPosition}%`,
+										transform: "translateX(-50%)",
+										fontSize: "0.7rem",
+										color: "text.secondary",
+										fontWeight: 500,
+										whiteSpace: "nowrap",
+									}}
+								>
+									{value.toLocaleString()}
+								</Typography>
+							);
+						})}
+					</Box>
 				</Box>
 				{(stateName === "Rhode Island" || stateName === "Vermont" || stateName === "Connecticut" || stateName === "Massachusetts") && (
 					<Typography variant="caption" color="primary.main" display="block" mt={0.5} fontSize="0.7rem" fontStyle="italic">

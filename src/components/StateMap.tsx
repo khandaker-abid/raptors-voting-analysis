@@ -14,6 +14,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import RegionRegisteredVotersTable from "../tables/RegionRegisteredVotersTable";
+import { fetchStateMetadata } from "../data/api";
 
 type CountyFeature = Feature<
 	Geometry,
@@ -36,7 +37,7 @@ type StateGeoJSONData = FeatureCollection<Geometry, { name: string }>;
 
 interface StateMapProps {
 	stateName: string;
-	center: [number, number];
+	center?: [number, number]; // Optional, will be fetched from DB if not provided
 	isDetailState: boolean;
 }
 
@@ -52,6 +53,8 @@ const StateMap: React.FC<StateMapProps> = ({
 	const [error, setError] = useState<string | null>(null);
 	const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
 	const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+	const [mapCenter, setMapCenter] = useState<[number, number] | null>(center || null);
+	const [mapZoom, setMapZoom] = useState<number>(7);
 
 	const mapRef = useRef<L.Map | null>(null);
 	const geoJsonRef = useRef<L.GeoJSON<any> | null>(null);
@@ -103,6 +106,30 @@ const StateMap: React.FC<StateMapProps> = ({
 			clearHover(true);
 
 			try {
+				// Fetch state metadata (center point and zoom level) from MongoDB
+				if (!center) {
+					try {
+						console.log("Fetching metadata for state:", stateName);
+						const metadata = await fetchStateMetadata(stateName);
+						console.log("Received metadata:", metadata);
+						
+						if (metadata.error) {
+							console.warn("Metadata fetch returned error:", metadata.error);
+						} else {
+							if (metadata.centerLng && metadata.centerLat) {
+								console.log("Setting map center:", [metadata.centerLng, metadata.centerLat]);
+								setMapCenter([metadata.centerLng, metadata.centerLat]);
+							}
+							if (metadata.zoomLevel) {
+								console.log("Setting map zoom:", metadata.zoomLevel);
+								setMapZoom(metadata.zoomLevel);
+							}
+						}
+					} catch (metadataError) {
+						console.warn("Failed to fetch state metadata, using defaults:", metadataError);
+					}
+				}
+
 				let features: (CountyFeature | StateFeature)[];
 
 				if (isDetailState && detailStates.includes(stateName)) {
@@ -174,7 +201,7 @@ const StateMap: React.FC<StateMapProps> = ({
 		loadMapData();
 
 		return () => clearHover(true);
-	}, [stateName, isDetailState]);
+	}, [stateName, isDetailState, center]);
 
 	useEffect(() => {
 		const map = mapRef.current;
@@ -425,8 +452,8 @@ const StateMap: React.FC<StateMapProps> = ({
 			>
 				<MapContainer
 					ref={mapRef}
-					center={[center[1], center[0]]} // Leaflet uses [lat, lng]
-					zoom={7}
+					center={mapCenter ? [mapCenter[1], mapCenter[0]] : [39.8283, -98.5795]} // Leaflet uses [lat, lng], fallback to US center
+					zoom={mapZoom}
 					minZoom={6}
 					maxZoom={12}
 					maxBounds={mapBounds || undefined}

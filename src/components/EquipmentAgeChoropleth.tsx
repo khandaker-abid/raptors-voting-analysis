@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useEffect } from "react";
+import React, { useMemo, useRef, useEffect, useCallback } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { Box, Paper, Typography, Button } from "@mui/material";
 import L from "leaflet";
@@ -15,38 +15,27 @@ interface Props {
     geoJsonData?: any;
     onClose?: () => void;
 }
-
-const AGE_BINS = [
-    { max: 1, label: "0-1 years", color: "#f5f5f5" },
-    { max: 2, label: "1-2 years", color: "#e0e0e0" },
-    { max: 3, label: "2-3 years", color: "#bdbdbd" },
-    { max: 4, label: "3-4 years", color: "#9e9e9e" },
-    { max: 5, label: "4-5 years", color: "#757575" },
-    { max: 6, label: "5-6 years", color: "#616161" },
-    { max: 7, label: "6-7 years", color: "#424242" },
-    { max: 8, label: "7-8 years", color: "#424242" },
-    { max: 9, label: "8-9 years", color: "#212121" },
-    { max: 10, label: "9-10 years", color: "#212121" },
-    { max: Infinity, label: "Older than 10 years", color: "#000000" },
+// Dynamic bins and color scale
+const COLOR_SCALE = [
+    "#f5f5f5", "#e0e0e0", "#bdbdbd", "#9e9e9e",
+    "#757575", "#616161", "#424242", "#212121"
 ];
 
-const getColorForAge = (age: number): string => {
-    for (const bin of AGE_BINS) {
-        if (age <= bin.max) {
-            return bin.color;
-        }
+function getDynamicBins(min: number, max: number, n: number) {
+    const bins = [];
+    const step = (max - min) / n;
+    for (let i = 0; i < n; i++) {
+        const binMin = min + i * step;
+        const binMax = i === n - 1 ? max : min + (i + 1) * step;
+        bins.push({
+            min: binMin,
+            max: binMax,
+            color: COLOR_SCALE[i],
+            label: `${binMin.toFixed(1)} - ${binMax.toFixed(1)} yrs`
+        });
     }
-    return "#cccccc";
-};
-
-const getBinLabel = (age: number): string => {
-    for (const bin of AGE_BINS) {
-        if (age <= bin.max) {
-            return bin.label;
-        }
-    }
-    return "No data";
-};
+    return bins;
+}
 
 const EquipmentAgeChoropleth: React.FC<Props> = ({
     data,
@@ -70,6 +59,12 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
         }
     };
 
+    // Compute min/max and bins
+    const ages = data.map((d) => d.averageAge).filter((a) => typeof a === "number" && !isNaN(a));
+    const minAge = Math.min(...ages);
+    const maxAge = Math.max(...ages);
+    const BINS = getDynamicBins(minAge, maxAge, 8);
+
     const ageLookup = useMemo(() => {
         const lookup = new Map<string, number>();
         data.forEach((item) => {
@@ -78,7 +73,41 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
         return lookup;
     }, [data]);
 
-    const getFeatureStyle = (feature?: Feature) => {
+    const getColorForAge = (age: number): string => {
+        for (const bin of BINS) {
+            if (age <= bin.max) return bin.color;
+        }
+        return BINS[BINS.length - 1].color;
+    };
+
+
+    const abbrToName: Record<string, string> = {
+        AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA: "California",
+        CO: "Colorado", CT: "Connecticut", DE: "Delaware", FL: "Florida", GA: "Georgia",
+        HI: "Hawaii", ID: "Idaho", IL: "Illinois", IN: "Indiana", IA: "Iowa",
+        KS: "Kansas", KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland",
+        MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi", MO: "Missouri",
+        MT: "Montana", NE: "Nebraska", NV: "Nevada", NH: "New Hampshire", NJ: "New Jersey",
+        NM: "New Mexico", NY: "New York", NC: "North Carolina", ND: "North Dakota", OH: "Ohio",
+        OK: "Oklahoma", OR: "Oregon", PA: "Pennsylvania", RI: "Rhode Island", SC: "South Carolina",
+        SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah", VT: "Vermont",
+        VA: "Virginia", WA: "Washington", WV: "West Virginia", WI: "Wisconsin", WY: "Wyoming",
+        DC: "District of Columbia",
+    };
+
+    const resolveStateName = (properties: any): string => {
+        const rawName = properties?.name || properties?.NAME || properties?.STATE_NAME || properties?.state_name;
+        if (typeof rawName === "string" && rawName.trim().length > 0) {
+            return rawName.trim();
+        }
+        const abbr = properties?.STUSPS || properties?.stusps || properties?.STATE_ABBR || properties?.abbr;
+        if (typeof abbr === "string" && abbrToName[abbr.toUpperCase()]) {
+            return abbrToName[abbr.toUpperCase()];
+        }
+        return "";
+    };
+
+    const getFeatureStyle = useCallback((feature?: Feature) => {
         if (!feature || !feature.properties) {
             return {
                 fillColor: "#cccccc",
@@ -89,12 +118,7 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
             };
         }
 
-        const stateName = (
-            feature.properties.name ||
-            feature.properties.NAME ||
-            ""
-        ).toLowerCase();
-
+        const stateName = resolveStateName(feature.properties).toLowerCase();
         const age = ageLookup.get(stateName);
 
         if (age === undefined) {
@@ -114,26 +138,35 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
             color: "#ffffff",
             fillOpacity: 0.8,
         };
-    };
+    }, [ageLookup, getColorForAge, resolveStateName]);
 
     const onEachFeature = (feature: Feature, layer: L.Layer) => {
+
         if (!feature.properties) return;
 
-        const stateName = (
-            feature.properties.name ||
-            feature.properties.NAME ||
-            "Unknown"
-        ).toLowerCase();
-
+        const resolved = resolveStateName(feature.properties);
+        const stateName = (resolved || "Unknown").toLowerCase();
         const age = ageLookup.get(stateName);
+
+        let binLabel = "No data";
+        let binColor = "#cccccc";
+        if (age !== undefined) {
+            for (const bin of BINS) {
+                if (age <= bin.max) {
+                    binLabel = bin.label;
+                    binColor = bin.color;
+                    break;
+                }
+            }
+        }
 
         const tooltipContent =
             age !== undefined
-                ? `<div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${feature.properties.name || feature.properties.NAME}</div>
-         <div style="font-size: 13px;">Average Equipment Age: <strong>${age.toFixed(1)} years</strong></div>
-         <div style="font-size: 13px;">Category: <strong>${getBinLabel(age)}</strong></div>`
-                : `<div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${feature.properties.name || feature.properties.NAME}</div>
-         <div style="font-size: 13px; color: #ff9800;">No equipment age data available</div>`;
+                ? `<div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${resolved || feature.properties.name || feature.properties.NAME}</div>
+                   <div style="font-size: 13px;">Average Equipment Age: <strong>${age.toFixed(1)} years</strong></div>
+                   <div style="font-size: 13px; display: flex; align-items: center; gap: 6px;">Category: <span style="display:inline-block;width:14px;height:14px;background:${binColor};border:1px solid #666;margin-right:4px;"></span><strong>${binLabel}</strong></div>`
+                : `<div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${resolved || feature.properties.name || feature.properties.NAME}</div>
+                   <div style="font-size: 13px; color: #ff9800;">No equipment age data available</div>`;
 
         bindResponsiveTooltip(layer, tooltipContent, mapRef.current);
 
@@ -141,10 +174,28 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
             mouseover: (e) => {
                 const targetLayer = e.target as L.Path;
                 hoveredRef.current = targetLayer;
+                // Get the correct fillColor for this feature
+                let featureAge = undefined;
+                const feature = (targetLayer as any).feature;
+                if (feature && feature.properties) {
+                    const resolved = resolveStateName(feature.properties);
+                    const stateName = (resolved || "Unknown").toLowerCase();
+                    featureAge = ageLookup.get(stateName);
+                }
+                let fillColor = "#cccccc";
+                if (typeof featureAge === "number") {
+                    for (const bin of BINS) {
+                        if (featureAge <= bin.max) {
+                            fillColor = bin.color;
+                            break;
+                        }
+                    }
+                }
                 targetLayer.setStyle({
                     weight: 3,
                     color: '#1976d2',
                     fillOpacity: 1.0,
+                    fillColor,
                 });
                 if ((targetLayer as any).bringToFront) {
                     (targetLayer as any).bringToFront();
@@ -155,7 +206,30 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
                 }
             },
             mouseout: (e) => {
-                geoRef.current?.resetStyle(e.target as any);
+                const targetLayer = e.target as L.Path;
+                // Restore the correct fillColor for this feature
+                let featureAge = undefined;
+                const feature = (targetLayer as any).feature;
+                if (feature && feature.properties) {
+                    const resolved = resolveStateName(feature.properties);
+                    const stateName = (resolved || "Unknown").toLowerCase();
+                    featureAge = ageLookup.get(stateName);
+                }
+                let fillColor = "#cccccc";
+                if (typeof featureAge === "number") {
+                    for (const bin of BINS) {
+                        if (featureAge <= bin.max) {
+                            fillColor = bin.color;
+                            break;
+                        }
+                    }
+                }
+                targetLayer.setStyle({
+                    weight: 2,
+                    color: '#ffffff',
+                    fillOpacity: 0.8,
+                    fillColor,
+                });
                 if (hoveredRef.current === e.target) hoveredRef.current = null;
 
                 try {
@@ -222,7 +296,7 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
                     Average Equipment Age (years)
                 </Typography>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                    {AGE_BINS.map((bin, index) => (
+                    {BINS.map((bin, index) => (
                         <Box key={index} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                             <Box
                                 sx={{

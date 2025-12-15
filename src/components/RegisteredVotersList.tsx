@@ -57,7 +57,7 @@ const RegisteredVotersList: React.FC<Props> = ({
         setLoading(true);
 
         // Fetch all voters for this location - filtering is done client-side
-        const apiUrl = `http://localhost:8080/api/registration/voters/${encodeURIComponent(stateName)}/${encodeURIComponent(geographicUnit)}?page=0&size=1000`;
+        const apiUrl = `http://localhost:8080/api/registration/voters/${encodeURIComponent(stateName)}/${encodeURIComponent(geographicUnit)}?page=0&size=100000`;
 
         fetch(apiUrl)
             .then(res => res.json())

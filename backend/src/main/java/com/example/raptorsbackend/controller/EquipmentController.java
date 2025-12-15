@@ -1,7 +1,10 @@
 package com.example.raptorsbackend.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -409,16 +412,39 @@ public class EquipmentController {
     @GetMapping("/age/all-states")
     public List<Map<String, Object>> getAllStatesEquipmentAge() {
         Query query = new Query();
-        query.addCriteria(Criteria.where("recordType").is("equipment_detail")
-                .and("age").exists(true));
+        query.addCriteria(Criteria.where("recordType").is("equipment_detail"));
         List<Map> allEquipment = mongoTemplate.find(query, Map.class, "votingEquipmentDetails");
+
+        // Fallback for local/dev when Mongo is not seeded: compute from bundled sample data.
+        if (allEquipment.isEmpty()) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                List<Map<String, Object>> sample = mapper.readValue(
+                        new ClassPathResource("data/every-state-all-models-data.json").getInputStream(),
+                        new TypeReference<List<Map<String, Object>>>() {}
+                );
+                allEquipment = (List<Map>) (List<?>) sample;
+            } catch (Exception e) {
+                // Preserve contract; frontend will show empty state gracefully.
+                return List.of();
+            }
+        }
 
         Map<String, List<Integer>> stateAges = new HashMap<>();
 
         for (Map doc : allEquipment) {
             String stateAbbr = (String) doc.get("stateAbbr");
-            if (stateAbbr == null)
+            if (stateAbbr == null) {
+                String stateNameDirect = (String) doc.get("stateName");
+                if (stateNameDirect != null) {
+                    Object ageObj = doc.get("age");
+                    if (ageObj != null) {
+                        int age = ((Number) ageObj).intValue();
+                        stateAges.computeIfAbsent(stateNameDirect, k -> new ArrayList<>()).add(age);
+                    }
+                }
                 continue;
+            }
 
             String stateName = getStateName(stateAbbr);
 
@@ -485,12 +511,45 @@ public class EquipmentController {
         query.addCriteria(Criteria.where("recordType").is("equipment_detail"));
         List<Map> allEquipment = mongoTemplate.find(query, Map.class, "votingEquipmentDetails");
 
+        // Fallback for local/dev when Mongo is not seeded.
+        if (allEquipment.isEmpty()) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                List<Map<String, Object>> sample = mapper.readValue(
+                        new ClassPathResource("data/every-state-all-models-data.json").getInputStream(),
+                        new TypeReference<List<Map<String, Object>>>() {}
+                );
+                allEquipment = (List<Map>) (List<?>) sample;
+            } catch (Exception e) {
+                return List.of();
+            }
+        }
+
         Map<String, Map<String, Integer>> stateEquipmentCounts = new HashMap<>();
 
         for (Map doc : allEquipment) {
             String stateAbbr = (String) doc.get("stateAbbr");
-            if (stateAbbr == null)
+            if (stateAbbr == null) {
+                String stateNameDirect = (String) doc.get("stateName");
+                if (stateNameDirect == null)
+                    continue;
+                stateEquipmentCounts.putIfAbsent(stateNameDirect, new HashMap<>());
+                Map<String, Integer> counts = stateEquipmentCounts.get(stateNameDirect);
+                String equipmentType = (String) doc.get("equipmentType");
+                if (equipmentType != null) {
+                    String type = equipmentType.toUpperCase();
+                    if (type.contains("DRE") && !type.contains("VVPAT") && !type.contains("PAPER")) {
+                        counts.put("dreNoVVPAT", counts.getOrDefault("dreNoVVPAT", 0) + 1);
+                    } else if (type.contains("DRE") && (type.contains("VVPAT") || type.contains("PAPER"))) {
+                        counts.put("dreWithVVPAT", counts.getOrDefault("dreWithVVPAT", 0) + 1);
+                    } else if (type.contains("BALLOT MARKING") || type.contains("BMD")) {
+                        counts.put("ballotMarkingDevice", counts.getOrDefault("ballotMarkingDevice", 0) + 1);
+                    } else if (type.contains("SCANNER") || type.contains("OPTICAL")) {
+                        counts.put("scanner", counts.getOrDefault("scanner", 0) + 1);
+                    }
+                }
                 continue;
+            }
 
             String stateFull = getStateName(stateAbbr);
 

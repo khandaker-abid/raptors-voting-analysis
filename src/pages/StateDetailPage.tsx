@@ -16,10 +16,8 @@ import ResetButton from "../components/ResetButton";
 
 import {
 	stateData,
-	getStateCenter,
 	isDetailState,
 } from "../data/stateData";
-import { getCountyCount } from "../data/stateShapes";
 
 import {
 	getProvisionalBallotData,
@@ -27,33 +25,24 @@ import {
 import StateMap from "../components/StateMap";
 import ProvisionalBallotTab from "./ProvisionalBallotTab";
 import ActiveVoterTab from "./ActiveVoterTab";
-import StateVoterRegistrationTable from "../tables/StateVoterRegistrationTable";
-import VoterRegistrationChloroplethMap from "../components/VoterRegistrationChloroplethMap";
 
 import {
-	fetchRegistrationTrends,
-	fetchBlockBubbles,
-	fetchDropboxBubbles,
-	fetchStateRegisteredVoters,
 	fetchGinglesData,
+	fetchDropboxBubbles,
 } from "../data/api";
-import VoterRegistrationTrendChart from "../charts/VoterRegistrationTrendChart";
-import VoterRegistrationBarChart from "../charts/VoterRegistrationBarChart";
-import VoterRegistrationBubbleOverlay from "../components/VoterRegistrationBubbleOverlay";
 
-import RegisteredVotersList from "../components/RegisteredVotersList";
 import DropboxBubbleChart from "../charts/DropboxBubbleChart";
 import GinglesChart from "../charts/GinglesChart";
 import EIEquipmentChart from "../charts/EIEquipmentChart";
 import EIRejectedBallotsChart from "../charts/EIRejectedBallotsChart";
 import type {
 	ActiveVotersRow,
-	RegistrationTrendPayload,
-	BlockBubblePayload,
 } from "../data/types";
 import PollbookDeletionsTab from "./PollbookDeletionsTab";
 import MailRejectionsTab from "./MailRejectionsTab";
 import VotingEquipmentTab from "./VotingEquipmentTab";
+import VoterRegistrationTab from "./VoterRegistrationTab";
+
 interface TabPanelProps {
 	children?: React.ReactNode;
 	index: number;
@@ -93,9 +82,7 @@ const StateDetailPage: React.FC = () => {
 		return stateData.find((s) => s.name === decodedStateName);
 	}, [decodedStateName]);
 
-	const stateCenter = useMemo(() => {
-		return getStateCenter(decodedStateName);
-	}, [decodedStateName]);
+
 
 	const isDetail = useMemo(() => {
 		return isDetailState(decodedStateName);
@@ -122,19 +109,8 @@ const StateDetailPage: React.FC = () => {
 		setSearchParams({ tab: newValue.toString() });
 	};
 
-	const [regTrends, setRegTrends] =
-		React.useState<RegistrationTrendPayload | null>(null);
-
-	const [blockBubbles, setBlockBubbles] =
-		React.useState<BlockBubblePayload | null>(null);
-	const [showBubbles, setShowBubbles] = React.useState(false);
-
-	const [selectedRegion, setSelectedRegion] = React.useState<string | null>(null);
-
 	const [dropboxBubbleData, setDropboxBubbleData] = React.useState<any[]>([]);
 	const [dropboxBubbleLoading, setDropboxBubbleLoading] = React.useState(false);
-
-	const [voterRegistrationData, setVoterRegistrationData] = React.useState<any[]>([]);
 
 	const [ginglesData, setGinglesData] = React.useState<any>(null);
 	const [ginglesLoading, setGinglesLoading] = React.useState(false);
@@ -145,29 +121,11 @@ const StateDetailPage: React.FC = () => {
 
 		setActiveVotersData(undefined);
 		setActiveVotersErr(null);
-		setRegTrends(null);
-		setBlockBubbles(null);
-		setShowBubbles(false);
 		setDropboxBubbleData([]);
 		setDropboxBubbleLoading(true);
-		setVoterRegistrationData([]);
 		let alive = true;
 
 		(async () => {
-			try {
-				const trends = await fetchRegistrationTrends(decodedStateName);
-				if (alive) setRegTrends(trends);
-			} catch {
-				if (alive) setRegTrends(null);
-			}
-
-			try {
-				const bubbles = await fetchBlockBubbles(decodedStateName);
-				if (alive) setBlockBubbles(bubbles);
-			} catch {
-				if (alive) setBlockBubbles(null);
-			}
-
 			if (isDetail && stateInfo?.party !== undefined) {
 				try {
 					const dropboxData = await fetchDropboxBubbles(decodedStateName);
@@ -183,15 +141,6 @@ const StateDetailPage: React.FC = () => {
 				}
 			} else {
 				if (alive) setDropboxBubbleLoading(false);
-			}
-
-			if (isDetail) {
-				try {
-					const regData = await fetchStateRegisteredVoters(decodedStateName);
-					if (alive) setVoterRegistrationData(regData);
-				} catch {
-					if (alive) setVoterRegistrationData([]);
-				}
 			}
 
 			if (["Maryland", "Arkansas", "Rhode Island"].includes(decodedStateName)) {
@@ -245,9 +194,9 @@ const StateDetailPage: React.FC = () => {
 	const tabOptions: Array<{ index: number; label: string }> = [];
 	tabOptions.push({ index: IDX_OVERVIEW, label: "Overview" });
 	if (isDetail) tabOptions.push({ index: IDX_PROVISIONAL, label: "Provisional Ballot" });
-	if (isDetail) tabOptions.push({ index: IDX_ACTIVE, label: "Active Voters" });
-	if (isDetail) tabOptions.push({ index: IDX_POLLBOOK, label: "Pollbook Deletions" });
-	if (isDetail) tabOptions.push({ index: IDX_MAIL, label: "Mail Rejections" });
+	if (isDetail) tabOptions.push({ index: IDX_ACTIVE, label: "Active Voter" });
+	if (isDetail) tabOptions.push({ index: IDX_POLLBOOK, label: "Pollbook Deletion" });
+	if (isDetail) tabOptions.push({ index: IDX_MAIL, label: "Mail Rejection" });
 	tabOptions.push({ index: IDX_EQUIPMENT, label: "Voting Equipment" });
 	if (isDetail) tabOptions.push({ index: IDX_REG, label: "Voter Registration" });
 	if (isPartyState) tabOptions.push({ index: IDX_DROPBOX, label: "Drop Box Analysis" });
@@ -316,35 +265,22 @@ const StateDetailPage: React.FC = () => {
 					<Box sx={{ p: 0, height: "calc(100vh - 180px)", display: "flex", flexDirection: "column" }}>
 						<Box sx={{ display: "flex", gap: 1, flexWrap: "nowrap", flexShrink: 0, mb: 0, px: 0.5, py: 0.5, bgcolor: "background.paper" }}>
 							<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-								<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem", fontWeight: 500 }}>
+								<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.85rem", fontWeight: 500 }}>
 									State Type:
 								</Typography>
-								<Typography variant="body2" fontWeight={600} sx={{ fontSize: "0.8rem" }}>
+								<Typography variant="body2" fontWeight={600} sx={{ fontSize: "0.9rem" }}>
 									{isDetail ? "Detailed Analysis" : "EAVS State"}
 								</Typography>
 							</Box>
 							{stateInfo.cvapPercentage && (
 								<>
-									<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem" }}>|</Typography>
+									<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.85rem" }}>|</Typography>
 									<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-										<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem", fontWeight: 500 }}>
+										<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.85rem", fontWeight: 500 }}>
 											CVAP:
 										</Typography>
-										<Typography variant="body2" fontWeight={600} sx={{ fontSize: "0.8rem" }}>
+										<Typography variant="body2" fontWeight={600} sx={{ fontSize: "0.9rem" }}>
 											{stateInfo.cvapPercentage}%
-										</Typography>
-									</Box>
-								</>
-							)}
-							{isDetail && (
-								<>
-									<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem" }}>|</Typography>
-									<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-										<Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem", fontWeight: 500 }}>
-											Counties/Towns:
-										</Typography>
-										<Typography variant="body2" fontWeight={600} sx={{ fontSize: "0.8rem" }}>
-											{getCountyCount(decodedStateName)}
 										</Typography>
 									</Box>
 								</>
@@ -374,7 +310,6 @@ const StateDetailPage: React.FC = () => {
 							}}>
 								<StateMap
 									stateName={decodedStateName}
-									center={stateCenter}
 									isDetailState={isDetail}
 								/>
 							</Box>
@@ -502,91 +437,7 @@ const StateDetailPage: React.FC = () => {
 
 				{isDetail && (
 					<TabPanel value={tabValue} index={IDX_REG}>
-						<Box sx={{
-							p: 0,
-							display: "flex",
-							flexDirection: "column",
-							gap: 1.5,
-							minHeight: "calc(100vh - 280px)",
-						}}>
-							<Box
-								sx={{
-									display: "flex",
-									gap: 1.5,
-									flexDirection: { xs: "column", md: "row" },
-									alignItems: "stretch",
-									justifyContent: "space-between",
-									height: { xs: "auto", md: "420px" },
-									flexShrink: 0,
-								}}
-							>
-								<Box
-									sx={{
-										flex: 1,
-										minWidth: { xs: "100%", md: "calc(50% - 8px)" },
-										maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
-										height: "100%",
-									}}
-								>
-									<VoterRegistrationBarChart
-										data={voterRegistrationData || []}
-									/>
-								</Box>
-								<Box
-									sx={{
-										flex: 1,
-										minWidth: { xs: "100%", md: "calc(50% - 8px)" },
-										maxWidth: { xs: "100%", md: "calc(50% - 8px)" },
-										height: "100%",
-									}}
-								>
-									<VoterRegistrationChloroplethMap
-										stateName={decodedStateName}
-										data={voterRegistrationData || []}
-									/>
-								</Box>
-							</Box>
-
-							<Box sx={{ flex: 1, display: "flex" }}>
-								<StateVoterRegistrationTable
-									stateName={stateName ? stateName : ""}
-								/>
-							</Box>
-
-							{regTrends && (
-								<Box sx={{ my: 3 }}>
-									<VoterRegistrationTrendChart trends={regTrends} />
-								</Box>
-							)}
-
-							<Box sx={{ my: 2, display: "flex", gap: 2, flexWrap: "wrap" }}>
-								<Button
-									variant="contained"
-									color="primary"
-									onClick={() => setSelectedRegion(decodedStateName)}
-								>
-									View Registered Voters
-								</Button>
-
-								{blockBubbles && (
-									<Button
-										variant="outlined"
-										onClick={() => setShowBubbles((s) => !s)}
-									>
-										{showBubbles ? "Hide" : "Show"} Party Bubble Overlay
-									</Button>
-								)}
-							</Box>
-
-							{showBubbles && blockBubbles && (
-								<Box sx={{ mt: 2 }}>
-									<VoterRegistrationBubbleOverlay
-										stateName={decodedStateName}
-										payload={blockBubbles}
-									/>
-								</Box>
-							)}
-						</Box>
+						<VoterRegistrationTab stateName={decodedStateName} />
 					</TabPanel>
 				)}
 
@@ -647,15 +498,6 @@ const StateDetailPage: React.FC = () => {
 					<TabPanel value={tabValue} index={IDX_EI_REJECTED}>
 						<EIRejectedBallotsChart stateName={decodedStateName} />
 					</TabPanel>
-				)}
-
-				{selectedRegion && (
-					<RegisteredVotersList
-						open={!!selectedRegion}
-						stateName={decodedStateName}
-						geographicUnit={selectedRegion}
-						onClose={() => setSelectedRegion(null)}
-					/>
 				)}
 			</Paper>
 		</Box>
