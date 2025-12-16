@@ -1,5 +1,4 @@
-package com.example.raptorsbackend.controller;
-
+   package com.example.raptorsbackend.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
@@ -118,9 +117,10 @@ public class RegistrationController {
         Map<String, List<Integer>> byYear = new HashMap<>();
         for (String year : yearArray) {
             Query query = new Query();
-
+            int yearInt = Integer.parseInt(year.trim());
+            String stateKey = yearInt == 2016 ? getStateAbbreviation(normalizedState) : normalizedState;
             query.addCriteria(
-                    Criteria.where("stateFull").is(normalizedState).and("year").is(Integer.parseInt(year.trim())));
+                Criteria.where("stateFull").is(stateKey).and("year").is(yearInt));
             List<Map> yearData = mongoTemplate.find(query, Map.class, "eavsData");
 
             Map<String, Integer> lookup = new HashMap<>();
@@ -142,6 +142,20 @@ public class RegistrationController {
 
         result.put("byYear", byYear);
         return result;
+    }
+
+    // Helper to get state abbreviation from full name or abbreviation
+    private String getStateAbbreviation(String state) {
+        Map<String, String> stateMap = new HashMap<>();
+        stateMap.put("arkansas", "AR");
+        stateMap.put("maryland", "MD");
+        stateMap.put("rhode island", "RI");
+        stateMap.put("AR", "AR");
+        stateMap.put("MD", "MD");
+        stateMap.put("RI", "RI");
+
+        String normalized = state.toLowerCase().trim();
+        return stateMap.getOrDefault(normalized, state.toUpperCase());
     }
 
     @GetMapping("/blocks/{state}")
@@ -229,9 +243,9 @@ public class RegistrationController {
         for (int i = 0; i < states.length; i++) {
             String state = states[i];
             String regType = registrationTypes[i];
-
+            String stateKey2024 = state;
             Query query = new Query();
-            query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(2024));
+            query.addCriteria(Criteria.where("stateFull").is(stateKey2024).and("year").is(2024));
             List<Map> eavsData = mongoTemplate.find(query, Map.class, "eavsData");
 
             long totalRegistered = 0;
@@ -279,8 +293,9 @@ public class RegistrationController {
 
         for (int i = 0; i < states.length; i++) {
             String state = states[i];
+            String stateKey2024 = state;
             Query query = new Query();
-            query.addCriteria(Criteria.where("stateFull").is(state).and("year").is(2024));
+            query.addCriteria(Criteria.where("stateFull").is(stateKey2024).and("year").is(2024));
             List<Map> eavsData = mongoTemplate.find(query, Map.class, "eavsData");
 
             long totalVotesCast = 0;

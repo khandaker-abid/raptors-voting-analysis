@@ -48,7 +48,7 @@ const RegisteredVotersList: React.FC<Props> = ({
     const [filteredVoters, setFilteredVoters] = useState<RegisteredVoter[]>([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(25);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [partyFilter, setPartyFilter] = useState<string>("All");
 
     useEffect(() => {
@@ -122,17 +122,16 @@ const RegisteredVotersList: React.FC<Props> = ({
                         Registered Voters - {geographicUnit}, {stateName}
                     </Typography>
                     <FormControl size="small" sx={{ minWidth: 200 }}>
-                        <InputLabel>Party Filter</InputLabel>
+                        <InputLabel>Party Affiliation</InputLabel>
                         <Select
                             value={partyFilter}
-                            label="Party Filter"
+                            label="Party Affiliation"
                             onChange={handlePartyFilterChange}
                         >
                             <MenuItem value="All">All Parties</MenuItem>
                             <MenuItem value="Republican">Republican</MenuItem>
                             <MenuItem value="Democratic">Democratic</MenuItem>
                             <MenuItem value="Unaffiliated">Unaffiliated</MenuItem>
-                            <MenuItem value="Other">Other</MenuItem>
                         </Select>
                     </FormControl>
                 </Box>
@@ -147,23 +146,67 @@ const RegisteredVotersList: React.FC<Props> = ({
                         <Typography variant="body2" color="text.secondary" gutterBottom>
                             Showing {filteredVoters.length.toLocaleString()} registered voters
                         </Typography>
-                        <TableContainer component={Paper} variant="outlined">
+                        <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 0 }}>
                             <Table size="small">
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell>
+                                        <TableCell
+                                            sx={{
+                                            fontWeight: "bold",
+                                            backgroundColor: "#616161",
+                                            color: "white",
+                                            py: 0.85,
+                                            fontSize: "0.95rem",
+                                            cursor: "pointer",
+									    }}>
                                             <strong>Last Name</strong>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell
+                                            sx={{
+                                            fontWeight: "bold",
+                                            backgroundColor: "#616161",
+                                            color: "white",
+                                            py: 0.85,
+                                            fontSize: "0.95rem",
+                                            cursor: "pointer",
+									    }}>
                                             <strong>First Name</strong>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell
+                                            sx={{
+                                            fontWeight: "bold",
+                                            backgroundColor: "#616161",
+                                            color: "white",
+                                            py: 0.85,
+                                            fontSize: "0.95rem",
+                                            cursor: "pointer",
+									    }}>
                                             <strong>Political Party</strong>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell
+                                            sx={{
+                                            fontWeight: "bold",
+                                            backgroundColor: "#616161",
+                                            color: "white",
+                                            py: 0.85,
+                                            fontSize: "0.95rem",
+                                            cursor: "pointer",
+									    }}>
                                             <strong>Registration Date</strong>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell
+                                            sx={{
+                                                fontWeight: "bold",
+                                                backgroundColor: "#616161",
+                                                color: "white",
+                                                py: 0.85,
+                                                fontSize: "0.95rem",
+                                                cursor: "pointer",
+                                                width: 220,
+                                                minWidth: 180,
+                                                maxWidth: 400,
+                                            }}
+                                        >
                                             <strong>Address</strong>
                                         </TableCell>
                                     </TableRow>
@@ -183,22 +226,31 @@ const RegisteredVotersList: React.FC<Props> = ({
                                                 <TableCell>{voter.lastName}</TableCell>
                                                 <TableCell>{voter.firstName}</TableCell>
                                                 <TableCell>
-                                                    <Box
-                                                        component="span"
-                                                        sx={{
-                                                            color:
-                                                                voter.party === "Republican"
-                                                                    ? "error.main"
-                                                                    : voter.party === "Democratic"
-                                                                        ? "primary.main"
-                                                                        : "text.secondary",
-                                                            fontWeight: 500,
-                                                        }}
-                                                    >
-                                                        {voter.party}
-                                                    </Box>
+                                                    {voter.party === "Democratic" ? (
+                                                        <span style={{ color: "#1976d2", fontWeight: 600 }}>
+                                                            {voter.party}
+                                                        </span>
+                                                    ) : voter.party === "Republican" ? (
+                                                        <span style={{ color: "#d32f2f", fontWeight: 600 }}>
+                                                            {voter.party}
+                                                        </span>
+                                                    ) : voter.party === "Unaffiliated" ? (
+                                                        <span>{voter.party}</span>
+                                                    ) : (
+                                                        voter.party
+                                                    )}
                                                 </TableCell>
-                                                <TableCell>{voter.registrationDate}</TableCell>
+                                                <TableCell>
+                                                    {voter.registrationDate
+                                                        ? (() => {
+                                                            const d = new Date(voter.registrationDate);
+                                                            const mm = String(d.getMonth() + 1).padStart(2, '0');
+                                                            const dd = String(d.getDate()).padStart(2, '0');
+                                                            const yyyy = d.getFullYear();
+                                                            return `${mm}-${dd}-${yyyy}`;
+                                                        })()
+                                                        : ""}
+                                                </TableCell>
                                                 <TableCell>{voter.address}</TableCell>
                                             </TableRow>
                                         ))
@@ -207,7 +259,7 @@ const RegisteredVotersList: React.FC<Props> = ({
                             </Table>
                         </TableContainer>
                         <TablePagination
-                            rowsPerPageOptions={[10, 25, 50, 100]}
+                            rowsPerPageOptions={[]}
                             component="div"
                             count={filteredVoters.length}
                             rowsPerPage={rowsPerPage}

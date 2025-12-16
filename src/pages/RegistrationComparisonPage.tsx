@@ -91,9 +91,8 @@ const RegistrationComparisonPage: React.FC = () => {
       <Typography variant="h6" align="center" sx={{ fontWeight: 700, color: "text.primary", fontSize: "1.05rem" }}>
         Registration & Early Voting Comparisons (2024)
       </Typography>
-
-      <Paper sx={{ p: 1.5, borderRadius: 3, height: "100%", display: "grid", gridTemplateRows: "1fr 1fr", gap: 1 }}>
         <Box sx={{ display: "grid", gridTemplateColumns: "7fr 3fr", gap: 1, minHeight: 0 }}>
+          <Paper sx={{ p: 1.5 }}>
           <Box sx={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
             <Typography variant="subtitle1" fontWeight={600} align="center" sx={{ fontSize: "0.95rem", mb: 0.5 }}>
               Opt-in vs Opt-out States
@@ -130,7 +129,9 @@ const RegistrationComparisonPage: React.FC = () => {
               </Table>
             </Box>
           </Box>
+          </Paper>
 
+          <Paper sx={{ p: 1.5 }}>
           <Box sx={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
             <Typography variant="subtitle1" fontWeight={600} align="center" sx={{ fontSize: "0.95rem", mb: 0.5 }}>
               Democratic vs Republican States
@@ -161,8 +162,10 @@ const RegistrationComparisonPage: React.FC = () => {
               </Table>
             </Box>
           </Box>
+          </Paper>
         </Box>
 
+        <Paper sx={{ p: 1.5 }}>
         <Box sx={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
           <Typography variant="subtitle1" fontWeight={600} align="center" sx={{ fontSize: "0.95rem", mb: 0.5 }}>
             Early Voting Comparison
@@ -204,7 +207,7 @@ const RegistrationComparisonPage: React.FC = () => {
             Percentages calculated based on total votes cast in each state
           </Typography>
         </Box>
-      </Paper>
+        </Paper>
     </Container>
   );
 };
