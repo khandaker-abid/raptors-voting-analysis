@@ -34,7 +34,7 @@ const USMap: React.FC = () => {
 			opacity: 1,
 			color: isDetailState ? theme.palette.primary.main : "#bdbdbd",
 			dashArray: "",
-			fillOpacity: isDetailState ? 0.5 : 0.2,
+			fillOpacity: isDetailState ? 0.9 : 0.4,
 			className: "no-outline",
 		};
 	};
@@ -64,7 +64,7 @@ const USMap: React.FC = () => {
 					weight: isDetailState ? 4 : 2,
 					color: isDetailState ? theme.palette.primary.main : "#757575",
 					dashArray: "",
-					fillOpacity: isDetailState ? 0.7 : 0.3,
+					fillOpacity: isDetailState ? 1.0 : 0.5,
 				});
 				targetLayer.bringToFront();
 			},
@@ -76,7 +76,7 @@ const USMap: React.FC = () => {
 					opacity: 1,
 					color: isDetailState ? theme.palette.primary.main : "#bdbdbd",
 					dashArray: "",
-					fillOpacity: isDetailState ? 0.5 : 0.2,
+					fillOpacity: isDetailState ? 0.9 : 0.4,
 				});
 			},
 			click: (e) => {

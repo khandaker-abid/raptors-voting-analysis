@@ -254,7 +254,7 @@ const VoterRegistrationChloroplethMap: React.FC<
 				opacity: 1,
 				color: "#bdbdbd",
 				dashArray: "",
-				fillOpacity: 0.7,
+				fillOpacity: 0.9,
 			};
 		}
 
@@ -278,7 +278,7 @@ const VoterRegistrationChloroplethMap: React.FC<
 			opacity: 1,
 			color: "#ffffff",
 			dashArray: "",
-			fillOpacity: 0.8,
+			fillOpacity: 1.0,
 		};
 	};
 

@@ -155,7 +155,7 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 				opacity: 1,
 				color: theme.palette.grey[400],
 				dashArray: "",
-				fillOpacity: 0.7,
+				fillOpacity: 0.9,
 			};
 		}
 
@@ -176,7 +176,7 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 			opacity: 1,
 			color: "#fff",
 			dashArray: "",
-			fillOpacity: 0.7,
+			fillOpacity: 0.9,
 		};
 	};
 
@@ -215,7 +215,7 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 					weight: 3,
 					color: theme.palette.primary.dark,
 					dashArray: "",
-					fillOpacity: 0.8,
+					fillOpacity: 1.0,
 				});
 				if ((targetLayer as any).bringToFront) {
 					(targetLayer as any).bringToFront();

@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useEffect, useCallback } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
-import { Box, Paper, Typography, Button } from "@mui/material";
+import { Box, Paper, Typography } from "@mui/material";
 import L from "leaflet";
 import type { Feature } from "geojson";
 import { bindResponsiveTooltip } from "../utils/leafletTooltipHelper";
@@ -114,7 +114,7 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
                 weight: 1,
                 opacity: 1,
                 color: "#666666",
-                fillOpacity: 0.5,
+                fillOpacity: 0.9,
             };
         }
 
@@ -127,7 +127,7 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
                 weight: 1,
                 opacity: 1,
                 color: "#666666",
-                fillOpacity: 0.3,
+                fillOpacity: 0.9,
             };
         }
 
@@ -136,7 +136,7 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
             weight: 2,
             opacity: 1,
             color: "#ffffff",
-            fillOpacity: 0.8,
+            fillOpacity: 1.0,
         };
     }, [ageLookup, getColorForAge, resolveStateName]);
 
@@ -227,7 +227,7 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
                 targetLayer.setStyle({
                     weight: 2,
                     color: '#ffffff',
-                    fillOpacity: 0.8,
+                    fillOpacity: 1.0,
                     fillColor,
                 });
                 if (hoveredRef.current === e.target) hoveredRef.current = null;
@@ -267,21 +267,6 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
 
     return (
         <Box sx={{ position: "relative", height: "100%", width: "100%" }}>
-            {onClose && (
-                <Button
-                    variant="contained"
-                    onClick={onClose}
-                    sx={{
-                        position: "absolute",
-                        top: 16,
-                        right: 180,
-                        zIndex: 1000,
-                    }}
-                >
-                    Back to State Map
-                </Button>
-            )}
-
             <Paper
                 sx={{
                     position: "absolute",

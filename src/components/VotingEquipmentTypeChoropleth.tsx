@@ -164,7 +164,7 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                 weight: 1,
                 opacity: 1,
                 color: "#666666",
-                fillOpacity: 0.5,
+                fillOpacity: 0.9,
             };
         }
 
@@ -185,7 +185,7 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                 weight: 1,
                 opacity: 1,
                 color: "#666666",
-                fillOpacity: 0.3,
+                fillOpacity: 0.9,
             };
         }
 
@@ -197,7 +197,7 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
             weight: 2,
             opacity: 1,
             color: "#ffffff",
-            fillOpacity: 0.7,
+            fillOpacity: 1.0,
         };
     };
 
@@ -262,7 +262,7 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                 hoveredRef.current = targetLayer;
                 targetLayer.setStyle({
                     weight: 3,
-                    fillOpacity: 0.9,
+                    fillOpacity: 1.0,
                 });
                 if ((targetLayer as any).bringToFront) {
                     (targetLayer as any).bringToFront();

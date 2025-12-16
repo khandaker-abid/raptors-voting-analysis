@@ -239,7 +239,7 @@ const StateMap: React.FC<StateMapProps> = ({
 				opacity: 1,
 				color: "#424242",
 				dashArray: "",
-				fillOpacity: 0.3,
+				fillOpacity: 0.9,
 				className: "no-outline",
 			};
 		} else {
@@ -249,7 +249,7 @@ const StateMap: React.FC<StateMapProps> = ({
 				opacity: 1,
 				color: "#bdbdbd",
 				dashArray: "",
-				fillOpacity: 0.2,
+				fillOpacity: 0.7,
 				className: "no-outline",
 			};
 		}
@@ -280,7 +280,7 @@ const StateMap: React.FC<StateMapProps> = ({
 						weight: 3,
 						color: "#424242",
 						dashArray: "",
-						fillOpacity: 0.5,
+						fillOpacity: 1.0,
 					});
 						e.target.bringToFront();
 						if (!e.target.isTooltipOpen()) {
@@ -330,7 +330,7 @@ const StateMap: React.FC<StateMapProps> = ({
 						weight: 3,
 						color: "#757575",
 						dashArray: "",
-						fillOpacity: 0.4,
+						fillOpacity: 0.9,
 					});
 					e.target.bringToFront();
 					if (!e.target.isTooltipOpen()) {

@@ -16,13 +16,13 @@ import theme from "../theme";
 type Props = { data: PollbookDeletionRow[] };
 
 const LABELS: Record<string, string> = {
-    A12b_Death: "A12b Death",
-    A12c_Moved: "A12c Moved",
-    A12d_Felon: "A12d Felon",
-    A12e_MentalIncap: "A12e Mental Incap",
-    A12f_Requested: "A12f Requested",
-    A12g_FailedToVote: "A12g Failed to Vote",
-    A12h_Other: "A12h Other",
+    A12b_Death: "Death",
+    A12c_Moved: "Moved",
+    A12d_Felon: "Felon",
+    A12e_MentalIncap: "Mental Incap",
+    A12f_Requested: "Requested",
+    A12g_FailedToVote: "Failed to Vote",
+    A12h_Other: "Other",
 };
 
 export default function PollbookDeletionsBarChart({ data }: Props) {

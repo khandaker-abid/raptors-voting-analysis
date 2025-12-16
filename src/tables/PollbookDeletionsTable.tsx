@@ -204,7 +204,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                         '&.Mui-active': { color: 'white !important' },
                                         '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
                                     }}>
-                                    A12b Death
+                                    Death
                                 </TableSortLabel>
                             </TableCell>
                             <TableCell
@@ -228,7 +228,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                         '&.Mui-active': { color: 'white !important' },
                                         '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
                                     }}>
-                                    A12c Moved
+                                    Moved
                                 </TableSortLabel>
                             </TableCell>
                             <TableCell
@@ -252,7 +252,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                         '&.Mui-active': { color: 'white !important' },
                                         '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
                                     }}>
-                                    A12d Felon
+                                    Felon
                                 </TableSortLabel>
                             </TableCell>
                             <TableCell
@@ -276,7 +276,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                         '&.Mui-active': { color: 'white !important' },
                                         '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
                                     }}>
-                                    A12e Mental Incap
+                                    Mental Incap
                                 </TableSortLabel>
                             </TableCell>
                             <TableCell
@@ -300,7 +300,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                         '&.Mui-active': { color: 'white !important' },
                                         '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
                                     }}>
-                                    A12f Requested
+                                    Requested
                                 </TableSortLabel>
                             </TableCell>
                             <TableCell
@@ -324,7 +324,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                         '&.Mui-active': { color: 'white !important' },
                                         '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
                                     }}>
-                                    A12g Failed to Vote
+                                    Failed to Vote
                                 </TableSortLabel>
                             </TableCell>
                             <TableCell
@@ -348,7 +348,7 @@ const PollbookDeletionsTable: React.FC<Props> = ({ data }) => {
                                         '&.Mui-active': { color: 'white !important' },
                                         '&.Mui-active .MuiTableSortLabel-icon': { color: 'white !important' },
                                     }}>
-                                    A12h Other
+                                    Other
                                 </TableSortLabel>
                             </TableCell>
                             <TableCell

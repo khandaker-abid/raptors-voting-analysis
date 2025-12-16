@@ -124,13 +124,13 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
 
 
     const styleFor = (feature?: Feature) => {
-        if (!feature) return { weight: 1, color: "#fff", fillOpacity: .7 } as L.PathOptions;
+        if (!feature) return { weight: 1, color: "#fff", fillOpacity: 0.9 } as L.PathOptions;
         const f = feature as CountyFeature;
         const raw = f.properties.coty_name_long?.[0] || f.properties.coty_name?.[0] || "";
 
         const key = normalizeCountyName(raw);
         const p = lookup.get(key) ?? 0;
-        return { fillColor: color(p), weight: 1, color: "#fff", fillOpacity: .75 } as L.PathOptions;
+        return { fillColor: color(p), weight: 1, color: "#fff", fillOpacity: 0.9 } as L.PathOptions;
     };
 
     const onEachFeature = (feature: Feature, layer: L.Layer) => {

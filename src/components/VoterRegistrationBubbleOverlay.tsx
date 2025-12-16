@@ -95,7 +95,7 @@ const VoterRegistrationBubbleOverlay: React.FC<Props> = ({ stateName, payload })
                                 pathOptions={{ 
                                     fillColor: color,
                                     color: color,
-                                    fillOpacity: 0.6,
+                                    fillOpacity: 0.9,
                                     opacity: 0.8,
                                     weight: 1
                                 }} 
