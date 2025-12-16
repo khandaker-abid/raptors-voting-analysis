@@ -1,0 +1,133 @@
+Manufacturer,Equipment Type,Model Name,First Manufactured,Last Manufactured,OS,Firmware Version,Battery Life,Scanning Rate,VVPAT?,Paper Capacity,Certification Level,Security Risks,Notes/Misc.,Discontinued,Team that added
+Clear Ballot,Hand-Fed Optical Scanner,ClearCast,2018,2026,,ClearCast,,Hand-fed,FALSE,1 / Hand-fed,VVSG 1.0 (2005),,,FALSE,? + Magic
+MicroVote,DRE Push Button,Infinity,2002,2022,"Microsoft Windows 2000, Windows XP Professional",Infinity Voting Panel Firmware v.3.11,,,FALSE,,,"manufacturer environmental-test evidence for the Chatsworth COTS scanners was incomplete,
+security seals, external communication ports, CompactFlash Cards",,TRUE,? + Magic
+Clear Ballot,BMD,ClearAccess,6/30/2015,2026,Windows 8.1 Pro,ClearVote 2.4/5,,N/A,TRUE,,VVSG 1.0 (2005),,,FALSE,? + Magic/The Bulls
+Clear Ballot,Batch-Fed Optical Scanner,ClearCount,6/5/2014,2026,Windows 7,ClearVote,,50-60 ballots/min,TRUE,300-500,VVSG 1.0 (2005),,,FALSE,? + Magic/The Bulls
+ES&S,Batch-Fed Optical Scanner,DS850,2012,,Windows,,,300 ballots/min,,,VVSG 1.0 (2005),,High speed central count,FALSE,Jazz
+ES&S,Batch-Fed Optical Scanner,DS450,2016,,Windows,,,60-90 ballots/min,,,VVSG 1.0 (2005),,,FALSE,Jazz
+ES&S,Hand-Fed Optical Scanner,DS200,2010,,Windows,,,Highspeed,,,VVSG 1.0 (2005),,Scanner/tabulator,FALSE,Jazz
+ES&S,Hand-Fed Optical Scanner,DS300,,,Windows,,,,,,VVSG 1.0 (2005),,,FALSE,Jazz
+ES&S,BMD,AutoMARK,,,,,,,,,VVSG 1.0 (2005),,,FALSE,Jazz
+ES&S,Hybrid BMD/ Tab,ExpressVote XL,,,Windows,,,,,,VVSG 1.0 (2005),,,FALSE,Jazz
+ES&S,DRE Touchscreen,ExpressTouch,,,Windows,,,,,,VVSG 1.0 (2005),,,FALSE,Jazz
+Dominion,Hand-Fed Optical Scanner,ImageCast Precinct,2011,,,,,,TRUE,,VVSG 1.0 (2005),,,FALSE,Jazz
+Dominion,Hand-Fed Optical Scanner,ImageCast Precinct 2,,,,,,,,TRUE,VVSG 1.0 (2005),,,FALSE,Jazz
+Dominion,DRE Touchscreen,ImageCast DRE,,,Windows,,,,TRUE,,VVSG 1.0 (2005),,,FALSE,Jazz
+Dominion,Hybrid optical scan/BMD,ImageCast Evolution,2011,,Windows,,,,TRUE,,VVSG 1.0 (2005),Printing after casting,,FALSE,Jazz
+ES&S,BMD,ExpressVote,2014,,Windows,,,,TRUE,,VVSG 1.0 (2005),,,FALSE,Jazz/Lakers
+Dominion,Batch-Fed Optical Scanner,ImageCast Central,2011,,Windows,,,High-speed,,,VVSG 1.0 (2005),,,FALSE,Jazz/Lakers
+Dominion,BMD,ImageCast X,2013,,Android,,,,TRUE,,VVSG 1.0 (2005),Can reboot into Android Safe Mode,,FALSE,Jazz/Lakers
+Dominion,Remote Ballot Marking,ImageCast Remote,2016,2024,Web-based,,Device Reliant,N/A,TRUE,N/A,,Unreadable bar codes and qr codes,,TRUE,Magic
+ES&S,DRE Touchscreen,iVotronic,2006,2006,,,Battery,N/A,Optional / TRUE,N/A,,Personal Electronic Ballot (PEB) Slot,,TRUE,Magic
+ES&S,Electronic Poll Book,ExpressPoll,2026,2026,Windows 10 / Windows 11,,16 hours,N/A (for ID),N/A,N/A,,"Remote monitoring and access, data synchronization and encryption, 
+networking of ExpressPolls, and Capability to Change Voter Status",,FALSE,Magic
+ES&S,Hand-Fed Optical Scanner,Model 100,2006,2018,,Unity 3.2.0.0,,Hand-fed,TRUE,Hand-fed,,"Security seals, ballot box access, memory card is sensitive, 
+correct inks, keys, and counterfeit ballots",,TRUE,Magic
+Enhanced Voting,Remote Ballot Marking,Enhanced Ballot,2020,2026,,,,N/A,,N/A,,,,FALSE ,Magic
+KNOWiNK,Electronic Poll Book,Poll Pad,,2026,iOS,,Apple iPad battery,N/A (for ID),,N/A,,"Voter data storage, data synchronization, apple ios updates, and user access",,FALSE,Magic
+Populex,BMD,Slate,2006,2006,Microsoft Windows XP Tablet PC Edition,,,,TRUE,,,"No phyiscal lock to secure the housing, manual visual verification
+of the ballot is complex, touch screen cannot be blanked for blind voters to
+protect their votes from being observed, nothing prevents a voter or
+poll worker from double-tabulating a Populex ballot, no electronic
+support for provisional ballots",,TRUE,Magic
+Premier Election Solutions (Diebold),Hand-Fed Optical Scanner,AccuVote OS,2002,2020,,,,,,,,"Security seals, keys, ballot box access, memory card is sensitive, 
+correct inks",,TRUE,Magic
+Premier Election Solutions (Diebold),Hand-Fed Optical Scanner,AccuVote OSX,2007,,,,,,,,,,,TRUE,Magic
+Sequoia Voting Systems,DRE Push Button,AVC Advantage,1998,2006,,,,N/A,N/A,N/A,,"Security seals, broken buttons, broken lights, fleeing voters,
+premature voting, incorrect ballot style, incorrect totals tape, 
+sensitive disability access panel, misleading activation",,TRUE,Magic
+Smartmatic/Los Angeles County,BMD,VSAP BMD,2020,2020,,,,,,,,"Printer could alter the voter's choices without the
+voter knowing.",,TRUE,Magic
+Smartmatic/Los Angeles County,Batch-Fed Optical Scanner,VSAP Tally,2018,2018,,,,,,,,,,TRUE,Magic
+Smartmatic/Los Angeles County,Remote Ballot Marking,VSAP Interactive Sample Ballot,2020,2020,,,,,,,,,,TRUE,Magic
+Tenex,Electronic Poll Book,Precinct Central,,2026,iOS,Precinct Central Touchpad,iPad Battery,N/A,N/A,N/A,None,"Remote Updates, automatic data downloads,
+remote retrieval of audit logs, incorrect
+ballot printing",,FALSE,Magic
+Triad Governmental Systems,Remote Ballot Marking,Accessible Ballot Marking Tool (ABMT),2018,2022,Web-based,Proprietary ABMT,,N/A,TRUE,N/A,None,,,TRUE,Magic
+Unisyn,BMD,Freedom Vote Tablet (FVT),2018,2026,Linux,OpenElect Voting System,AC Wall Power,N/A,TRUE,,VVSG 1.0 (2005),,,FALSE,Magic
+Unisyn,BMD,OpenElect OVI,2012,2020,Linux,OpenElect Voting System,AC Wall Power,N/A,TRUE,,VVSG 1.0 (2005),,,TRUE,Magic
+Unisyn,BMD,OpenElect OVI-VC,2014,2020,Linux,OpenElect Voting System,AC Wall Power,N/A,TRUE,,VVSG 1.0 (2005),,,TRUE,Magic
+Unisyn,Batch-Fed Optical Scanner,OpenElect OVCS,2012,2024,Linux,OpenElect Voting System,,150 ballots/min,FALSE,500 ballots,VVSG 1.0 (2005),,,TRUE,Magic
+Unisyn,Hand-Fed Optical Scanner,Freedom Vote Scan (FVS),2020,2026,Linux,OpenElect Voting System,Internal battery,,FALSE,,VVSG 1.0 (2005),,,FALSE,Magic
+Unisyn,Hand-Fed Optical Scanner,OpenElect OVO,2012,2022,Linux,OpenElect Voting System,,N/A,FALSE,N/A,VVSG 1.0 (2005),,,TRUE,Magic
+VR Systems,Electronic Poll Book,EViD,2004,2026,Tablet / Mobile / COTS laptop,Proprietary,Device Reliant,N/A,FALSE,N/A,None,"Potential for voters to be checked in more than
+once. Russian phishing and hacking (2016)",,FALSE,Magic
+Voatz,Internet Voting,Mobile App,2020,2020,Mobile App,Proprietary,Mobile,Online ballot,FALSE,Online,None,,,TRUE,Magic
+Votem,Internet Voting,CastIron Voting Platform,2016,2018,Mobile Device,Proprietary,Mobile,Online ballot,FALSE,Online,None,,,TRUE,Magic
+VotingWorks,BMD,VxMark,2020,2022,Debian 12,VxSuite v4 (open-source),Connected  to UPS,,TRUE,,VVSG 2.0,,,TRUE,Magic
+VotingWorks,Batch-Fed Optical Scanner,VxCentralScan,2020,2026,Debian 12,VxSuite v4 (open-source),Connected AC/UPS,50-100 ballots/min,FALSE,,VVSG 2.0,,,FALSE,Magic
+VotingWorks,Hand-Fed Optical Scanner,VxScan,2022,2026,Debian 12,VxSuite v4 (open-source),Connected AC/UPS,30 ballots/min,FALSE,2000 ballots,VVSG 2.0,,,FALSE,Magic
+ES&S,Batch-Fed Optical Scan Tabulator,Model 650,2004,2006,Windows,Proprietary,AC-powered,Highspeed,FALSE,,VVSG 1.0 (2005),,,TRUE,Magic
+Clear Ballot,BMD,ClearMark,2024,2026,,ClearVote 2.4/5,"Internal/external
+power source",N/A,TRUE,,"NYSBOE (2023)
++ VVSG 1.0 (2005)",,accessibility focused,FALSE,Magic + Shiny Melhiraj + The Bulls
+ES&S,Batch-Fed Optical Scanner,DS650,12/15/2005,2014,Embedded OS,V2.1,,,FALSE,500 ballots,,,,TRUE,The Bulls
+ES&S,Batch-Fed Optical Scanner,Model 150,1992,2002,Embedded OS,,,,FALSE,300,,,,TRUE,The Bulls
+ES&S,Batch-Fed Optical Scanner,Model 550,1990,2000,Embedded OS,,,50 ballots/min,FALSE,250-300,State-level certified,,,TRUE,The Bulls
+ES&S/Unisyn,Hand-Fed Optical Scanner,InkaVote,2002,2018,,,,,TRUE,,State-level certified,no software audit logs,,TRUE,The Bulls
+In-House,Electronic Poll Book,In-House Electronic Poll Books,2009,2025,windows/android,,,N/A,FALSE,N/A,,,,FALSE,The Bulls
+ES&S,Batch-Fed Optical Scanner,DS950,,,,EVS 6.5.0.0,,280 ballots/minute,,,(VVSG) 2.0,,,,The Bulls (Sanzida)
+ES&S,Batch-Fed Optical Scanner,DS450,6/3/2016,,,EVS 6.5.0.0,,72 ballots/minute,,,VVSG 1.0 (2005),,,FALSE,The Knicks (Gabriel)
+ES&S,BMD,ExpressVote,3/20/2014,2026,,EVS 6.5.0.0,,,,,VVSG 1.0 (2005),,,FALSE,The Knicks (Gabriel) + The Bulls
+ES&S,BMD/Tabulator,ExpressVote XL,2019,2026,,EVS 6.5.0.0,7hours/14hours,,,,VVSG 1.0 (2005),,,FALSE,The Knicks (Gabriel) + The Bulls
+AVS,DRE Touchscreen,WINVote,11/1/2003,2007,Windows 2000 Professional / Windows XP Embedded,1.54,,,FALSE,,Decertified 2007,malicious memory card wireless interception exposed ports insecure admin user password,,TRUE,The Knicks (Jerry)
+Avante,DRE Touchscreen,Vote-Trakker,3/1/2001,2020,Windows 2000 Professional,,,,TRUE,,FEC Certified,Exposed ports Exposed memory card slot malicious memory card,Uses Microsoft SQL-Server 2000,TRUE,The Knicks (Jerry)
+AVS,Batch-Fed Optical Scanner,WINScan,10/1/2003,2007,,,,,,,FEC VSS 2002,,,TRUE,The Knicks (Jerry)
+Clear Ballot,Hand-Fed Optical Scanner,ClearCast Go,1/3/2022,9/30/2024,Linux,ClearCast 2.3.0,0,8,FALSE,0,VVSG 1.0 (2005),"wireless vulnerabilities,default or weak passwords,unpatched or outdated operating system,exposed network services,insecure removable media,exposed physical ports,insufficient tamper-evident sealing",Battery life is 0 because the device has no internal battery and requires constant AC power.,FALSE,The Knicks (Sean)
+DFM Associates,Hand-Fed Optical Scanner,Mark-A-Vote,1/6/1981,12/31/2012,N/A,N/A,0,2,FALSE,0,None,"outdated design,no encryption,physical tampering risk","Battery life is 0 because the device has no internal power and relies on AC input only.
+Operating system and firmware version are N/A because the system is mechanical and does not include digital logic.",TRUE,The Knicks (Sean)
+DFM Associates,Electronic Poll Book,EIMS,1/1/1980,12/31/2024,Windows,N/A,0,0,FALSE,0,None,"unencrypted data,default or weak passwords,unpatched or outdated operating system,insecure removable media,exposed network services","Battery life is 0 because EIMS is software and has no hardware power supply of its own. Scanning rate is 0 because it does not process ballots. Paper capacity is 0 because the system is not designed to accept or scan physical paper. Firmware version is N/A because EIMS is a software application, not a hardware device.",FALSE,The Knicks (Sean)
+DFM Associates,Electronic Poll Book,Vote Center App,1/1/2018,12/31/2024,Windows,N/A,-1,0,FALSE,0,None,"unencrypted data,default or weak passwords,unpatched or outdated operating system,insecure removable media,exposed network services",Battery life is -1 because runtime depends on the external tablet or laptop used. Scanning rate is 0 because the system does not scan ballots. Paper capacity is 0 because the application does not intake physical paper. Firmware version is N/A because the product is software-only and not tied to dedicated hardware.,FALSE,The Knicks (Sean)
+Danaher,DRE Push Button,Shouptronic 1242,1/1/1986,12/31/2004,Embedded DOS,3.2,4,0,FALSE,0,FEC VSS 2002,"insecure physical access,unencrypted data,unpatched or outdated operating system,lack of audit trail,default or weak passwords",Scanning rate is 0 because the machine is a DRE and does not scan. Paper capacity is 0 because it does not intake or print ballots.,TRUE,The Knicks (Sean)
+DemTech,Electronic Poll Book,Advocate Precinct,1/1/2016,12/31/2022,Windows 10,AdvocateOS 3.0,8,0,FALSE,0,None,"default or weak passwords,insecure physical access,unencrypted data,unpatched or outdated operating system,lack of authentication",Scanning rate is 0 because this device does not scan. Paper capacity is 0 because it does not handle printed materials. Certification is Not Applicable as no federal or VVSG standard exists for poll books.,FALSE,The Knicks (Sean)
+DemTech,Electronic Poll Book,ePollTAB,1/1/2019,12/31/2023,Windows 10,AdvocateOS 4.1,10,0,FALSE,0,None,"default or weak passwords,unencrypted data,insecure physical access,lack of authentication,unpatched or outdated operating system",Scanning rate is 0 because this is a poll book and does not scan. Paper capacity is 0 because the device handles no paper. Certification is Not Applicable as poll books are not federally certified.,FALSE,The Knicks (Sean)
+Dominion,BMD,ImageCast Precinct BMD,1/1/2015,12/31/2023,Linux,ImageCastOS 5.2,6,0,TRUE,1,VVSG 1.0 (2005),"unencrypted data,insecure physical access,default or weak passwords,lack of audit trail",Battery life is 6 because device hardware supports 5–7 hours of operation. Scanning rate is 0 because it does not scan ballots. Paper capacity is 1 because it prints one marked ballot per session.,FALSE,The Knicks (Sean)
+Dominion,Batch-Fed Optical Scanner,ImageCast Central,6/1/2012,12/31/2023,Linux,ImageCastCentralOS 4.5,-1,300,FALSE,1000,VVSG 1.0 (2005),"unpatched or outdated operating system,default or weak passwords,insecure physical access",Battery life is -1 because this is a high-throughput central scanner typically powered by wall AC and not battery-operated.,FALSE,The Knicks (Sean)
+Dominion,DRE Touchscreen,ImageCast X as DRE,7/1/2015,12/31/2023,Android,ImageCastXOS 4.9,10,0,FALSE,0,VVSG 1.0 (2005),"unpatched or outdated operating system,insecure physical access,default or weak passwords,lack of audit trail",Battery life is 10 based on ruggedized tablet specs. Scanning rate is 0 because it does not scan ballots. Paper capacity is 0 because it does not print or handle paper.,FALSE,The Knicks (Sean)
+Dominion,Hand-Fed Optical Scanner,ImageCast Precinct,6/1/2015,12/31/2023,Linux,ImageCastPrecinctOS 5.0,6,71,FALSE,3000,VVSG 1.0 (2005),"unpatched or outdated operating system,default or weak passwords,insecure physical access",Battery life is 6 based on field reports from mobile precinct usage. Scanning rate is 71 based on Dominion documentation.,FALSE,The Knicks (Sean)
+Dominion,Hybrid Optical Scanner/BMD,ImageCast Evolution,6/1/2015,12/31/2023,Linux,ImageCastEvolutionOS 5.1,6,71,FALSE,3000,VVSG 1.0 (2005),"unpatched or outdated operating system,default or weak passwords,insecure physical access",Battery life is 6 based on field deployment references. Scanning rate is 71 as documented by Dominion.,FALSE,The Knicks (Sean)
+Dominion,Hybrid Optical Scanner/DRE,ImageCast Precinct ATI,6/1/2015,12/31/2023,Linux,ImageCastPrecinctOS 5.0,6,71,FALSE,3000,VVSG 1.0 (2005),"unpatched or outdated operating system,default or weak passwords,insecure physical access",Battery life is 6 based on same hardware as standard ImageCast Precinct. Scanning rate is 71 based on Dominion specs.,FALSE,The Knicks (Sean)
+Hart InterCivic,BMD,Verity Duo,1/1/1800,12/31/2024,None,None,-1,0,FALSE,0,Not Applicable,"insecure physical access,lack of authentication,lack of audit trail",Battery life is -1 because this is a non-electronic process. Scanning rate is 0 as ballots are counted by hand. Paper capacity is 0 because it does not involve a machine.,TRUE,The Knicks (Sean)
+Hart InterCivic,BMD,Verity Touch Writer,2/1/2015,12/31/2023,Proprietary Embedded OS,VerityOS 2.3,8,0,TRUE,1,VVSG 1.0,"unpatched or outdated operating system,insecure physical access,default or weak passwords,lack of audit trail",Battery life is 8 based on Hart Verity system specs. Scanning rate is 0 because this BMD does not scan. Paper capacity is 1 since it prints one ballot per session.,FALSE,The Knicks (Sean)
+Hart InterCivic,Batch-Fed Optical Scanner,Ballot Now,3/1/2015,12/31/2023,Proprietary Embedded OS,VerityOS 2.2,8,0,TRUE,1,VVSG 1.0,"unpatched or outdated operating system,insecure physical access,default or weak passwords,lack of audit trail",Battery life is 8 based on precinct-use Verity hardware specifications. Scanning rate is 0 because it does not tabulate. Paper capacity is 1 because it produces a single ballot.,FALSE,The Knicks (Sean)
+Hart InterCivic,Batch-Fed Optical Scanner,Verity Central,5/1/2003,12/31/2023,Windows XP,BallotNowOS 3.4,-1,72,FALSE,3000,VVSG 1.0,"unpatched or outdated operating system,default or weak passwords,insecure physical access",Battery life is -1 because it is a central count system powered by AC. Scanning rate is 72 based on vendor documentation.,FALSE,The Knicks (Sean)
+Hart InterCivic,DRE Dial,eSlate,4/1/2015,12/31/2023,Windows 10,VerityOS 2.5,-1,72,FALSE,3000,VVSG 1.0,"unpatched or outdated operating system,insecure physical access,default or weak passwords",Battery life is -1 because this is a central count system that operates exclusively on AC power. Scanning rate is 72 based on certified performance reports.,FALSE,The Knicks (Sean)
+Hart InterCivic,DRE Touchscreen,Verity Touch,6/1/2001,12/31/2019,Proprietary Embedded OS,eSlateOS 3.1,4,0,FALSE,0,VVSG 1.0,"unpatched or outdated operating system,insecure physical access,default or weak passwords,lack of audit trail",Battery life is 4 based on early-generation precinct deployment. Scanning rate is 0 because it is a DRE. Paper capacity is 0 because the eSlate did not use printed ballots.,TRUE,The Knicks (Sean)
+Hart InterCivic,Hand-Fed Optical Scanner,Verity Scan,4/1/2015,12/31/2023,Proprietary Embedded OS,VerityOS 2.5,8,0,FALSE,0,VVSG 2.0,"unpatched or outdated operating system,insecure physical access,default or weak passwords,lack of audit trail",Battery life is 8 based on Hart touchscreen hardware documentation. Scanning rate is 0 because it does not scan ballots. Paper capacity is 0 because it does not produce a printed record.,FALSE,The Knicks (Sean)
+Hart InterCivic,Hand-Fed Optical Scanner,eScan,4/1/2015,12/31/2023,Proprietary Embedded OS,VerityOS 2.5,8,71,FALSE,3000,VVSG 2.0,"unpatched or outdated operating system,insecure physical access,default or weak passwords",Battery life is 8 based on Verity field specifications. Scanning rate is 71 based on official Hart documentation.,FALSE,The Knicks (Sean)
+Hart InterCivic,Hybrid Optical Scanner/DRE,eScan A/T,6/1/2003,12/31/2019,Linux,eScanOS 2.0,6,71,FALSE,3000,VVSG 1.0,"unpatched or outdated operating system,insecure physical access,default or weak passwords",Battery life is 6 based on precinct unit deployment specs. Scanning rate is 71 based on official documentation.,FALSE,The Knicks (Sean)
+IVS,BMD,Inspire Ballot Marking Device,6/1/2008,12/31/2020,Linux,eScanATOS 2.2,6,71,TRUE,3000,VVSG 1.0,"unpatched or outdated operating system,insecure physical access,default or weak passwords,lack of audit trail",Battery life is 6 based on hybrid scanner deployments. Scanning rate is 71 as per Hart specifications.,FALSE,The Knicks (Sean)
+Democracy Live,BMD,OmniBallot Tablet,,,Windows 10 IoT Enterprise,,,,FALSE,,,,,,Timberwolves (Akib)
+Democracy Live,Internet Voting,OmniBallot Online,2008,,,,,,FALSE,,,"Electronic return of voted ballot (internet voting) supported, screen reader incompatibility, AWS cloud hosting, sharing of voter's identity and selections",,FALSE,Timberwolves (Akib)
+Democracy Live,Remote Ballot Marking,Secure Select,2018,2024,Web-based,SecureSelect 1.0,Device Reliant,N/A,FALSE,,,Unreadable bar codes and QR codes,,TRUE,"Timberwolves (Akib)
++ Magic"
+Dominion,BMD,ImageCast X,2016,2026,,,,,TRUE,,VVSG 1.0 (2005),"Improper verification of cryptographic signature, mutable attestation or measurement reporting data
+hidden functionality, improper protection of alternate path, path traversal, executation with unnecessary privileges,
+authentication bypass by spoofing, incorrect privilege assignment, origin validation error",,FALSE,"Timberwolves (Akib)
++ Magic"
+ES&S,DRE Touchscreen,ExpressTouch,2020,2026,,EVS 6.0.4.0,,N/A,FALSE,0,VVSG 1.0 (2005),,,FALSE,"Timberwolves (Akib) 
++ Magic"
+ES&S,BMD,AutoMARK,2003,,Windows,,2 Hours,,FALSE,,VSS 2002,Windows Key Vulnerability,,TRUE,Timberwolves (Akib)/Lakers
+ES&S,Batch-Fed Optical Scanner,Batch-Fed Optical Scanner,,,,EVS 6.5.0.0,,,,,VVSG 1.0 (2005),,,,
+ES&S,Hand-Fed Optical Scanner,DS200,2009,2026,Linux,EVS 6.5.0.0,4,11 ballots/min,FALSE,3500,VVSG 1.0 (2005),,,FALSE,The Bulls
+ES&S,Hand-Fed Optical Scanner,DS300,2023,2026,Linux,VVSG 2.0,6,,FALSE,3000,VVSG 1.0 (2005),,5-7 year production and service parts supply,FALSE,The Bulls
+ES&S/Unisyn,BMD,InkaVote Plus,,,,,,,,,,,,,
+Enhanced Voting,Remote Ballot Marking,MyBallot,2013,,Web-based (single HTML file),,,N/A,TRUE,N/A,,Unreadable bar codes and QR codes,,,
+Five Cedars Group,BMD,Alternate Format Ballot,,,,,,,,,,,,,
+Hand Count,Hand Count,Hand Counted Paper Ballots,,,,,,,,,,,,,
+In-House,Internet Voting,In-House Internet Voting Systems,,,,,,,,,,,,,
+In-House,Remote Ballot Marking,In-House Remote Ballot Marking Systems,,,,,,,,,,,,,
+MicroVote,DRE Push Button,MV-464,1985,,,,,,,,VSTL Certification Test Plan,"in the event of a failure in the electronics, the last 4 votes cast would be lost",,2016,
+MicroVote/Chatsworth,Hand-Fed Optical Scanner,ACP 2200,2004,,Embedded OS,,,,FALSE,,v.4.0B EAC certification,,,,The Bulls
+Premier Election Solutions (Diebold),Batch-Fed Optical Scanner,AccuVote OS Central,,,,,,,,,,,,,
+Premier Election Solutions (Diebold),DRE Touchscreen,AccuVote TSX,,,,,,,,,,,,,
+Robis,Electronic Poll Book,AskED ePollbook,,,,,,,,,,,,,
+Sequoia Voting Systems,Batch-Fed Optical Scanner,Optech 400C,,,,,,,,,,,,,
+Sequoia Voting Systems,DRE Touchscreen,AVC Edge,,,,,,,,,,,,,
+Sequoia Voting Systems,Hand-Fed Optical Scanner,Optech Insight,,,,,,,,,,,,,
+Sequoia and ES&S,Hand-Fed Optical Scanner,Optech IIIP-Eagle,,,,,,,,,,,,,
+UniLect,DRE Touchscreen,Patriot,,,,,,,,,,,,,
+UniLect,Hand-Fed Optical Scanner,Marksense Scanner,,,,,,,,,,,,,
+Vote-PAD,BMD,Ballot Marking System,,,,,,,,,,,,,
+Votec,Electronic Poll Book,VoteSafe,2015,2024,Windows,,Device Reliant,N/A,FALSE,N/A,,,,FALSE,The Bulls
