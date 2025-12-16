@@ -52,9 +52,7 @@ const DEMOGRAPHIC_COLORS: Record<string, string> = {
     "Other": "#c2185b",
 };
 
-const toBackendFormat = (demographic: string): string => {
-    return demographic.toLowerCase().replace(/ /g, '_');
-};
+
 
 const API_TO_UI_DEMOGRAPHIC: Record<string, string> = {
     "white": "White",

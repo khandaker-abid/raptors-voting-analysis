@@ -414,6 +414,6 @@ export async function getEveryStateEquipmentData() {
     try {
         return data;
     } catch (error) {
-        console.error('Error:', error);
+        console.log('Error:', error);
     }
 }

@@ -419,14 +419,15 @@ public class EquipmentController {
         query.addCriteria(Criteria.where("recordType").is("equipment_detail"));
         List<Map> allEquipment = mongoTemplate.find(query, Map.class, "votingEquipmentDetails");
 
-        // Fallback for local/dev when Mongo is not seeded: compute from bundled sample data.
+        // Fallback for local/dev when Mongo is not seeded: compute from bundled sample
+        // data.
         if (allEquipment.isEmpty()) {
             try {
                 ObjectMapper mapper = new ObjectMapper();
                 List<Map<String, Object>> sample = mapper.readValue(
                         new ClassPathResource("data/every-state-all-models-data.json").getInputStream(),
-                        new TypeReference<List<Map<String, Object>>>() {}
-                );
+                        new TypeReference<List<Map<String, Object>>>() {
+                        });
                 allEquipment = (List<Map>) (List<?>) sample;
             } catch (Exception e) {
                 // Preserve contract; frontend will show empty state gracefully.
@@ -523,8 +524,8 @@ public class EquipmentController {
                 ObjectMapper mapper = new ObjectMapper();
                 List<Map<String, Object>> sample = mapper.readValue(
                         new ClassPathResource("data/every-state-all-models-data.json").getInputStream(),
-                        new TypeReference<List<Map<String, Object>>>() {}
-                );
+                        new TypeReference<List<Map<String, Object>>>() {
+                        });
                 allEquipment = (List<Map>) (List<?>) sample;
             } catch (Exception e) {
                 return List.of();
@@ -1180,22 +1181,175 @@ public class EquipmentController {
             }
         }
 
-        Map<String, Object> republicanRegression = calculatePowerRegression(republicanPoints, "R");
-        Map<String, Object> democraticRegression = calculatePowerRegression(democraticPoints, "D");
-
         Map<String, Object> response = new HashMap<>();
         response.put("dataPoints", dataPoints);
 
+        // Prefer quadratic regression when available; otherwise fall back to exponential, power, then linear
+        Map<String, Object> repReg = calculateQuadraticRegression(republicanPoints, "R");
+        if (repReg == null) repReg = calculateExponentialRegression(republicanPoints, "R");
+        if (repReg == null) repReg = calculatePowerRegression(republicanPoints, "R");
+        if (repReg == null) repReg = calculateLinearRegression(republicanPoints, "R");
+
+        Map<String, Object> demReg = calculateQuadraticRegression(democraticPoints, "D");
+        if (demReg == null) demReg = calculateExponentialRegression(democraticPoints, "D");
+        if (demReg == null) demReg = calculatePowerRegression(democraticPoints, "D");
+        if (demReg == null) demReg = calculateLinearRegression(democraticPoints, "D");
+
         List<Map<String, Object>> regressionLines = new ArrayList<>();
-        if (republicanRegression != null) {
-            regressionLines.add(republicanRegression);
-        }
-        if (democraticRegression != null) {
-            regressionLines.add(democraticRegression);
-        }
+        if (repReg != null) regressionLines.add(repReg);
+        if (demReg != null) regressionLines.add(demReg);
         response.put("regressionLines", regressionLines);
 
         return response;
+    }
+    // Quadratic regression: fits y = a*x^2 + b*x + c
+    private Map<String, Object> calculateQuadraticRegression(List<double[]> points, String party) {
+        if (points.size() < 3) {
+            return null; // Not enough points for regression
+        }
+
+        int n = points.size();
+        double sumX = 0, sumX2 = 0, sumX3 = 0, sumX4 = 0;
+        double sumY = 0, sumXY = 0, sumX2Y = 0;
+        for (double[] p : points) {
+            double x = p[0];
+            double y = p[1];
+            sumX += x;
+            sumX2 += x * x;
+            sumX3 += x * x * x;
+            sumX4 += x * x * x * x;
+            sumY += y;
+            sumXY += x * y;
+            sumX2Y += x * x * y;
+        }
+
+        // Solve the normal equations for quadratic regression
+        // | n    sumX   sumX2 |   | c |   | sumY   |
+        // | sumX sumX2  sumX3 | * | b | = | sumXY  |
+        // | sumX2 sumX3 sumX4 |   | a |   | sumX2Y |
+
+        double[][] A = {
+            { n, sumX, sumX2 },
+            { sumX, sumX2, sumX3 },
+            { sumX2, sumX3, sumX4 }
+        };
+        double[] B = { sumY, sumXY, sumX2Y };
+
+        double[] coeffs = solve3x3(A, B);
+        if (coeffs == null) return null;
+        double c = coeffs[0], b = coeffs[1], a = coeffs[2];
+
+        // Calculate R^2
+        double meanY = sumY / n;
+        double ssTot = 0, ssRes = 0;
+        for (double[] p : points) {
+            double x = p[0];
+            double y = p[1];
+            double yPred = a * x * x + b * x + c;
+            ssTot += (y - meanY) * (y - meanY);
+            ssRes += (y - yPred) * (y - yPred);
+        }
+        double r2 = (ssTot > 0) ? 1 - (ssRes / ssTot) : 0;
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("party", party);
+        result.put("type", "quadratic");
+        Map<String, String> coefficients = new HashMap<>();
+        // Round coefficients to 4 decimal places for display
+        coefficients.put("a", String.format("%.4f", a));
+        coefficients.put("b", String.format("%.4f", b));
+        coefficients.put("c", String.format("%.4f", c));
+        result.put("coefficients", coefficients);
+        result.put("r2", Math.round(r2 * 1000) / 1000.0);
+        return result;
+    }
+
+    // Helper to solve 3x3 linear system (Ax = B)
+    private double[] solve3x3(double[][] A, double[] B) {
+        double a00 = A[0][0], a01 = A[0][1], a02 = A[0][2];
+        double a10 = A[1][0], a11 = A[1][1], a12 = A[1][2];
+        double a20 = A[2][0], a21 = A[2][1], a22 = A[2][2];
+        double b0 = B[0], b1 = B[1], b2 = B[2];
+
+        double det = a00 * (a11 * a22 - a12 * a21)
+                   - a01 * (a10 * a22 - a12 * a20)
+                   + a02 * (a10 * a21 - a11 * a20);
+        if (Math.abs(det) < 1e-12) return null;
+
+        double det0 = b0 * (a11 * a22 - a12 * a21)
+                    - a01 * (b1 * a22 - a12 * b2)
+                    + a02 * (b1 * a21 - a11 * b2);
+        double det1 = a00 * (b1 * a22 - a12 * b2)
+                    - b0 * (a10 * a22 - a12 * a20)
+                    + a02 * (a10 * b2 - b1 * a20);
+        double det2 = a00 * (a11 * b2 - b1 * a21)
+                    - a01 * (a10 * b2 - b1 * a20)
+                    + b0 * (a10 * a21 - a11 * a20);
+
+        return new double[] { det0 / det, det1 / det, det2 / det };
+    }
+
+    // Exponential regression: fits y = a * exp(bx)
+    private Map<String, Object> calculateExponentialRegression(List<double[]> points, String party) {
+        if (points.size() < 3) {
+            return null; // Not enough points for regression
+        }
+
+        List<double[]> validPoints = new ArrayList<>();
+        for (double[] p : points) {
+            if (p[0] > 0 && p[1] > 0) {
+                validPoints.add(p);
+            }
+        }
+
+        if (validPoints.size() < 3) {
+            return calculateLinearRegression(points, party);
+        }
+
+        int n = validPoints.size();
+        double sumX = 0, sumLogY = 0, sumX2 = 0, sumXLogY = 0;
+        for (double[] p : validPoints) {
+            double x = p[0];
+            double logY = Math.log(p[1]);
+            sumX += x;
+            sumLogY += logY;
+            sumX2 += x * x;
+            sumXLogY += x * logY;
+        }
+
+        double denominator = n * sumX2 - sumX * sumX;
+        if (Math.abs(denominator) < 0.0001) {
+            return null; // Avoid division by zero
+        }
+
+        double b = (n * sumXLogY - sumX * sumLogY) / denominator;
+        double logA = (sumLogY - b * sumX) / n;
+        double a = Math.exp(logA);
+
+        // Calculate R^2
+        double meanLogY = sumLogY / n;
+        double ssTot = 0, ssRes = 0;
+        for (double[] p : validPoints) {
+            double x = p[0];
+            double logY = Math.log(p[1]);
+            double predictedLogY = logA + b * x;
+            ssTot += (logY - meanLogY) * (logY - meanLogY);
+            ssRes += (logY - predictedLogY) * (logY - predictedLogY);
+        }
+        double r2 = (ssTot > 0) ? 1 - (ssRes / ssTot) : 0;
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("party", party);
+        result.put("type", "exponential");
+
+        Map<String, String> coefficients = new HashMap<>();
+        coefficients.put("a", String.format("%.8g", a));
+        coefficients.put("b", String.format("%.8g", b));
+        result.put("coefficients", coefficients);
+
+        result.put("r2", Math.round(r2 * 1000) / 1000.0);
+
+        return result;
     }
 
     private Map<String, Object> calculatePowerRegression(List<double[]> points, String party) {
@@ -1247,9 +1401,9 @@ public class EquipmentController {
         result.put("party", party);
         result.put("type", "power");
 
-        Map<String, Double> coefficients = new HashMap<>();
-        coefficients.put("a", Math.round(a * 10000) / 10000.0);
-        coefficients.put("b", Math.round(b * 10000) / 10000.0);
+        Map<String, String> coefficients = new HashMap<>();
+        coefficients.put("a", String.format("%.8g", a));
+        coefficients.put("b", String.format("%.8g", b));
         result.put("coefficients", coefficients);
 
         result.put("r2", Math.round(r2 * 1000) / 1000.0);

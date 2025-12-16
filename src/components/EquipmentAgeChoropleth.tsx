@@ -42,6 +42,8 @@ const EquipmentAgeChoropleth: React.FC<Props> = ({
     geoJsonData,
     onClose,
 }) => {
+    // mark unused prop as referenced to avoid lint errors
+    void onClose;
     const mapRef = useRef<L.Map | null>(null);
     const geoRef = useRef<L.GeoJSON | null>(null);
     const hoveredRef = useRef<L.Path | null>(null);

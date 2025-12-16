@@ -1,7 +1,7 @@
 import { saveAs } from 'file-saver';
 export function convertToCSV(data: any[], filename: string): void {
     if (!data || data.length === 0) {
-        console.warn('No data to export');
+        console.log('No data to export');
         return;
     }
 
@@ -33,7 +33,7 @@ export async function exportChartAsPNG(
 
         const element = document.getElementById(elementId);
         if (!element) {
-            console.error(`Element with id "${elementId}" not found`);
+            console.log(`Element with id "${elementId}" not found`);
             return;
         }
 
@@ -49,7 +49,7 @@ export async function exportChartAsPNG(
             }
         });
     } catch (error) {
-        console.error('Error exporting chart as PNG:', error);
+        console.log('Error exporting chart as PNG:', error);
     }
 }
 
@@ -59,7 +59,7 @@ export function exportTableToCSV(
     filename: string
 ): void {
     if (!tableData || tableData.length === 0) {
-        console.warn('No table data to export');
+        console.log('No table data to export');
         return;
     }
 

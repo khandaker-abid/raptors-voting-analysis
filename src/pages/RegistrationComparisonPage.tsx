@@ -60,7 +60,7 @@ const RegistrationComparisonPage: React.FC = () => {
 
         setEarlyVotingData(earlyVoting);
       } catch (err) {
-        console.error("Error loading registration comparison data:", err);
+        console.log("Error loading registration comparison data:", err);
         setError(err instanceof Error ? err.message : "Failed to load data");
       } finally {
         setLoading(false);

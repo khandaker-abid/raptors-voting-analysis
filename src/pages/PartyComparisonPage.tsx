@@ -72,7 +72,7 @@ const PartyComparisonPage: React.FC = () => {
                 setError(null);
             } catch (err) {
                 if (!active) return;
-                console.error("Failed to fetch party comparison data", err);
+                console.log("Failed to fetch party comparison data", err);
                 setError("Unable to load party comparison data. Please try again later.");
             } finally {
                 if (active) setLoading(false);

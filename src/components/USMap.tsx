@@ -21,7 +21,7 @@ const USMap: React.FC = () => {
 		fetch("/us-state-boundaries.geojson")
 			.then((response) => response.json())
 			.then((data) => setGeoData(data))
-			.catch((error) => console.error("Error loading GeoJSON:", error));
+			.catch((error) => console.log("Error loading GeoJSON:", error));
 	}, []);
 
 	const getFeatureStyle = (feature?: Feature) => {
