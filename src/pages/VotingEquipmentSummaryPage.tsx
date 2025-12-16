@@ -21,3 +21,4 @@ const VotingEquipmentSummaryPage: React.FC = () => {
 };
 
 export default VotingEquipmentSummaryPage;
+

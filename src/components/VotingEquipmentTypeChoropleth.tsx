@@ -78,6 +78,7 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                     (hoveredRef.current as any).closeTooltip();
                 }
             } catch {
+                // ignore reset/tooltip errors from Leaflet during rapid hover changes
             }
             hoveredRef.current = null;
         }
@@ -226,7 +227,9 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                                             }
                                         } else {
                                             try {
-                                                layer.setStyle && layer.setStyle({ fill: `url(#${patternId})`, fillOpacity: 1 } as any);
+                                                if (layer.setStyle) {
+                                                    layer.setStyle({ fill: `url(#${patternId})`, fillOpacity: 1 } as any);
+                                                }
                                                 console.log('[EquipChoropleth] FORCE setStyle applied for', unitName);
                                             } catch (err) {
                                                 console.log('[EquipChoropleth] FORCE setStyle failed for', unitName, err);
@@ -234,32 +237,36 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                                         }
                                     }
                                 }
-                            } catch (err) {
+                            } catch {
                                 /* ignore per-layer errors */
                             }
                         });
-                    // summary pass: count mixed layers and those with applied pattern fills
-                    try {
-                        let totalMixed = 0;
-                        let withAttr = 0;
-                        let withStyle = 0;
-                        (mapLayers as any).getLayers().forEach((layer: any) => {
-                            try {
-                                const feat = layer.feature; if (!feat || !feat.properties) return;
-                                const unitName = Array.isArray(feat.properties?.coty_name_long || feat.properties?.coty_name || [feat.properties?.name]) ? (feat.properties?.coty_name_long || feat.properties?.coty_name || [feat.properties?.name])[0] : feat.properties?.name;
-                                const normalized = normalizeCountyName(unitName);
-                                const eq = equipmentLookup.get(normalized);
-                                if (eq && eq.primaryEquipmentType === 'MIXED') {
-                                    totalMixed += 1;
-                                    const p = (layer as any)._path;
-                                    if (p && p.getAttribute && (p.getAttribute('fill') || '').startsWith('url(#')) withAttr += 1;
-                                    if ((layer as any).options && ((layer as any).options.fill || '').startsWith('url(#')) withStyle += 1;
+                        // summary pass: count mixed layers and those with applied pattern fills
+                        try {
+                            let totalMixed = 0;
+                            let withAttr = 0;
+                            let withStyle = 0;
+                            (mapLayers as any).getLayers().forEach((layer: any) => {
+                                try {
+                                    const feat = layer.feature; if (!feat || !feat.properties) return;
+                                    const unitName = Array.isArray(feat.properties?.coty_name_long || feat.properties?.coty_name || [feat.properties?.name]) ? (feat.properties?.coty_name_long || feat.properties?.coty_name || [feat.properties?.name])[0] : feat.properties?.name;
+                                    const normalized = normalizeCountyName(unitName);
+                                    const eq = equipmentLookup.get(normalized);
+                                    if (eq && eq.primaryEquipmentType === 'MIXED') {
+                                        totalMixed += 1;
+                                        const p = (layer as any)._path;
+                                        if (p && p.getAttribute && (p.getAttribute('fill') || '').startsWith('url(#')) withAttr += 1;
+                                        if ((layer as any).options && ((layer as any).options.fill || '').startsWith('url(#')) withStyle += 1;
+                                    }
+                                } catch {
+                                    // ignore per-layer errors
                                 }
-                            } catch (e) {}
-                        });
-                        console.log('[EquipChoropleth] FORCE-APPLY summary: mixed total=', totalMixed, 'withAttr=', withAttr, 'withStyle=', withStyle);
-                    } catch (e) { console.log('[EquipChoropleth] FORCE-APPLY summary failed', e); }
-                } catch (err) {
+                            });
+                            console.log('[EquipChoropleth] FORCE-APPLY summary: mixed total=', totalMixed, 'withAttr=', withAttr, 'withStyle=', withStyle);
+                        } catch (err) {
+                            console.log('[EquipChoropleth] FORCE-APPLY summary failed', err);
+                        }
+                    } catch (err) {
                         console.log('[EquipChoropleth] FORCE-APPLY loop failed', err);
                     }
                 }, 300);
@@ -555,7 +562,14 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                 const weights = types.map((t: any) => t.count);
                 const provisionalBlend = blendHexColors(colorsForBlend, weights);
                 try {
-                    (layer as any).setStyle && (layer as any).setStyle({ fillColor: provisionalBlend, fillOpacity: 1, color: '#ffffff', dashArray: '4,6' } as any);
+                    if ((layer as any).setStyle) {
+                        (layer as any).setStyle({
+                            fillColor: provisionalBlend,
+                            fillOpacity: 1,
+                            color: '#ffffff',
+                            dashArray: '4,6',
+                        } as any);
+                    }
                     console.log('[EquipChoropleth] provisional blended fill applied', provisionalBlend, 'to', unitName);
                 } catch (err) {
                     console.log('[EquipChoropleth] failed to apply provisional fill to', unitName, err);
@@ -576,7 +590,7 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                                 el.setAttribute('fill', `url(#${patternId})`);
                                 el.setAttribute('fill-opacity', '1');
                                 el.setAttribute('stroke', '#ffffff');
-                            } catch (err) {
+                            } catch {
                                 // attribute set may fail on non-SVG renderers
                             }
 
@@ -587,16 +601,18 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                                 (layer as any).options.fillOpacity = 1;
                                 if ((layer as any).feature) (layer as any).feature.properties = (layer as any).feature.properties || {};
                                 (layer as any).feature.properties.__appliedPatternFill = `url(#${patternId})`;
-                            } catch (err) {
+                            } catch {
                                 /* ignore */
                             }
 
                             // remove dashed stroke
-                            (layer as any).setStyle && (layer as any).setStyle({ dashArray: null } as any);
+                            if ((layer as any).setStyle) {
+                                (layer as any).setStyle({ dashArray: null } as any);
+                            }
                             console.log('[EquipChoropleth] applied pattern', patternId, 'to', unitName);
                             return;
                         }
-                    } catch (err) {
+                    } catch {
                         // ignore and retry
                     }
                     if (attempt < 5) setTimeout(() => applyPattern(attempt + 1), 60 * (attempt + 1));
@@ -623,7 +639,7 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                     else if (baseStyle && (baseStyle as any).fillColor) hoverStyle.fillColor = (baseStyle as any).fillColor;
 
                     targetLayer.setStyle(hoverStyle as any);
-                } catch (err) {
+                } catch {
                     // fallback
                     targetLayer.setStyle({
                         weight: 3,
@@ -657,22 +673,26 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                             styleApply.fillOpacity = expected.fillOpacity ?? 1;
                             styleApply.color = expected.color ?? '#ffffff';
                             styleApply.weight = expected.weight ?? 2;
-                            target.setStyle && target.setStyle(styleApply as any);
+                            if (target.setStyle) {
+                                target.setStyle(styleApply as any);
+                            }
 
                             // Also set DOM fill attribute so the visual is immediate and doesn't rely on CSS defaults
                             if (target._path) {
                                 try {
-                                    target._path.setAttribute && target._path.setAttribute('fill', explicitFill);
-                                    target._path.setAttribute && target._path.setAttribute('fill-opacity', String(styleApply.fillOpacity));
-                                } catch (err) {
+                                    if (target._path.setAttribute) {
+                                        target._path.setAttribute('fill', explicitFill);
+                                        target._path.setAttribute('fill-opacity', String(styleApply.fillOpacity));
+                                    }
+                                } catch {
                                     /* ignore */
                                 }
                             }
                         }
-                    } catch (err) {
+                    } catch {
                         /* ignore */
                     }
-                } catch (err) {
+                } catch {
                     geoRef.current?.resetStyle(e.target as any);
                 }
 
@@ -740,12 +760,12 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                                         layer.feature.properties.__appliedPatternFill = `url(#${patternId})`;
                                         console.log('[EquipChoropleth] reapplied pattern', patternId, 'to', unitName);
                                     }
-                                } catch (err) {
+                                } catch {
                                     // ignore per-layer
                                 }
                             }
                         }
-                    } catch (err) {
+                    } catch {
                         // ignore per-layer
                     }
                 });
@@ -765,11 +785,11 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                 try {
                     ensureSvgDefs();
                     console.log('[EquipChoropleth] map.whenReady ensured SVG defs');
-                } catch (e) {
+                } catch {
                     /* ignore */
                 }
             });
-        } catch (e) {
+        } catch {
             // older map implementations may not have whenReady
         }
 
@@ -860,7 +880,7 @@ const VotingEquipmentTypeChoropleth: React.FC<Props> = ({
                         data={geoData}
                         style={getFeatureStyle}
                         onEachFeature={onEachFeature}
-                        // @ts-ignore - pass renderer through to underlying Leaflet geoJSON layer
+                        // @ts-expect-error - pass renderer through to underlying Leaflet geoJSON layer (react-leaflet typings don't expose this prop)
                         renderer={L.svg() as any}
                     />
                 </MapContainer>

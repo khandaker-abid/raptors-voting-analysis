@@ -1,4 +1,5 @@
-Preliminary Master Use Case List (11/30/25)
+Preliminary Master Use Case List (12/14/25)
+
 CSE416, S01 – Fall 2025
 
 Project goals
@@ -15,7 +16,6 @@ Display data in a way that allows for the discovery
 of data anomalies.
 Compare voting patterns between a Republican
 state and a Democratic state.
-Determine the results of varying state policies for
 voter registration
 Determine year over year trends in voting
 
@@ -92,7 +92,8 @@ category (i.e., provisional ballots) preselected. Note that the default provisio
 requirements (map, chart, and table) will be stated in separate use cases, while subsequent
 EAVS display requirements will be combined into single use cases. If the state is a Political
 Party detailed state, the percentage of CVAP voters eligible to vote will be displayed (calculated
-as the number of 2024 EAVS registered voters divided by the 2023 ACS CVAP).
+as the number of 2024 EAVS registered voters divided by the 2023 ACS CVAP). Your EAVS
+quality data measure (Prepro-5) will be displayed on the page.
 GUI-3.
 Provisional ballot bar chart (required) (SD)
 The state map GUI page will contain a GUI component for a bar chart that displays the various
@@ -125,7 +126,10 @@ make and model), the data should include quantity, equipment type, short descrip
 underlying OS, certification, scan rate, error rate, and reliability. For certification, use the
 following categories: VVSG 2.0 certified, VVSG 2.0 applied, VVSG 1.1 certified, VVSG 1.0 certified,
 and not certified. If a voting device is no longer available from the manufacturer, the make and
-model should be displayed in red.
+model should be displayed in red. Remember to extract equipment details (e.g., certification
+level) from the shared Google Sheet (link on class home page). Add equipment information to
+the shared Google Sheet and remember to include your team name in the sheet if you added
+information.
 GUI-7.
 Display 2024 EAVS active voters (required)
 In response to a user selection of active voters from the EAVS data category drop-down menu
@@ -144,16 +148,17 @@ inactive voters for each of the EAVS geographic units. The choropleth map will s
 percentage of total number of deletions. When calculating the percentage, use the Total
 Registered (A1a) as the denominator. If the state is not a detailed data state, the map will just
 show the state.
-GUI-9.
+
+3
+
+GUI-9.
 Display mail ballots rejected (preferred)
 In response to a user selection of mail ballot rejections from the EAVS drop-down menu on the
 state page, the bar chart will display the total number of rejections for each of the categories
 (C9b-C9q). The table will display the number of rejections for each of the categories for each
 EAVS geographic units. The choropleth map will show the percentage of total number of ballot
 rejections. If the state is not a detailed data state, the map will just show the state.
-3
-
-GUI-10. Display type of voting equipment (preferred)
+GUI-10. Display type of voting equipment (preferred)
 For detailed data states, in response to a user selection from the EAVS drop-down menu on the
 state page, EAVS geographic units on the map will fill with different colors depending on the
 voting equipment used in the region. The categories of voting equipment should be DRE no
@@ -161,11 +166,12 @@ VVPAT, DRE with VVPAT, ballot marking device, and scanner. A legend should ident
 colors. If some combination of device types is used within a region, display the fill with a stripe
 pattern or blended color. The colors should provide good contrast.
 GUI-11. Display relative age of voting equipment (preferred)
-In response to a user selection on a splash page dropdown menu, the US map on the page will
-show a choropleth map for the age of voting equipment used in each state. The choropleth bins
-will show age as 1 year through 10 years, with an additional category for older than 10 years.
-Colors will be in the same hue, with saturation increasing with older devices. When calculating
-the average age of devices, just consider the number of devices and the age of each device.
+In response to a user selection on a splash page dropdown menu (or button), the US map on the
+page will show a choropleth map for the age of voting equipment used in each state. The
+choropleth bins will show age as 1 year through 10 years, with an additional category for older
+than 10 years. Colors will be in the same hue, with saturation increasing with older devices.
+When calculating the average age of devices, just consider the number of devices and the age of
+each device.
 GUI-12. Display voting equipment in US (required)
 In response to the user selecting a state voting equipment GUI component (e.g., button) on the
 splash page, the system will display a table of equipment used in 2024. Each row of the table
@@ -189,15 +195,15 @@ compare the team-selected Republican state with the team-selected Democratic sta
 resulting display will contain a table containing one column for Republican data and one
 column for Democratic data. Table data will include felony voting rights (Prepro-13),
 percentage of mail ballots, percentage of drop box ballots, turnout, and others.
-GUI-16. Compare changes in voter registration (preferred)
+4
+
+GUI-16. Compare changes in voter registration (preferred)
 For every EAVS state, sort the EAVS geographical units in order of increasing number of
 registered voters for 2024 EAVS. Using that sorted group of units, determine the corresponding
 registered voter numbers for 2020 and 2016. Plot all three lines in a line graph. All calculations
 should be done either on the server or in preprocessing. The line graphs should include labeling
 of the axes and the lines so that the user can understand the data.
-4
-
-GUI-17. Display voter registration data (required)
+GUI-17. Display voter registration data (required)
 When displaying a state display page, if the current state is one for which you have voter
 registration data, the page will include a GUI component to allow the user to request a display
 of voter registration data. For example, the non-map component of the page might use tabs, and
@@ -206,9 +212,10 @@ registration data component, the map will display a choropleth map of the EAVS r
 the percentage of registered voters used to determine the choropleth colors. The registered
 voter tab will display a table with one row for each EAVS region. The columns for the table will
 be the number of registered voters, the number of Democratic, Republican, and unaffiliated
-voters, and other columns you select when data is available. Note: you can always check the
-suitability of a data column with a post to Piazza. For the table data component, scrolling is
-acceptable, but pagination is preferred.
+voters, and other columns you select when data is available. The table will include columns for
+completeness data you calculate in Prepro-7. Note: you can always check the suitability of a
+data column with a post to Piazza. For the table data component, scrolling is acceptable, but
+pagination is preferred.
 GUI-18. Display voter registration bubble chart (preferred) (SD)
 When displaying a state display page, if the current state is your registered voter state, the user
 will be able to trigger the display of a bubble chart showing the dominant political party in each
@@ -217,7 +224,7 @@ with the most registered voters (Republican or Democratic). The bubble chart wil
 state map on the page, and the location of each bubble will correspond to the lat/long center
 point of each census block. The size of each bubble will be the same for all census blocks, but
 that size will be selected to minimize bubble overlapping and still provide visibility to the state
-map.
+map. This use case is related to Prepro-9.
 GUI-19. Display registered voters (required)
 When displaying a state display page, if the current state is your voter registration state, the GUI
 will allow the user to click on an EAVS geographic unit and trigger the display of the names of
@@ -229,7 +236,10 @@ After selecting a detailed state from the map, the user will be shown the bounda
 set of EAVS geographical units for that state. The state map should be a fraction of the usable
 screen since other state data is also displayed. The state will be centered and at a zoom level
 appropriate to the size and location of the state and the GUI component. .
-GUI-21. Compare voter registration data for opt-in and opt-out (required)
+
+5
+
+GUI-21. Compare voter registration data for opt-in and opt-out (required)
 The splash screen will include a screen component to allow the user to request a comparison of
 voter registration data for an opt-in state, an opt-out state with same-day registration, and an
 opt-out state with no same-day registration. When the user requests the comparison, a
@@ -237,10 +247,7 @@ component of the splash screen will show a table of data for the three states. T
 show the 2024 data from the EAVS dataset that displays voter registration rates and turnout
 rates, with both the absolute numbers and the percentages. An interesting addition to the table,
 but not required, is to also show the same-day registration numbers and percentages.
-
-5
-
-GUI-22. Compare Republican and Democratic states (required)
+GUI-22. Compare Republican and Democratic states (required)
 The splash screen will include a screen component to allow the user to request a comparison of
 registration data for the Republican and Democratic state the team selected. When the user
 requests the comparison, a component of the splash screen will show a table of data for the two
@@ -261,9 +268,10 @@ display one bubble for each EAVS geographic unit. The color of the bubble will c
 the party in that unit with the most votes in the 2024 Presidential election (i.e., red or blue). The
 x-axis of each bubble will correspond to the percentage of Republican votes in that unit, and the
 y-axis position of each bubble will correspond to the percentage of drop box voting in that unit.
-Use the total drop box votes (C3a) in your calculation. Note: some states may not use drop
+Use the total drop box votes (C6a) in your calculation. Note: some states may not use drop
 boxes. If one of your states does not use drop boxes, you can replace it with another state with
-the same party domination. In this case the state selection limit does not apply.
+the same party domination. In this case the state selection limit does not apply. Alternatively,
+you can opt to use a different data item (e.g., mail-in ballot) in your bubble chart.
 GUI-25. Bubble chart for voting equipment quality and rejected ballots (required)
 The state page will include a screen component to allow the user to request the display of a
 bubble chart that associates voting equipment quality with the percentage of rejected ballots.
@@ -274,16 +282,15 @@ number of rejected ballots divided by the total number of ballots (Absentee Ball
 Early In-Person Ballots Counted + Election Day Ballots + Provisional Ballots Counted). The
 number of rejected ballots includes mail-in ballots (C9a), provisional ballots (E1d), and
 UOCAVA ballots (B24a).
-GUI-26. Bubble chart regression line (preferred) (SD)
+6
+
+GUI-26. Bubble chart regression line (preferred) (SD)
 For the bubble chart above, calculate the non-linear regression line for each political party. The
 calculation should be done either on the server or preprocessed, with the coefficients of the
 regression line transmitted to the client for each such GUI request. Two regression lines will be
 displayed on the GUI bubble chart, one for the Republican bubbles and one for the Democratic
 bubbles.
-
-6
-
-GUI-27. Display Gingles Chart (required) (SD)
+GUI-27. Display Gingles Chart (required) (SD)
 For your preclearance state, when the user clicks on a Gingles Chart component, the Gingles
 chart will be displayed. The chart will show two bubbles for each precinct in the state, one with
 a y-axis value for the percentage of Democratic votes in the precinct and one for the percentage
@@ -320,7 +327,10 @@ Add boundary data to your DB (required) (AD)
 Download boundary data for all 48 mainland states. Add the data to the DB, including the
 geographical center point of the state and the appropriate zoom level so that the state will fit
 within the GUI component for the state map.
-Prepro-2.
+
+7
+
+Prepro-2.
 
 DB Design for EAVS Data (required) (schema)
 
@@ -329,10 +339,7 @@ should cover the federal election years starting in 2016 and continuing through 
 needs only to include the data items required by your user interface use cases, but those use
 cases will evolve during the semester. You can use either a relational DB (e.g., MySQL), a NoSQL
 DB (MongoDB), or a Serialized file corresponding to your Java object structure.
-
-7
-
-Prepro-3.
+Prepro-3.
 
 Populate your DB with EAVS data (required)
 
@@ -354,7 +361,7 @@ determine the form of the measure by examining the EAVS dataset. A likely form w
 series of values for each relevant category along with a weighting factor for the category. For
 example, one category could be the percentage of mail ballots rejected for a specific reason.
 Another category could be the percentage of null or missing values for an EAVS data item
-required in a use case.
+required in a use case. The measure will be displayed in the user interface for each state (GUI2).
 Prepro-6.
 
 Develop a measure of voting equipment quality (required)
@@ -384,16 +391,17 @@ Prepro-9.
 Determine census block for each voter in the registration dataset (preferred)
 
 For your voter registration dataset, determine the census block in which the voter is located.
-Prepro-10.
+This use case is related to GUI-18.
+
+8
+
+Prepro-10.
 
 Determine EAVS region for each voter in registration dataset (required) (AD)
 
 For your voter registration dataset, determine the EAVS geographic unit in which the voter is
 located.
-
-8
-
-Prepro-11.
+Prepro-11.
 
 Calculate the Republican/Democratic vote split (required) (AD)
 

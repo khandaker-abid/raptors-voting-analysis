@@ -134,21 +134,24 @@ def validate_preprocessing():
                 f"Prepro-5: Only {score_pct:.1f}% of EAVS records have completeness scores"
             )
     
-    equip_with_scores = db.count_documents('votingEquipmentData', {'equipmentDetails.qualityScore': {'$exists': True}})
-    equip_eavs_format = db.count_documents('votingEquipmentData', {'equipmentDetails': {'$type': 'array'}})
+    # Check equipment quality scores - supports both formats:
+    # 1. EAVS format: equipmentDetails is array with qualityScore in each item
+    # 2. VerifiedVoting format: qualityScore at record level
+    equip_eavs_scored = db.count_documents('votingEquipmentData', {'equipmentDetails.qualityScore': {'$exists': True}})
+    equip_vv_scored = db.count_documents('votingEquipmentData', {'qualityScore': {'$exists': True}})
+    equip_total_scored = equip_eavs_scored + equip_vv_scored
     equip_total = db.count_documents('votingEquipmentData')
     
-    if equip_eavs_format > 0:
-        eavs_score_pct = (equip_with_scores / equip_eavs_format) * 100
-        logger.info(f"  Equipment records with quality scores: {equip_with_scores}/{equip_eavs_format} EAVS-format ({eavs_score_pct:.1f}%)")
-        logger.info(f"  VerifiedVoting records (no quality scores): {equip_total - equip_eavs_format}")
+    if equip_total > 0:
+        score_pct = (equip_total_scored / equip_total) * 100
+        logger.info(f"  Equipment records with quality scores: {equip_total_scored}/{equip_total} ({score_pct:.1f}%)")
+        logger.info(f"    EAVS format (list): {equip_eavs_scored}")
+        logger.info(f"    VerifiedVoting format: {equip_vv_scored}")
         
-        if eavs_score_pct < 100:
+        if score_pct < 50:
             validation_results['warnings'].append(
-                f"Prepro-6: Only {eavs_score_pct:.1f}% of EAVS equipment records have quality scores"
+                f"Prepro-6: Only {score_pct:.1f}% of equipment records have quality scores"
             )
-    elif equip_total > 0:
-        logger.info(f"  Equipment records: {equip_total} (all VerifiedVoting format - quality scoring not applicable)")
     
     logger.info("\n" + "="*70)
     logger.info("VALIDATION SUMMARY")

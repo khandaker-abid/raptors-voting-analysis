@@ -149,6 +149,38 @@ class EquipmentQualityCalculator:
             }
         }
     
+    def extract_equipment_from_vv_record(self, record: dict) -> dict:
+        """
+        Extract equipment information from VerifiedVoting record
+        Creates a normalized equipment dict for quality scoring
+        """
+        equipment = {
+            'equipmentType': 'Unknown',
+            'yearAcquired': None,
+            'certificationStatus': 'State certified',  # VV data is from official state sources
+            'operatingSystem': 'Unknown',
+        }
+        
+        # Map marking/tabulation methods to equipment types
+        marking = record.get('markingMethod', '')
+        tabulation = record.get('tabulationMethod', '')
+        
+        if 'DRE' in marking or 'DRE' in tabulation:
+            equipment['equipmentType'] = 'DRE'
+        elif 'Ballot Marking Device' in marking or 'BMD' in marking:
+            equipment['equipmentType'] = 'BMD'
+        elif 'Optical Scan' in tabulation:
+            equipment['equipmentType'] = 'Optical Scan'
+        elif 'Hand Counted' in marking or 'Hand Counted' in tabulation:
+            equipment['equipmentType'] = 'Other'
+        
+        # Use year as approximate acquisition year (equipment likely acquired before election)
+        year = record.get('year')
+        if year:
+            equipment['yearAcquired'] = year - 2  # Assume acquired 2 years before use
+        
+        return equipment
+    
     def process_all_equipment(self):
         """Process all equipment records and update quality scores"""
         logger.info("Calculating equipment quality scores...")
@@ -163,13 +195,14 @@ class EquipmentQualityCalculator:
         
         logger.info(f"Processing {total:,} equipment records...")
         
-        detailed_count = sum(1 for r in records if r.get('equipmentDetails'))
-        if detailed_count == 0:
-            logger.warning(f"Found {total} equipment records but none have detailed specs")
-            logger.warning("Quality scores will be based on limited data from EAVS")
-            logger.info("For better quality scores, consider scraping Verified Voting database")
+        # Count by source
+        eavs_records = sum(1 for r in records if r.get('dataSource') == 'EAVS')
+        vv_records = sum(1 for r in records if r.get('dataSource') == 'VerifiedVoting.org')
+        logger.info(f"  EAVS records: {eavs_records:,}")
+        logger.info(f"  VerifiedVoting records: {vv_records:,}")
         
         updated = 0
+        equipment_scored = 0
         score_distribution = {
             'Excellent (0.8-1.0)': 0,
             'Good (0.6-0.8)': 0,
@@ -180,17 +213,43 @@ class EquipmentQualityCalculator:
         
         for i, record in enumerate(records):
             equipment_details = record.get('equipmentDetails', [])
+            data_source = record.get('dataSource', 'Unknown')
+            scored_something = False
             
-            if isinstance(equipment_details, dict):
-                continue
-            
-            if not equipment_details or not isinstance(equipment_details, list):
-                continue
-            
-            for equipment in equipment_details:
-                if not isinstance(equipment, dict):
-                    continue
+            # Handle EAVS format (list of equipment dicts)
+            if isinstance(equipment_details, list) and equipment_details:
+                for equipment in equipment_details:
+                    if not isinstance(equipment, dict):
+                        continue
+                        
+                    score_data = self.calculate_quality_score(equipment)
                     
+                    score = score_data['qualityScore']
+                    if score >= 0.8:
+                        score_distribution['Excellent (0.8-1.0)'] += 1
+                    elif score >= 0.6:
+                        score_distribution['Good (0.6-0.8)'] += 1
+                    elif score >= 0.4:
+                        score_distribution['Fair (0.4-0.6)'] += 1
+                    elif score >= 0.2:
+                        score_distribution['Poor (0.2-0.4)'] += 1
+                    else:
+                        score_distribution['Critical (0.0-0.2)'] += 1
+                    
+                    equipment.update(score_data)
+                    equipment_scored += 1
+                    scored_something = True
+                
+                self.db.upsert_one(
+                    'votingEquipmentData',
+                    {'_id': record['_id']},
+                    {'equipmentDetails': equipment_details}
+                )
+            
+            # Handle VerifiedVoting format (dict with metadata)
+            elif data_source == 'VerifiedVoting.org':
+                # Extract equipment info from VV record
+                equipment = self.extract_equipment_from_vv_record(record)
                 score_data = self.calculate_quality_score(equipment)
                 
                 score = score_data['qualityScore']
@@ -205,27 +264,33 @@ class EquipmentQualityCalculator:
                 else:
                     score_distribution['Critical (0.0-0.2)'] += 1
                 
-                equipment.update(score_data)
+                # Store quality score at record level for VV data
+                self.db.upsert_one(
+                    'votingEquipmentData',
+                    {'_id': record['_id']},
+                    {
+                        'qualityScore': score_data['qualityScore'],
+                        'componentScores': score_data['componentScores']
+                    }
+                )
+                equipment_scored += 1
+                scored_something = True
             
-            self.db.upsert_one(
-                'votingEquipmentData',
-                {'_id': record['_id']},
-                {'equipmentDetails': equipment_details}
-            )
+            if scored_something:
+                updated += 1
             
-            updated += 1
-            
-            if (i + 1) % 10 == 0:
+            if (i + 1) % 100 == 0:
                 logger.info(f"  Processed {i + 1:,}/{total:,} records...")
 
         
         logger.info("\n" + "="*70)
         logger.info("EQUIPMENT QUALITY SUMMARY")
         logger.info("="*70)
-        logger.info(f"Total equipment processed: {updated:,}")
+        logger.info(f"Total records processed: {updated:,}")
+        logger.info(f"Equipment units scored: {equipment_scored:,}")
         logger.info("\nQuality Distribution:")
         for category, count in score_distribution.items():
-            pct = (count / total * 100) if total > 0 else 0
+            pct = (count / equipment_scored * 100) if equipment_scored > 0 else 0
             logger.info(f"  {category}: {count:,} ({pct:.1f}%)")
         logger.info("="*70)
         

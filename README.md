@@ -565,6 +565,27 @@ All endpoints return JSON. Example response structure:
 }
 ```
 
+## Preprocessing
+
+### Non-interactive runs (CI/batch)
+
+- **Prepro-8** (USPS address validation) now **proceeds by default** (no prompt). To skip it in CI/unattended runs, use `--no` or `PREPROCESS_ASSUME_NO=1`.
+- **Prepro-9** (geocoding) now **also proceeds by default** (no prompt). To skip it, use `--no` or `PREPROCESS_ASSUME_NO=1`.
+
+Non-interactive options:
+
+- Env var (assume yes): set `PREPROCESS_ASSUME_YES=1`
+- Env var (assume no): set `PREPROCESS_ASSUME_NO=1`
+- Flags: `--yes` / `--no`
+
+Examples:
+
+- Run Prepro-8 (no prompt): `python preprocessing/08_automated_voter_analysis.py`
+- Skip Prepro-8 (no prompt): `python preprocessing/08_automated_voter_analysis.py --no`
+- Skip Prepro-8 via env var: `PREPROCESS_ASSUME_NO=1 python preprocessing/08_automated_voter_analysis.py`
+- Run Prepro-9 (no prompt): `python preprocessing/09_geocode_voters_to_census_blocks.py`
+- Skip Prepro-9 (no prompt): `python preprocessing/09_geocode_voters_to_census_blocks.py --no`
+
 ### Project Documentation
 
 - **[preprocessing/README.md](preprocessing/README.md)** - Complete data pipeline guide

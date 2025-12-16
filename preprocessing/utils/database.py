@@ -143,6 +143,20 @@ class DatabaseManager:
         cursor = collection.find(filter_dict or {}, projection, limit=limit)
         return list(cursor)
     
+    def insert_many(self, collection_name: str, documents: List[Dict]) -> Any:
+        """Insert many documents and return result"""
+        collection = self.get_collection(collection_name)
+        result = collection.insert_many(documents)
+        logger.info(f"Inserted {len(result.inserted_ids)} documents into {collection_name}")
+        return result
+    
+    def delete_many(self, collection_name: str, filter_dict: Dict) -> int:
+        """Delete multiple documents matching filter"""
+        collection = self.get_collection(collection_name)
+        result = collection.delete_many(filter_dict)
+        logger.info(f"Deleted {result.deleted_count} documents from {collection_name}")
+        return result.deleted_count
+    
     def drop_collection(self, collection_name: str):
         """Drop a collection (use with caution!)"""
         self.db[collection_name].drop()

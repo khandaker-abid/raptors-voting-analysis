@@ -59,27 +59,29 @@ public class PartyComparisonController {
             String party = statePartyControl.getOrDefault(state, "Split");
 
             long totalRegistered = 0;
-            long totalCVAP = 0;
+            long totalActive = 0;
             long totalVotesCast = 0;
             long totalMailBallots = 0;
             long totalDropBoxVotes = 0;
 
             for (Map<String, Object> county : counties) {
                 totalRegistered += safeLong(county.get("A1a")); // Total registered
-                totalCVAP += safeLong(county.get("A1b")); // CVAP
-                totalVotesCast += safeLong(county.get("F1a")) + safeLong(county.get("F1b"))
-                        + safeLong(county.get("F1d")) + safeLong(county.get("F1f"));
-                totalMailBallots += safeLong(county.get("C9a"));
-                totalDropBoxVotes += safeLong(county.get("F1f"));
+                totalActive += safeLong(county.get("A1b")); // Active voters (not CVAP)
+                // F1a is total votes cast - don't add F1b/F1d/F1f which are subcategories
+                totalVotesCast += safeLong(county.get("F1a"));
+                totalMailBallots += safeLong(county.get("F1d")); // Mail ballots
+                totalDropBoxVotes += safeLong(county.get("F1f")); // Early in-person / drop box
             }
 
             Map<String, Object> stateData = new HashMap<>();
             stateData.put("state", toTitleCase(state));
             stateData.put("party", party);
 
-            double registrationRate = totalCVAP > 0 ? (totalRegistered * 100.0 / totalCVAP) : 0;
+            // Registration rate: Active / Total Registered (percentage of active voters)
+            double registrationRate = totalRegistered > 0 ? (totalActive * 100.0 / totalRegistered) : 0;
             stateData.put("registrationRate", Math.round(registrationRate * 10) / 10.0);
 
+            // Turnout: Votes cast / Registered voters
             double turnout = totalRegistered > 0 ? (totalVotesCast * 100.0 / totalRegistered) : 0;
             stateData.put("turnout", Math.round(turnout * 10) / 10.0);
 

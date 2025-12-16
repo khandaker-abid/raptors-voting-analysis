@@ -45,7 +45,7 @@ def shapefile_to_geojson(shapefile_path: str, output_path: str = None) -> Dict:
     return geojson
 
 
-def calculate_centroid(geometry: Dict) -> Tuple[float, float]:
+def calculate_centroid(geometry) -> Tuple[float, float]:
     """
     Calculate centroid of a geometry
     
@@ -55,7 +55,12 @@ def calculate_centroid(geometry: Dict) -> Tuple[float, float]:
     Returns:
         Tuple of (longitude, latitude)
     """
-    geom = shape(geometry)
+    # Compatibility: tests pass a simple polygon ring (list of [x,y])
+    # while production code passes a GeoJSON geometry dict.
+    if isinstance(geometry, list):
+        geom = Polygon(geometry)
+    else:
+        geom = shape(geometry)
     centroid = geom.centroid
     return (centroid.x, centroid.y)
 
@@ -113,7 +118,7 @@ def calculate_zoom_level(geometry: Dict, map_width_px: int = 800,
     return zoom
 
 
-def point_in_polygon(point: Tuple[float, float], geometry: Dict) -> bool:
+def _point_in_polygon_tuple(point: Tuple[float, float], geometry: Dict) -> bool:
     """
     Check if a point is inside a polygon
     
@@ -124,6 +129,98 @@ def point_in_polygon(point: Tuple[float, float], geometry: Dict) -> bool:
     Returns:
         True if point is inside geometry
     """
+    pt = Point(point)
+    geom = shape(geometry)
+    return geom.contains(pt)
+
+
+# ---------------------------------------------------------------------------
+# Compatibility helpers (used by tests / older code)
+# ---------------------------------------------------------------------------
+
+def parse_geojson(geojson: Dict) -> List[Dict]:
+    """Parse a GeoJSON object into a list of features.
+
+    Supports FeatureCollection and single Feature. Returns an empty list for
+    unsupported inputs.
+    """
+    if not isinstance(geojson, dict):
+        return []
+    geojson_type = geojson.get('type')
+    if geojson_type == 'FeatureCollection':
+        return list(geojson.get('features', []))
+    if geojson_type == 'Feature':
+        return [geojson]
+    return []
+
+
+def calculate_area(polygon: List[List[float]]) -> float:
+    """Calculate area for a simple polygon ring (list of [lon,lat])."""
+    if not polygon:
+        return 0.0
+    geom = Polygon(polygon)
+    return float(geom.area)
+
+
+def calculate_bounding_box(polygon: List[List[float]]) -> Dict[str, float]:
+    """Calculate bounding box for a simple polygon ring.
+
+    Returns a dict to match the expectations in `tests/test_geojson_tools.py`.
+    """
+    geom = Polygon(polygon)
+    minx, miny, maxx, maxy = geom.bounds
+    return {
+        'min_x': float(minx),
+        'min_y': float(miny),
+        'max_x': float(maxx),
+        'max_y': float(maxy),
+    }
+
+
+def create_feature(geometry: Dict, properties: Optional[Dict] = None) -> Dict:
+    """Create a GeoJSON Feature."""
+    return {
+        'type': 'Feature',
+        'geometry': geometry,
+        'properties': properties or {},
+    }
+
+
+def create_feature_collection(features: List[Dict]) -> Dict:
+    """Create a GeoJSON FeatureCollection."""
+    return {
+        'type': 'FeatureCollection',
+        'features': features,
+    }
+
+
+def parse_multipolygon(geometry: Dict) -> List[Polygon]:
+    """Parse a GeoJSON MultiPolygon geometry into a list of shapely Polygons."""
+    geom = shape(geometry)
+    if isinstance(geom, MultiPolygon):
+        return list(geom.geoms)
+    if isinstance(geom, Polygon):
+        return [geom]
+    return []
+
+
+def point_in_polygon_legacy(lon: float, lat: float, polygon: List[List[float]]) -> bool:
+    """Legacy signature used by older code/tests: (lon, lat, polygon_ring)."""
+    return Polygon(polygon).contains(Point(lon, lat))
+
+
+# Back-compat alias: some tests call point_in_polygon(lon, lat, polygon)
+# while the newer implementation expects (point_tuple, geometry_dict).
+def point_in_polygon(*args, **kwargs):  # type: ignore[override]
+    if len(args) == 3 and isinstance(args[0], (int, float)) and isinstance(args[1], (int, float)):
+        return point_in_polygon_legacy(args[0], args[1], args[2])
+    if len(args) == 2:
+        pt, geom = args
+        return _point_in_polygon_tuple(pt, geom)
+    raise TypeError('point_in_polygon() expected (point, geometry) or (lon, lat, polygon)')
+
+
+def _point_in_polygon_tuple(point: Tuple[float, float], geometry: Dict) -> bool:
     pt = Point(point)
     geom = shape(geometry)
     return geom.contains(pt)

@@ -11,6 +11,28 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+class CensusAPIClient:
+    """Backwards-compatible client wrapper.
+
+    The codebase historically referenced `CensusAPIClient` in tests and some
+    scripts. The implementation evolved into `CensusAPI`. This wrapper keeps
+    those older imports working while delegating to the current implementation.
+    """
+
+    def __init__(self, api_key: Optional[str] = None):
+        # Allow missing key for tests/limited usage.
+        self.api_key = api_key or ""
+        self.base_url = CensusAPI.BASE_URL
+        self._api = CensusAPI(api_key=self.api_key or "")
+
+    def fetch_cvap_data(self, state_fips: str, county_fips: str = '*', year: int = 2023):
+        return self._api.get_cvap_data(year=year, state_fips=state_fips, county_fips=county_fips)
+
+    def fetch_demographic_data(self, state_fips: str, county_fips: str = '*', year: int = 2023):
+        return self._api.get_demographic_data(year=year, state_fips=state_fips, county_fips=county_fips)
+
+
+
 class CensusAPI:
     """Wrapper for US Census Bureau API"""
     

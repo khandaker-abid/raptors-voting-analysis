@@ -56,7 +56,7 @@ const VotingEquipmentSummaryTable: React.FC = () => {
 		return (
 			<Paper sx={{ p: 3, textAlign: "center" }}>
 				<Typography variant="body1" color="text.secondary">
-					No detailed voter equipment data available for this state.
+					No voting equipment summary data available.
 				</Typography>
 			</Paper>
 		);

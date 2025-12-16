@@ -24,7 +24,19 @@ def generate_equipment_history():
         print("No 2024 equipment data found!")
         return
     
-    print(f"Found {len(current_equipment)} states with 2024 equipment data")
+    # NOTE:
+    # `votingEquipmentData` is not guaranteed to have exactly one document per US state.
+    # Depending on how upstream sources were parsed, there may be multiple documents per
+    # state (or entries that include territories / other groupings). The previous log
+    # message incorrectly labeled the raw document count as "states", which was confusing.
+    unique_states = {
+        doc.get('state')
+        for doc in current_equipment
+        if doc.get('state')
+    }
+    print(
+        f"Found {len(current_equipment)} equipment records for 2024 across {len(unique_states)} unique states/territories"
+    )
     
     db.equipment_history.delete_many({})
     
@@ -101,7 +113,7 @@ def generate_equipment_history():
         db.equipment_history.insert_many(history_docs)
         print(f"\n[OK] Generated {len(history_docs)} equipment history records!")
         print(f"Years: {years}")
-        print(f"States: {len(current_equipment)}")
+        print(f"States/territories: {len(unique_states)}")
         print(f"Equipment types: {len(equipment_types)}")
         
         sample = db.equipment_history.find_one({'state': 'MARYLAND'})

@@ -55,6 +55,7 @@ const ProvisionalBallotChoroplethMap: React.FC<
 					(hoveredRef.current as any).closeTooltip();
 				}
 			} catch {
+				// ignore reset/tooltip errors from Leaflet during rapid hover changes
 			}
 			hoveredRef.current = null;
 		}
@@ -115,7 +116,7 @@ const ProvisionalBallotChoroplethMap: React.FC<
 				const countyData = (await response.json()) as CountyGeoJSONData;
 
 				if (!countyData || !countyData.features) {
-				throw new Error("County GeoJSON data is invalid or empty");
+					throw new Error("County GeoJSON data is invalid or empty");
 				}
 
 				const features = countyData.features.filter(
@@ -237,6 +238,7 @@ const ProvisionalBallotChoroplethMap: React.FC<
 				try {
 					(e.target as L.Path).closeTooltip();
 				} catch {
+					// ignore tooltip close errors
 				}
 			},
 		});

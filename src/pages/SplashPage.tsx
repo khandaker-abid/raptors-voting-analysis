@@ -54,7 +54,7 @@ const SplashPage: React.FC = () => {
 							if (resp.ok) {
 								resolvedGeo = await resp.json();
 							}
-						} catch (_) {
+						} catch {
 							// ignore, will show map data not available inside choropleth
 						}
 					}

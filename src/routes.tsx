@@ -5,6 +5,7 @@ import StateDetailPage from "./pages/StateDetailPage";
 import PartyComparisonPage from "./pages/PartyComparisonPage";
 import RegistrationComparisonPage from "./pages/RegistrationComparisonPage";
 import VotingEquipmentSummaryPage from "./pages/VotingEquipmentSummaryPage";
+import VotingEquipmentRawPage from "./pages/VotingEquipmentRawPage";
 import EveryStateEquipmentPage from "./pages/EveryStateEquipmentPage";
 import VotingEquipmentHistoryPage from "./pages/VotingEquipmentHistoryPage";
 
@@ -18,6 +19,10 @@ const AppRoutes: React.FC = () => {
 			<Route
 				path="/voting-equipment-summary"
 				element={<VotingEquipmentSummaryPage />}
+			/>
+			<Route
+				path="/voting-equipment-raw"
+				element={<VotingEquipmentRawPage />}
 			/>
 			<Route
 				path="/per-state-voting-equipment"

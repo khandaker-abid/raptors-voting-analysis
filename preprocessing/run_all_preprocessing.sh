@@ -3,6 +3,15 @@
 
 set -e  # Exit on error
 
+# Quick demo tips:
+# - By default this runner skips the optional/slow steps Prepro-8 (USPS) and Prepro-9 (block geocoding).
+# - Prepro-10 (region assignment) is demo-capped by default (currently 5,000 voters).
+#   To override the Prepro-10 cap:
+#     PREPRO10_MAX_VOTERS=0 ./run_all_preprocessing.sh        # run all voters
+#     PREPRO10_MAX_VOTERS=20000 ./run_all_preprocessing.sh    # run a larger demo slice
+#
+# Note: Disabling geocoding in Prepro-10 can reduce assignment success depending on voter data.
+
 # Setup logging
 LOG_DIR="logs"
 mkdir -p "$LOG_DIR"
@@ -54,6 +63,31 @@ log ""
 log "Starting preprocessing pipeline..."
 log ""
 
+# Optional step controls
+#
+# By default, we SKIP the optional/slow steps (Prepro-8 USPS + Prepro-9 geocoding)
+# to keep the pipeline demo-friendly and avoid long-running external API calls.
+#
+# Opt-in to run them explicitly:
+#   RUN_PREPRO8=1 ./run_all_preprocessing.sh
+#   RUN_PREPRO9=1 ./run_all_preprocessing.sh
+#   RUN_PREPRO9B=1 ./run_all_preprocessing.sh
+#
+# Or force-skip regardless of RUN_*:
+#   SKIP_PREPRO8=1 ./run_all_preprocessing.sh
+#   SKIP_PREPRO9=1 ./run_all_preprocessing.sh
+#   SKIP_PREPRO9B=1 ./run_all_preprocessing.sh
+
+# Default: do NOT run optional steps unless explicitly requested
+RUN_PREPRO8=${RUN_PREPRO8:-0}
+RUN_PREPRO9=${RUN_PREPRO9:-0}
+RUN_PREPRO9B=${RUN_PREPRO9B:-0}
+
+# Explicit skip overrides
+SKIP_PREPRO8=${SKIP_PREPRO8:-0}
+SKIP_PREPRO9=${SKIP_PREPRO9:-0}
+SKIP_PREPRO9B=${SKIP_PREPRO9B:-0}
+
 # Prepro-1: Boundary Data
 log ">>> Prepro-1: Downloading state boundary data..."
 $PYTHON 01_download_boundaries.py 2>&1 | tee -a "$LOG_FILE" || { log "Failed at Prepro-1"; exit 1; }
@@ -95,6 +129,20 @@ if [ -f "06b_import_equipment_data.py" ]; then
     log ""
 fi
 
+# Prepro-6c: Import Equipment Details
+if [ -f "06c_import_equipment_details.py" ]; then
+    log ">>> Prepro-6c: Importing equipment make/model details..."
+    $PYTHON 06c_import_equipment_details.py 2>&1 | tee -a "$LOG_FILE" || { log "Failed at Prepro-6c"; exit 1; }
+    log ""
+fi
+
+# Prepro-6d: Import Master Equipment Specifications
+if [ -f "06d_import_master_equipment_spreadsheet.py" ]; then
+    log ">>> Prepro-6d: Importing master equipment specifications..."
+    $PYTHON 06d_import_master_equipment_spreadsheet.py 2>&1 | tee -a "$LOG_FILE" || { log "Failed at Prepro-6d"; exit 1; }
+    log ""
+fi
+
 # Prepro-6: Equipment Quality
 if [ -f "06_calculate_equipment_quality.py" ]; then
     log ">>> Prepro-6: Calculating equipment quality scores..."
@@ -118,16 +166,47 @@ fi
 
 # Prepro-8: Automated Analysis (optional)
 if [ -f "08_automated_voter_analysis.py" ]; then
-    log ">>> Prepro-8: Running automated voter analysis..."
-    $PYTHON 08_automated_voter_analysis.py 2>&1 | tee -a "$LOG_FILE" || log "Warning: Prepro-8 failed (optional)"
-    log ""
+    if [ "$SKIP_PREPRO8" = "1" ] || [ "$SKIP_PREPRO8" = "true" ] || [ "$SKIP_PREPRO8" = "TRUE" ]; then
+        log ">>> Prepro-8: Skipping automated voter analysis (SKIP_PREPRO8=$SKIP_PREPRO8)"
+        log ""
+    elif [ "$RUN_PREPRO8" = "1" ] || [ "$RUN_PREPRO8" = "true" ] || [ "$RUN_PREPRO8" = "TRUE" ]; then
+        log ">>> Prepro-8: Running automated voter analysis (RUN_PREPRO8=$RUN_PREPRO8)..."
+        $PYTHON 08_automated_voter_analysis.py 2>&1 | tee -a "$LOG_FILE" || log "Warning: Prepro-8 failed (optional)"
+        log ""
+    else
+        log ">>> Prepro-8: Skipping automated voter analysis (default; set RUN_PREPRO8=1 to run)"
+        log ""
+    fi
 fi
 
 # Prepro-9: Census Blocks (optional)
+if [ -f "09b_repair_voter_records.py" ]; then
+    if [ "$SKIP_PREPRO9B" = "1" ] || [ "$SKIP_PREPRO9B" = "true" ] || [ "$SKIP_PREPRO9B" = "TRUE" ]; then
+        log ">>> Prepro-9b: Skipping malformed voter repair (SKIP_PREPRO9B=$SKIP_PREPRO9B)"
+        log ""
+    elif [ "$RUN_PREPRO9B" = "1" ] || [ "$RUN_PREPRO9B" = "true" ] || [ "$RUN_PREPRO9B" = "TRUE" ]; then
+        log ">>> Prepro-9b: Repairing malformed voter records (RUN_PREPRO9B=$RUN_PREPRO9B)..."
+        $PYTHON 09b_repair_voter_records.py 2>&1 | tee -a "$LOG_FILE" || { log "Failed at Prepro-9b"; exit 1; }
+        log ""
+    else
+        log ">>> Prepro-9b: Repairing malformed voter records (default)"
+        $PYTHON 09b_repair_voter_records.py 2>&1 | tee -a "$LOG_FILE" || { log "Failed at Prepro-9b"; exit 1; }
+        log ""
+    fi
+fi
+
 if [ -f "09_geocode_voters_to_census_blocks.py" ]; then
-    log ">>> Prepro-9: Geocoding voters to census blocks..."
-    $PYTHON 09_geocode_voters_to_census_blocks.py 2>&1 | tee -a "$LOG_FILE" || log "Warning: Prepro-9 failed (optional)"
-    log ""
+    if [ "$SKIP_PREPRO9" = "1" ] || [ "$SKIP_PREPRO9" = "true" ] || [ "$SKIP_PREPRO9" = "TRUE" ]; then
+        log ">>> Prepro-9: Skipping geocoding voters to census blocks (SKIP_PREPRO9=$SKIP_PREPRO9)"
+        log ""
+    elif [ "$RUN_PREPRO9" = "1" ] || [ "$RUN_PREPRO9" = "true" ] || [ "$RUN_PREPRO9" = "TRUE" ]; then
+        log ">>> Prepro-9: Geocoding voters to census blocks (RUN_PREPRO9=$RUN_PREPRO9)..."
+        $PYTHON 09_geocode_voters_to_census_blocks.py 2>&1 | tee -a "$LOG_FILE" || log "Warning: Prepro-9 failed (optional)"
+        log ""
+    else
+        log ">>> Prepro-9: Skipping geocoding voters to census blocks (default; set RUN_PREPRO9=1 to run)"
+        log ""
+    fi
 fi
 
 # Prepro-10: EAVS Regions

@@ -44,7 +44,9 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 				if ((hoveredRef.current as any).closeTooltip) {
 					(hoveredRef.current as any).closeTooltip();
 				}
-			} catch { }
+			} catch {
+				// ignore reset/tooltip errors from Leaflet during rapid hover changes
+			}
 			hoveredRef.current = null;
 		}
 	};
@@ -229,7 +231,9 @@ const ActiveVotersChoroplethMap: React.FC<ActiveVotersChoroplethMapProps> = ({
 				if (hoveredRef.current === e.target) hoveredRef.current = null;
 				try {
 					(e.target as L.Path).closeTooltip();
-				} catch { }
+				} catch {
+					// ignore tooltip close errors
+				}
 			},
 		});
 	};

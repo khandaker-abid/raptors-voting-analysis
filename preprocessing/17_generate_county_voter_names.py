@@ -14,6 +14,88 @@ from pymongo import MongoClient
 from datetime import datetime, timedelta
 import random
 
+
+def _state_to_abbr(state: str) -> str:
+    mapping = {
+        "Arkansas": "AR",
+        "Maryland": "MD",
+        "Rhode Island": "RI",
+    }
+    return mapping.get(state, "")
+
+
+def _make_address(raw_line: str, city: str, state_abbr: str, zip_code: str) -> dict:
+    # Keep a stable schema for downstream scripts.
+    return {
+        "raw": raw_line,
+        # NOTE: `street` is used for geocoding in Prepro-9.
+        # For synthetic voters, random street/number combinations often don't exist
+        # and the Census geocoder returns no match. Downstream analyses rely on
+        # having *some* census block, so we intentionally use a real anchor street
+        # address per county (set by the caller) to ensure a high match rate.
+        "street": raw_line,
+        "city": city,
+        "state": state_abbr,
+        "zipCode": zip_code,
+    }
+
+
+def _default_city_zip(state: str, county: str) -> tuple[str, str]:
+    """Return a reasonable (city, zip) for synthetic addresses.
+
+    Goal: maximize Census geocoder match rates. If we don't know, omit ZIP.
+    """
+    key = (str(state).strip().lower(), str(county).strip().lower())
+
+    # Minimal curated map for the 3 detailed states.
+    # We can extend this list over time; unknown entries fall back safely.
+    table: dict[tuple[str, str], tuple[str, str]] = {
+        # Arkansas
+        ("arkansas", "benton"): ("Bentonville", "72712"),
+        ("arkansas", "pulaski"): ("Little Rock", "72201"),
+        ("arkansas", "washington"): ("Fayetteville", "72701"),
+        # Maryland
+        ("maryland", "montgomery"): ("Rockville", "20850"),
+        ("maryland", "prince george's"): ("Upper Marlboro", "20772"),
+        ("maryland", "baltimore"): ("Towson", "21204"),
+        # Rhode Island
+        ("rhode island", "providence"): ("Providence", "02903"),
+        ("rhode island", "kent"): ("Warwick", "02886"),
+        ("rhode island", "washington"): ("South Kingstown", "02879"),
+    }
+
+    if key in table:
+        return table[key]
+
+    # Fall back: county name as city; no ZIP (better than a fake ZIP).
+    return (county, "")
+
+
+def _default_anchor_street(state: str, county: str) -> str:
+    """Return a known, geocodable street address for the given county.
+
+    This is intentionally *not* a realistic voter address. It's an anchor point
+    (often a courthouse/county building) used to ensure geocoding succeeds.
+    """
+    key = (str(state).strip().lower(), str(county).strip().lower())
+
+    table: dict[tuple[str, str], str] = {
+        # Arkansas
+        ("arkansas", "benton"): "215 E Central Ave",
+        ("arkansas", "pulaski"): "401 W Markham St",
+        ("arkansas", "washington"): "280 N College Ave",
+        # Maryland
+        ("maryland", "montgomery"): "50 Maryland Ave",
+        ("maryland", "prince george's"): "14735 Main St",
+        ("maryland", "baltimore"): "400 Washington Ave",
+        # Rhode Island
+        ("rhode island", "providence"): "1 Dorrance Plaza",
+        ("rhode island", "kent"): "222 Quaker Ln",
+        ("rhode island", "washington"): "4800 Tower Hill Rd",
+    }
+
+    return table.get(key, "100 Main St")
+
 def generate_county_voters():
     """Generate individual voter records for all three detail states based on real statistics"""
     
@@ -202,6 +284,7 @@ def generate_county_voters():
     for region_data in all_regions:
         state = region_data["state"]
         county = region_data["county"]
+        state_abbr = _state_to_abbr(state)
         dem_count = region_data["dem"]
         rep_count = region_data["rep"]
         unaf_count = region_data["unaf"]
@@ -215,40 +298,52 @@ def generate_county_voters():
         unaf_sample = sample_size - dem_sample - rep_sample
         
         voters = []
+
+        # Synthetic but *geocodable* city/ZIP for better Census geocoder match rates.
+        # If unknown, omit ZIP rather than making one up.
+        city, zip_code = _default_city_zip(state, county)
         
+        anchor_street = _default_anchor_street(state, county)
+
         for i in range(dem_sample):
+            raw_addr = f"{random.randint(100, 9999)} {random.choice(street_names)}"
             voter = {
                 "state": state,
+                "stateAbbr": state_abbr,
                 "county": county,
                 "firstName": random.choice(first_names),
                 "lastName": random.choice(last_names),
                 "party": "Democratic",
                 "registrationDate": (datetime.now() - timedelta(days=random.randint(30, 3650))).isoformat(),
-                "address": f"{random.randint(100, 9999)} {random.choice(street_names)}"
+                "address": _make_address(anchor_street, city=city, state_abbr=state_abbr, zip_code=zip_code) | {"raw": raw_addr},
             }
             voters.append(voter)
         
         for i in range(rep_sample):
+            raw_addr = f"{random.randint(100, 9999)} {random.choice(street_names)}"
             voter = {
                 "state": state,
+                "stateAbbr": state_abbr,
                 "county": county,
                 "firstName": random.choice(first_names),
                 "lastName": random.choice(last_names),
                 "party": "Republican",
                 "registrationDate": (datetime.now() - timedelta(days=random.randint(30, 3650))).isoformat(),
-                "address": f"{random.randint(100, 9999)} {random.choice(street_names)}"
+                "address": _make_address(anchor_street, city=city, state_abbr=state_abbr, zip_code=zip_code) | {"raw": raw_addr},
             }
             voters.append(voter)
         
         for i in range(unaf_sample):
+            raw_addr = f"{random.randint(100, 9999)} {random.choice(street_names)}"
             voter = {
                 "state": state,
+                "stateAbbr": state_abbr,
                 "county": county,
                 "firstName": random.choice(first_names),
                 "lastName": random.choice(last_names),
                 "party": "Unaffiliated",
                 "registrationDate": (datetime.now() - timedelta(days=random.randint(30, 3650))).isoformat(),
-                "address": f"{random.randint(100, 9999)} {random.choice(street_names)}"
+                "address": _make_address(anchor_street, city=city, state_abbr=state_abbr, zip_code=zip_code) | {"raw": raw_addr},
             }
             voters.append(voter)
         

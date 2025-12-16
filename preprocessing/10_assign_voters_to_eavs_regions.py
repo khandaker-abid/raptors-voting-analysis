@@ -8,15 +8,19 @@ Uses spatial joins with county boundaries.
 import sys
 import logging
 from pathlib import Path
+import os
 
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import DatabaseManager
 from utils.geojson_tools import point_in_polygon
 from utils.geocoding import CompositeGeocoder
+from utils.voter_collections import get_voter_collection_name
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+
 
 
 class VoterRegionAssigner:
@@ -24,11 +28,45 @@ class VoterRegionAssigner:
     
     def __init__(self, config_path='config.json'):
         self.db = DatabaseManager(config_path)
-        self.geocoder = CompositeGeocoder(config_path)
+        # Demo/runtime controls
+        # - PREPRO10_MAX_VOTERS: limit total voters processed (default: 5000)
+        # - PREPRO10_DISABLE_GEOCODING: if truthy, do NOT call geocoding APIs; use censusBlock or county-name fallback only
+        #
+        # We cap by default to keep the end-to-end preprocessing run demo-friendly.
+        # For a full run, set PREPRO10_MAX_VOTERS=0 (or a large number).
+        self.max_voters = self._parse_int_env("PREPRO10_MAX_VOTERS")
+        if self.max_voters is None:
+            self.max_voters = 5000
+        self.disable_geocoding = self._parse_bool_env("PREPRO10_DISABLE_GEOCODING", default=False)
+
+        self.geocoder = None if self.disable_geocoding else CompositeGeocoder(config_path)
         
         logger.info("Loading county boundaries...")
         self.boundaries = list(self.db.find_many('boundaryData', {'boundaryType': 'county'}))
         logger.info(f"Loaded {len(self.boundaries)} county boundaries")
+
+        if self.disable_geocoding:
+            logger.warning("PREPRO10_DISABLE_GEOCODING is enabled: will not call external geocoding APIs")
+        if self.max_voters is not None and self.max_voters > 0:
+            logger.warning(f"DEMO MODE: Prepro-10 will process at most {self.max_voters:,} voters")
+            logger.warning("To run full Prepro-10 on all voters, set PREPRO10_MAX_VOTERS=0 before running.")
+
+    @staticmethod
+    def _parse_bool_env(name: str, default: bool = False) -> bool:
+        val = os.environ.get(name)
+        if val is None:
+            return default
+        return val.strip().lower() in {"1", "true", "yes", "y", "on"}
+
+    @staticmethod
+    def _parse_int_env(name: str):
+        val = os.environ.get(name)
+        if val is None or not str(val).strip():
+            return None
+        try:
+            return int(str(val).strip())
+        except ValueError:
+            return None
     
     def find_county_for_point(self, lat: float, lon: float) -> str:
         """Find county FIPS for a given lat/lon point"""
@@ -58,17 +96,18 @@ class VoterRegionAssigner:
         zipcode = address.get('zipCode', '')
         
         full_address = f"{street}, {city}, {state} {zipcode}"
-        
-        result = self.geocoder.geocode(full_address)
-        
-        if result and result.get('lat') and result.get('lon'):
-            lat = result['lat']
-            lon = result['lon']
-            
-            county_fips = self.find_county_for_point(lat, lon)
-            
-            if county_fips:
-                return {'eavsRegionFips': county_fips}
+
+        if self.geocoder is not None:
+            result = self.geocoder.geocode(full_address)
+
+            if result and result.get('lat') and result.get('lon'):
+                lat = result['lat']
+                lon = result['lon']
+
+                county_fips = self.find_county_for_point(lat, lon)
+
+                if county_fips:
+                    return {'eavsRegionFips': county_fips}
         
         county_name = voter.get('county', '').lower()
         if county_name:
@@ -82,13 +121,16 @@ class VoterRegionAssigner:
     def process_all_voters(self):
         """Process all voters and assign regions"""
         logger.info("Assigning EAVS regions to voters...")
-        
-        voters = list(self.db.find_many('voterRegistration', {
+
+        voter_collection = get_voter_collection_name(self.db)
+        limit = self.max_voters if (self.max_voters is not None and self.max_voters > 0) else 0
+
+        voters = list(self.db.find_many(voter_collection, {
             '$or': [
                 {'eavsRegionFips': None},
                 {'eavsRegionFips': {'$exists': False}}
             ]
-        }))
+        }, limit=limit))
         
         total = len(voters)
         
@@ -107,7 +149,7 @@ class VoterRegionAssigner:
                 
                 if update:
                     self.db.upsert_one(
-                        'voterRegistration',
+                        voter_collection,
                         {'_id': voter['_id']},
                         update
                     )

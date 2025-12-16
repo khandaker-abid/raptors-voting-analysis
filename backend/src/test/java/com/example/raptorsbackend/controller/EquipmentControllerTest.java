@@ -108,7 +108,12 @@ class EquipmentControllerTest {
         mockMvc.perform(get("/api/equipment/summary")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                // Contract checks for GUI-13
+                .andExpect(jsonPath("$[0].provider").exists())
+                .andExpect(jsonPath("$[0].model").exists())
+                .andExpect(jsonPath("$[0].quantity").exists());
     }
 
     /**

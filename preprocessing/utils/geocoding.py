@@ -73,18 +73,42 @@ class CensusGeocoder:
                 match = data['result']['addressMatches'][0]
                 coordinates = match.get('coordinates', {})
                 geographies = match.get('geographies', {})
+
+                # The Census geocoder may return geographies with keys like:
+                # - "Census Blocks"
+                # - "Census Blocks 2020"
+                # - "2020 Census Blocks"
+                # - "2010 Census Blocks"
+                # so we search for a key containing "Census Blocks".
+                census_block = {}
+                for k, v in geographies.items():
+                    if isinstance(k, str) and 'Census Blocks' in k and isinstance(v, list) and v:
+                        census_block = v[0]
+                        break
+
+                if not census_block:
+                    # Helpful when API changes or vintages differ.
+                    logger.info(f"Census geocoder geographies keys: {list(geographies.keys())}")
                 
-                census_blocks = geographies.get('Census Blocks', [])
-                census_block = census_blocks[0] if census_blocks else {}
+                county = {}
+                for k, v in geographies.items():
+                    if isinstance(k, str) and k.startswith('Counties') and isinstance(v, list) and v:
+                        county = v[0]
+                        break
                 
-                counties = geographies.get('Counties', [])
-                county = counties[0] if counties else {}
-                
+                # Tract may come from the block or directly from a "Census Tracts" entry.
+                tract = census_block.get('TRACT') if isinstance(census_block, dict) else None
+                if not tract:
+                    for k, v in geographies.items():
+                        if isinstance(k, str) and 'Census Tracts' in k and isinstance(v, list) and v:
+                            tract = v[0].get('TRACT')
+                            break
+
                 return {
                     'lat': coordinates.get('y'),
                     'lon': coordinates.get('x'),
                     'censusBlock': census_block.get('GEOID'),
-                    'censusTract': census_block.get('TRACT'),
+                    'censusTract': tract,
                     'countyFips': county.get('COUNTY'),
                     'stateFips': county.get('STATE'),
                     'matchedAddress': match.get('matchedAddress')
@@ -183,19 +207,33 @@ class CompositeGeocoder:
         if cache_key in self.cache:
             return self.cache[cache_key]
         
-        parts = [p.strip() for p in full_address.split(',')]
+        # Parse common formats:
+        # - "street, city, ST 12345"
+        # - "street, city, ST"
+        # - "street city ST 12345" (fallback)
+        street = city = state = zip_code = ''
+
+        if ',' in full_address:
+            parts = [p.strip() for p in full_address.split(',') if p.strip()]
+            street = parts[0] if len(parts) > 0 else ''
+            city = parts[1] if len(parts) > 1 else ''
+
+            if len(parts) > 2:
+                state_zip = parts[2].split()
+                state = state_zip[0] if len(state_zip) > 0 else ''
+                zip_code = state_zip[1] if len(state_zip) > 1 else ''
+        else:
+            tokens = full_address.split()
+            if len(tokens) >= 3:
+                # Assume last 2 are state + zip, rest is street+city (unknown split)
+                state = tokens[-2]
+                zip_code = tokens[-1] if tokens[-1].isdigit() else ''
+                street = ' '.join(tokens[:-2])
         
-        street = parts[0] if len(parts) > 0 else ''
-        city = parts[1] if len(parts) > 1 else ''
-        
-        state = ''
-        zip_code = ''
-        if len(parts) > 2:
-            state_zip = parts[2].split()
-            state = state_zip[0] if len(state_zip) > 0 else ''
-            zip_code = state_zip[1] if len(state_zip) > 1 else ''
-        
-        result = self.census_geocoder.geocode_address(street, city, state, zip_code)
+        # Census geocoder needs street+city+state at minimum.
+        result = None
+        if street and city and state:
+            result = self.census_geocoder.geocode_address(street, city, state, zip_code)
         
         if result:
             result['source'] = 'census'
@@ -210,12 +248,13 @@ class CompositeGeocoder:
                     'census_block': None,  # Nominatim doesn't provide this
                     'source': 'nominatim'
                 }
+
+        # Cache both successes and failures so we don't hammer external services
+        # on repeated addresses within the same run.
+        self.cache[cache_key] = result
         
-        if result:
-            self.cache[cache_key] = result
-            
-            if len(self.cache) % 100 == 0:
-                self.save_cache(str(self.cache_file))
+        if len(self.cache) % 100 == 0:
+            self.save_cache(str(self.cache_file))
         
         return result
     
@@ -233,6 +272,13 @@ class CompositeGeocoder:
             logger.info(f"Loaded {len(self.cache)} geocoding results from cache")
         except FileNotFoundError:
             logger.warning(f"Cache file not found: {filepath}")
+            self.cache = {}
+            # Create an empty cache file to avoid repeated warnings.
+            try:
+                self.save_cache(filepath)
+            except Exception:
+                # Non-fatal; we can still operate without a cache file.
+                pass
 
 
 def geocode_batch_with_progress(addresses: List[Dict], output_file: str = None) -> List[Dict]:

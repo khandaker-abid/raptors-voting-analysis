@@ -1,4 +1,5 @@
-   package com.example.raptorsbackend.controller;
+package com.example.raptorsbackend.controller;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
@@ -120,7 +121,7 @@ public class RegistrationController {
             int yearInt = Integer.parseInt(year.trim());
             String stateKey = yearInt == 2016 ? getStateAbbreviation(normalizedState) : normalizedState;
             query.addCriteria(
-                Criteria.where("stateFull").is(stateKey).and("year").is(yearInt));
+                    Criteria.where("stateFull").is(stateKey).and("year").is(yearInt));
             List<Map> yearData = mongoTemplate.find(query, Map.class, "eavsData");
 
             Map<String, Integer> lookup = new HashMap<>();
@@ -249,16 +250,14 @@ public class RegistrationController {
             List<Map> eavsData = mongoTemplate.find(query, Map.class, "eavsData");
 
             long totalRegistered = 0;
-            long totalCVAP = 0;
+            long totalActive = 0;
             long totalVotesCast = 0;
 
             for (Map doc : eavsData) {
                 totalRegistered += getLongValue(doc, "A1a"); // Total registered voters
-                totalCVAP += getLongValue(doc, "A1b"); // Citizen Voting Age Population
-                totalVotesCast += getLongValue(doc, "F1a"); // Election day
-                totalVotesCast += getLongValue(doc, "F1b"); // Polling place
-                totalVotesCast += getLongValue(doc, "F1d"); // Mail
-                totalVotesCast += getLongValue(doc, "F1f"); // Early in-person
+                totalActive += getLongValue(doc, "A1b"); // Active registered voters (not CVAP)
+                // F1a is total votes cast - other F1 fields are subcategories, not additive
+                totalVotesCast += getLongValue(doc, "F1a");
             }
 
             Map<String, Object> row = new HashMap<>();
@@ -268,11 +267,13 @@ public class RegistrationController {
             row.put("registeredVoters", totalRegistered);
             row.put("votesCast", totalVotesCast);
 
-            double registrationRate = totalCVAP > 0
-                    ? (double) totalRegistered / totalCVAP * 100
+            // Registration rate: Active voters as percentage of total registered
+            double registrationRate = totalRegistered > 0
+                    ? (double) totalActive / totalRegistered * 100
                     : 0.0;
             row.put("registrationRate", Math.round(registrationRate * 10) / 10.0);
 
+            // Turnout rate: Votes cast as percentage of registered voters
             double turnoutRate = totalRegistered > 0
                     ? (double) totalVotesCast / totalRegistered * 100
                     : 0.0;

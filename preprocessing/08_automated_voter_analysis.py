@@ -11,14 +11,19 @@ from pathlib import Path
 import time
 import base64
 import json
+import os
+import argparse
 
 sys.path.append(str(Path(__file__).parent))
 
 from utils.database import DatabaseManager, load_config
+from utils.voter_collections import get_voter_collection_name
 import requests
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+
 
 
 class USPSAddressValidator:
@@ -65,7 +70,7 @@ class USPSAddressValidator:
         }
         
         try:
-            response = requests.post(self.oauth_url, headers=headers, data=data)
+            response = requests.post(self.oauth_url, headers=headers, data=data, timeout=10)
             response.raise_for_status()
             
             token_data = response.json()
@@ -76,7 +81,14 @@ class USPSAddressValidator:
             return self.access_token
             
         except Exception as e:
-            logger.error(f"Failed to get USPS access token: {e}")
+            # Surface the response body if available; USPS often returns useful error details.
+            details = ""
+            try:
+                if isinstance(e, requests.HTTPError) and e.response is not None:
+                    details = f" | status={e.response.status_code} body={e.response.text[:500]}"
+            except Exception:
+                details = ""
+            logger.error(f"Failed to get USPS access token: {e}{details}")
             raise
     
     def validate_address(self, address_dict: dict) -> dict:
@@ -193,8 +205,9 @@ class USPSAddressValidator:
             batch_size: Process in batches with pauses
         """
         logger.info(f"Validating addresses for up to {limit:,} voters...")
-        
-        voters = list(self.db.find_many('voterRegistration', {
+
+        voter_collection = get_voter_collection_name(self.db)
+        voters = list(self.db.find_many(voter_collection, {
             '$or': [
                 {'addressValidation': None},
                 {'addressValidation': {'$exists': False}}
@@ -212,15 +225,38 @@ class USPSAddressValidator:
         invalid_count = 0
         corrected_count = 0
         
+        # If USPS OAuth is failing, don't hammer the endpoint for every voter.
+        # This step is OPTIONAL in the pipeline, so we fail fast and let the pipeline continue.
+        skip_on_token_error = os.environ.get("PREPRO8_SKIP_ON_TOKEN_ERROR", "1").strip().lower() in {"1", "true", "yes", "y"}
+        token_error_streak = 0
+        max_token_errors = int(os.environ.get("PREPRO8_MAX_TOKEN_ERRORS", "1") or 1)
+
         for i, voter in enumerate(voters):
             address = voter.get('address', {})
-            
+
+            # Defensive: some DBs contain malformed address values (string/null/etc.).
+            # Prepro-9b repairs these, but Prepro-8 runs earlier and is optional.
+            if not isinstance(address, dict):
+                continue
+
             if not address.get('street'):
                 continue
             
             address['state'] = voter.get('stateAbbr', '')
             
             validation = self.validate_address(address)
+
+            # If token retrieval fails, optionally bail out quickly.
+            if validation.get('validationSource') == 'token_error':
+                token_error_streak += 1
+                if skip_on_token_error and token_error_streak >= max_token_errors:
+                    logger.warning(
+                        "USPS token retrieval failed; skipping remaining address validation "
+                        "(this step is optional)."
+                    )
+                    break
+            else:
+                token_error_streak = 0
             
             if validation['isValid']:
                 valid_count += 1
@@ -230,7 +266,7 @@ class USPSAddressValidator:
                 invalid_count += 1
             
             self.db.upsert_one(
-                'voterRegistration',
+                voter_collection,
                 {'_id': voter['_id']},
                 {'addressValidation': validation}
             )
@@ -250,10 +286,19 @@ class USPSAddressValidator:
         logger.info("ADDRESS VALIDATION SUMMARY")
         logger.info("="*70)
         logger.info(f"Total addresses validated: {validated:,}")
-        logger.info(f"Valid addresses: {valid_count:,} ({valid_count/validated*100:.1f}%)")
-        logger.info(f"Invalid addresses: {invalid_count:,} ({invalid_count/validated*100:.1f}%)")
-        logger.info(f"Addresses corrected: {corrected_count:,} ({corrected_count/validated*100:.1f}%)")
+        if validated > 0:
+            logger.info(f"Valid addresses: {valid_count:,} ({valid_count/validated*100:.1f}%)")
+            logger.info(f"Invalid addresses: {invalid_count:,} ({invalid_count/validated*100:.1f}%)")
+            logger.info(f"Addresses corrected: {corrected_count:,} ({corrected_count/validated*100:.1f}%)")
+        else:
+            logger.info("Valid addresses: 0 (n/a)")
+            logger.info("Invalid addresses: 0 (n/a)")
+            logger.info("Addresses corrected: 0 (n/a)")
         logger.info("="*70)
+
+        if validated == 0:
+            logger.info("No addresses were validated (likely due to missing/empty street fields).")
+            return 0
         
         return validated
 
@@ -261,14 +306,23 @@ class USPSAddressValidator:
 def main():
     """Main execution"""
     try:
+        parser = argparse.ArgumentParser(description="Prepro-8: Optional USPS address validation")
+        parser.add_argument(
+            "--no",
+            action="store_true",
+            help="Skip address validation (no prompt).",
+        )
+        args = parser.parse_args()
+
         db = DatabaseManager()
-        voter_count = db.count_documents('voterRegistration')
+        voter_collection = get_voter_collection_name(db)
+        voter_count = db.count_documents(voter_collection)
         
         if voter_count == 0:
             logger.info("="*70)
             logger.info("OPTIONAL: Automated Voter Address Validation with USPS")
             logger.info("="*70)
-            logger.info("\nNo voter registration records found in database")
+            logger.info(f"\nNo voter registration records found in database ({voter_collection})")
             logger.info("Skipping address validation (nothing to validate)")
             logger.info("\nNext step: Run 09_geocode_voters_to_census_blocks.py (optional)")
             return
@@ -283,11 +337,19 @@ def main():
         logger.info("  - Standardize address formatting")
         logger.info("  - Correct typos and errors")
         logger.info("  - Improve data quality for geocoding")
-        
-        response = input("\nDo you want to proceed with validation? (yes/no): ")
-        
-        if response.lower() not in ['yes', 'y']:
+
+        assume_no = args.no or os.environ.get("PREPROCESS_ASSUME_NO", "").strip().lower() in {"1", "true", "yes", "y"}
+
+        if assume_no:
             logger.info("Skipping address validation.")
+            logger.info("Next step: Run 09_geocode_voters_to_census_blocks.py (optional)")
+            return
+
+        # Proceed by default. If USPS keys are missing, skip instead of crashing.
+        config = load_config('config.json')
+        api_keys = (config.get('apiKeys') or {})
+        if not api_keys.get('uspsConsumerKey') or not api_keys.get('uspsConsumerSecret'):
+            logger.info("USPS API credentials not found - skipping address validation")
             logger.info("Next step: Run 09_geocode_voters_to_census_blocks.py (optional)")
             return
         

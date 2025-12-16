@@ -38,6 +38,7 @@ const PercentChoropleth: React.FC<Props> = ({ stateName, data, title }) => {
                     (hoveredRef.current as any).closeTooltip();
                 }
             } catch {
+                // ignore reset/tooltip errors from Leaflet during rapid hover changes
             }
             hoveredRef.current = null;
         }

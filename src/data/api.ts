@@ -71,6 +71,33 @@ export async function fetchEquipmentSummary(): Promise<any[]> {
     return fetchApi<any[]>(`${API_BASE}/equipment/summary`);
 }
 
+export type EquipmentRawResponse = {
+    page: number;
+    pageSize: number;
+    total: number;
+    items: any[];
+};
+
+export async function fetchEquipmentRaw(params?: {
+    stateAbbr?: string;
+    year?: number;
+    equipmentType?: string;
+    dataSource?: string;
+    page?: number;
+    pageSize?: number;
+}): Promise<EquipmentRawResponse> {
+    const p = params ?? {};
+    const qs = new URLSearchParams();
+    if (p.stateAbbr) qs.set("stateAbbr", p.stateAbbr);
+    if (typeof p.year === "number") qs.set("year", String(p.year));
+    if (p.equipmentType) qs.set("equipmentType", p.equipmentType);
+    if (p.dataSource) qs.set("dataSource", p.dataSource);
+    if (typeof p.page === "number") qs.set("page", String(p.page));
+    if (typeof p.pageSize === "number") qs.set("pageSize", String(p.pageSize));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return fetchApi<EquipmentRawResponse>(`${API_BASE}/equipment/raw${suffix}`);
+}
+
 export async function fetchEquipmentVsRejected(state: string): Promise<any[]> {
     const s = encodeURIComponent(state);
     return fetchApi<any[]>(`${API_BASE}/equipment/vs-rejected/${s}`);
