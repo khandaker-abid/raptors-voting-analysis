@@ -1,66 +1,130 @@
-<!-- prettier-ignore --># 🗳️ Raptors Voting Analysis
+<div align="center"><!-- prettier-ignore --># 🗳️ Raptors Voting Analysis
 
-<div align="center">
 
-[![CSE 416](https://img.shields.io/badge/CSE-416-blue)](https://www.stonybrook.edu)
 
-<img src="public/raptors+compass.png" alt="Raptors Voting Analysis" height="96" />[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
+<img src="public/raptors+compass.png" alt="" height="80" /><div align="center">
 
-[![Node.js](https://img.shields.io/badge/node.js-22.12.0-green.svg)](https://nodejs.org/)
 
-# Raptors Voting Analysis[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-green.svg)](https://spring.io/projects/spring-boot)
+
+# Raptors Voting Analysis[![CSE 416](https://img.shields.io/badge/CSE-416-blue)](https://www.stonybrook.edu)
+
+
+
+**Election data visualization platform for analyzing voting patterns, equipment quality, and VRA compliance.**<img src="public/raptors+compass.png" alt="Raptors Voting Analysis" height="96" />[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
+
+
+
+[![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=white)](https://react.dev)[![Node.js](https://img.shields.io/badge/node.js-22.12.0-green.svg)](https://nodejs.org/)
+
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-6db33f?style=flat-square&logo=spring&logoColor=white)](https://spring.io/projects/spring-boot)
+
+[![MongoDB](https://img.shields.io/badge/MongoDB-7.0-47a248?style=flat-square&logo=mongodb&logoColor=white)](https://www.mongodb.com/)# Raptors Voting Analysis[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-green.svg)](https://spring.io/projects/spring-boot)
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 
 [![MongoDB](https://img.shields.io/badge/MongoDB-7.0-green.svg)](https://www.mongodb.com/)
 
+[Features](#features) • [Quick Start](#quick-start) • [Tech Stack](#tech-stack) • [Architecture](#architecture)
+
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)]()[![Tests](https://img.shields.io/badge/tests-37%2F37%20passing-brightgreen.svg)]()
-
-[![Node.js](https://img.shields.io/badge/Node.js-22.12.0-3c873a?style=flat-square)](https://nodejs.org/)[![Use Cases](https://img.shields.io/badge/use%20cases-55%2F55%20complete-brightgreen.svg)]()
-
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-6db33f?style=flat-square)](https://spring.io/projects/spring-boot)
-
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)Interactive web application for analyzing and visualizing election administration data, voter registration trends, voting equipment quality, and Voting Rights Act preclearance analysis across the United States. Built for **CSE 416 - Software Engineering**.
-
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
-
-**Full-stack application featuring:**
-
-**Interactive election data analysis platform for exploring voting patterns, equipment quality, and Voting Rights Act compliance across the United States.**- 🎨 **React Frontend** - Interactive maps, charts, and data visualizations with 30 GUI components
-
-- ⚙️ **Spring Boot Backend** - RESTful API with 30+ endpoints and MongoDB integration
-
-[Features](#features) •- 🗄️ **MongoDB Database** - 26,636+ records across 11 collections
-
-[Getting Started](#getting-started) •- 🔄 **Automated Pipeline** - 21 preprocessing stages with logging and cache-aware retries
-
-[Run the App](#run-the-app) •- ✅ **Testing Suite** - 100% pass rate on 37 integration tests
-
-[Architecture](#architecture) •- 📊 **Statistical Analysis** - Non-linear regression and ecological inference modeling
-
-[API Reference](#api-reference)
-
----
 
 </div>
 
-## 📋 Table of Contents
+[![Node.js](https://img.shields.io/badge/Node.js-22.12.0-3c873a?style=flat-square)](https://nodejs.org/)[![Use Cases](https://img.shields.io/badge/use%20cases-55%2F55%20complete-brightgreen.svg)]()
 
 ---
 
-- [Features](#-features)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-6db33f?style=flat-square)](https://spring.io/projects/spring-boot)
 
-A full-stack application that visualizes election administration data, voter registration trends, and voting equipment quality metrics. Built with React, Spring Boot, and MongoDB, it supports analysis of EAVS survey data (2016-2024), voting equipment specifications, and VRA Section 2 preclearance assessments.- [Tech Stack](#-tech-stack)
+## Features
 
-- [Prerequisites](#-prerequisites)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)Interactive web application for analyzing and visualizing election administration data, voter registration trends, voting equipment quality, and Voting Rights Act preclearance analysis across the United States. Built for **CSE 416 - Software Engineering**.
 
-> [!TIP]- [Quick Start](#-quick-start)
+- **Interactive Maps** — State/county choropleths with census block voter overlays
+
+- **Equipment Tracking** — Voting machine types, age, and quality metrics (2016-2024)[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
+
+- **EAVS Analysis** — Active voters, provisional ballots, mail rejections by jurisdiction
+
+- **VRA Tools** — Gingles factors, ecological inference, demographic disparity detection**Full-stack application featuring:**
+
+- **30+ REST Endpoints** — Full API with caching, pagination, and GeoJSON support
+
+**Interactive election data analysis platform for exploring voting patterns, equipment quality, and Voting Rights Act compliance across the United States.**- 🎨 **React Frontend** - Interactive maps, charts, and data visualizations with 30 GUI components
+
+## Quick Start
+
+- ⚙️ **Spring Boot Backend** - RESTful API with 30+ endpoints and MongoDB integration
+
+```bash
+
+# Frontend only (mock data)[Features](#features) •- 🗄️ **MongoDB Database** - 26,636+ records across 11 collections
+
+npm install && npm run dev
+
+[Getting Started](#getting-started) •- 🔄 **Automated Pipeline** - 21 preprocessing stages with logging and cache-aware retries
+
+# Full stack
+
+cd preprocessing && pip install -r requirements.txt && ./run_all_preprocessing.sh[Run the App](#run-the-app) •- ✅ **Testing Suite** - 100% pass rate on 37 integration tests
+
+cd ../backend && ./mvnw spring-boot:run
+
+npm run dev[Architecture](#architecture) •- 📊 **Statistical Analysis** - Non-linear regression and ecological inference modeling
+
+```
+
+[API Reference](#api-reference)
+
+## Tech Stack
+
+---
+
+| Layer | Technologies |
+
+|-------|-------------|</div>
+
+| Frontend | React 19, TypeScript, Vite, Material-UI, Leaflet, Recharts |
+
+| Backend | Spring Boot 3.5, Java 17, Spring Data MongoDB |## 📋 Table of Contents
+
+| Database | MongoDB 7.0 with GeoJSON |
+
+| Pipeline | Python 3.12, Pandas, 21 automated ETL stages |---
+
+
+
+## Architecture- [Features](#-features)
+
+
+
+```A full-stack application that visualizes election administration data, voter registration trends, and voting equipment quality metrics. Built with React, Spring Boot, and MongoDB, it supports analysis of EAVS survey data (2016-2024), voting equipment specifications, and VRA Section 2 preclearance assessments.- [Tech Stack](#-tech-stack)
+
+React + Vite ──▶ Spring Boot REST API ──▶ MongoDB
+
+     │                   │- [Prerequisites](#-prerequisites)
+
+     ▼                   ▼
+
+Leaflet/Recharts    Python ETL Pipeline> [!TIP]- [Quick Start](#-quick-start)
+
+```
 
 > You can run the frontend with mock data instantly—no database setup required. Just run `npm install && npm run dev` to explore the UI.- [Project Structure](#-project-structure)
 
+**Data Sources:** EAC EAVS surveys, Census TIGER/Line boundaries, MIT Election Lab results, VerifiedVoting equipment specs
+
 - [Preprocessing Pipeline](#-preprocessing-pipeline)
+
+---
 
 ## Features- [Backend Setup](#-backend-setup)
 
-- [Frontend Setup](#-frontend-setup)
+<div align="center">
+
+<sub>CSE 416 Software Engineering — Stony Brook University</sub>- [Frontend Setup](#-frontend-setup)
+
+</div>
 
 - **Interactive Maps** — State and county choropleths with voter registration overlays and census block bubbles- [Database](#-database)
 
