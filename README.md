@@ -1,248 +1,494 @@
-# 🗳️ Raptors Voting Analysis
+<!-- prettier-ignore --># 🗳️ Raptors Voting Analysis
+
+<div align="center">
 
 [![CSE 416](https://img.shields.io/badge/CSE-416-blue)](https://www.stonybrook.edu)
-[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
-[![Node.js](https://img.shields.io/badge/node.js-22.12.0-green.svg)](https://nodejs.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-green.svg)](https://spring.io/projects/spring-boot)
-[![MongoDB](https://img.shields.io/badge/MongoDB-7.0-green.svg)](https://www.mongodb.com/)
-[![Tests](https://img.shields.io/badge/tests-37%2F37%20passing-brightgreen.svg)]()
-[![Use Cases](https://img.shields.io/badge/use%20cases-55%2F55%20complete-brightgreen.svg)]()
 
-Interactive web application for analyzing and visualizing election administration data, voter registration trends, voting equipment quality, and Voting Rights Act preclearance analysis across the United States. Built for **CSE 416 - Software Engineering**.
+<img src="public/raptors+compass.png" alt="Raptors Voting Analysis" height="96" />[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
+
+[![Node.js](https://img.shields.io/badge/node.js-22.12.0-green.svg)](https://nodejs.org/)
+
+# Raptors Voting Analysis[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-green.svg)](https://spring.io/projects/spring-boot)
+
+[![MongoDB](https://img.shields.io/badge/MongoDB-7.0-green.svg)](https://www.mongodb.com/)
+
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)]()[![Tests](https://img.shields.io/badge/tests-37%2F37%20passing-brightgreen.svg)]()
+
+[![Node.js](https://img.shields.io/badge/Node.js-22.12.0-3c873a?style=flat-square)](https://nodejs.org/)[![Use Cases](https://img.shields.io/badge/use%20cases-55%2F55%20complete-brightgreen.svg)]()
+
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-6db33f?style=flat-square)](https://spring.io/projects/spring-boot)
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)Interactive web application for analyzing and visualizing election administration data, voter registration trends, voting equipment quality, and Voting Rights Act preclearance analysis across the United States. Built for **CSE 416 - Software Engineering**.
+
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 
 **Full-stack application featuring:**
-- 🎨 **React Frontend** - Interactive maps, charts, and data visualizations with 30 GUI components
+
+**Interactive election data analysis platform for exploring voting patterns, equipment quality, and Voting Rights Act compliance across the United States.**- 🎨 **React Frontend** - Interactive maps, charts, and data visualizations with 30 GUI components
+
 - ⚙️ **Spring Boot Backend** - RESTful API with 30+ endpoints and MongoDB integration
-- 🗄️ **MongoDB Database** - 26,636+ records across 11 collections
-- 🔄 **Automated Pipeline** - 21 preprocessing stages with logging and cache-aware retries
-- ✅ **Testing Suite** - 100% pass rate on 37 integration tests
-- 📊 **Statistical Analysis** - Non-linear regression and ecological inference modeling
+
+[Features](#features) •- 🗄️ **MongoDB Database** - 26,636+ records across 11 collections
+
+[Getting Started](#getting-started) •- 🔄 **Automated Pipeline** - 21 preprocessing stages with logging and cache-aware retries
+
+[Run the App](#run-the-app) •- ✅ **Testing Suite** - 100% pass rate on 37 integration tests
+
+[Architecture](#architecture) •- 📊 **Statistical Analysis** - Non-linear regression and ecological inference modeling
+
+[API Reference](#api-reference)
 
 ---
+
+</div>
 
 ## 📋 Table of Contents
 
+---
+
 - [Features](#-features)
-- [Tech Stack](#-tech-stack)
+
+A full-stack application that visualizes election administration data, voter registration trends, and voting equipment quality metrics. Built with React, Spring Boot, and MongoDB, it supports analysis of EAVS survey data (2016-2024), voting equipment specifications, and VRA Section 2 preclearance assessments.- [Tech Stack](#-tech-stack)
+
 - [Prerequisites](#-prerequisites)
-- [Quick Start](#-quick-start)
-- [Project Structure](#-project-structure)
+
+> [!TIP]- [Quick Start](#-quick-start)
+
+> You can run the frontend with mock data instantly—no database setup required. Just run `npm install && npm run dev` to explore the UI.- [Project Structure](#-project-structure)
+
 - [Preprocessing Pipeline](#-preprocessing-pipeline)
-- [Backend Setup](#-backend-setup)
+
+## Features- [Backend Setup](#-backend-setup)
+
 - [Frontend Setup](#-frontend-setup)
-- [Database](#-database)
-- [API Documentation](#-api-documentation)
-- [Contributing](#-contributing)
-- [License](#-license)
 
----
+- **Interactive Maps** — State and county choropleths with voter registration overlays and census block bubbles- [Database](#-database)
 
-## ✨ Features
+- **Equipment Analysis** — Track voting equipment types, age, and quality metrics across election cycles (2016-2024)- [API Documentation](#-api-documentation)
 
-### Interactive Maps & Visualizations
+- **EAVS Insights** — Active voters, provisional ballots, pollbook deletions, and mail ballot rejection rates- [Contributing](#-contributing)
+
+- **VRA Compliance Tools** — Gingles factors analysis, ecological inference modeling, and demographic disparity detection- [License](#-license)
+
+- **Party Comparisons** — Side-by-side Republican vs Democratic state analysis with registration trends
+
+- **Data Export** — Download charts, tables, and analysis results---
+
+
+
+## Getting Started## ✨ Features
+
+
+
+### Prerequisites### Interactive Maps & Visualizations
+
 - **Geographic Choropleths** - State and county-level voting data visualizations
-- **Census Block Bubbles** - Voter registration overlays with demographic data
-- **Dynamic Filtering** - Filter by state, year, party, and data completeness
 
-### Data Analysis & Charts
-- **Equipment History** - Track voting equipment types and quality over time (2016-2024)
-- **Registration Trends** - Multi-year voter registration pattern analysis with sorted timelines
+| Tool | Version | Notes |- **Census Block Bubbles** - Voter registration overlays with demographic data
+
+|------|---------|-------|- **Dynamic Filtering** - Filter by state, year, party, and data completeness
+
+| [Node.js](https://nodejs.org/) | 22.12.0 | Use `.nvmrc` with nvm/fnm |
+
+| [Java JDK](https://adoptium.net/) | 17+ | For Spring Boot backend |### Data Analysis & Charts
+
+| [MongoDB](https://www.mongodb.com/) | 7.0+ | Local or Atlas |- **Equipment History** - Track voting equipment types and quality over time (2016-2024)
+
+| [Python](https://www.python.org/) | 3.12+ | For data preprocessing |- **Registration Trends** - Multi-year voter registration pattern analysis with sorted timelines
+
 - **EAVS Insights** - Active voters, provisional ballots, pollbook deletions, mail rejections
-- **Party Comparisons** - Republican vs Democratic state analysis
+
+### Clone the Repository- **Party Comparisons** - Republican vs Democratic state analysis
+
 - **Equipment Quality** - Automated quality metrics with rejection rate correlations
-- **Regression Analysis** - Power curve regression lines showing statistical correlations
 
-### Voting Rights Act Analysis
-- **Gingles Factors** - Three-prong test for Section 2 VRA compliance
+```bash- **Regression Analysis** - Power curve regression lines showing statistical correlations
+
+git clone https://github.com/khandaker-abid/raptors-voting-analysis.git
+
+cd raptors-voting-analysis### Voting Rights Act Analysis
+
+```- **Gingles Factors** - Three-prong test for Section 2 VRA compliance
+
 - **Ecological Inference** - Equipment quality and ballot rejection analysis by demographics
-- **Statistical Modeling** - Normal distribution curves for six demographic groups
+
+If using nvm, run `nvm use` to activate the pinned Node version.- **Statistical Modeling** - Normal distribution curves for six demographic groups
+
 - **Disparities Detection** - Automated identification of voting access inequalities
-- **Preclearance Tools** - Comprehensive VRA Section 2 analysis for covered jurisdictions
 
----
+## Run the App- **Preclearance Tools** - Comprehensive VRA Section 2 analysis for covered jurisdictions
 
-## 🛠️ Tech Stack
 
-### Frontend
-- **React 19.1** - Modern UI components with hooks
-- **TypeScript 5.8** - Type-safe development
-- **Vite 7.1** - Lightning-fast build tool
+
+### Option 1: Quick Start (Mock Data)---
+
+
+
+Perfect for UI development—no database required:## 🛠️ Tech Stack
+
+
+
+```bash### Frontend
+
+npm install- **React 19.1** - Modern UI components with hooks
+
+npm run dev- **TypeScript 5.8** - Type-safe development
+
+```- **Vite 7.1** - Lightning-fast build tool
+
 - **Material-UI (MUI) 7.3** - Professional component library
-- **Leaflet + React-Leaflet** - Interactive geographic maps
-- **Recharts 3.2** - Responsive data visualizations
-- **Axios** - HTTP client for API communication
 
-### Backend
+Open http://localhost:5173- **Leaflet + React-Leaflet** - Interactive geographic maps
+
+- **Recharts 3.2** - Responsive data visualizations
+
+### Option 2: Full Stack (Real Data)- **Axios** - HTTP client for API communication
+
+
+
+**1. Start MongoDB**### Backend
+
 - **Spring Boot 3.5.6** - Production-ready REST API
-- **Java 17** - Modern Java features with Maven build
-- **MongoDB 7.0+** - NoSQL database with native GeoJSON support
-- **Spring Data MongoDB** - Data access layer
+
+```bash- **Java 17** - Modern Java features with Maven build
+
+# Linux- **MongoDB 7.0+** - NoSQL database with native GeoJSON support
+
+sudo systemctl start mongod- **Spring Data MongoDB** - Data access layer
+
 - **CORS Support** - Cross-origin resource sharing enabled
 
-### Data Pipeline
-- **Python 3.12** - 21 automated ETL/preprocessing stages with caching
-- **Pandas** - Data manipulation and analysis
-- **NumPy** - Statistical modeling and computations
-- **PyMongo** - MongoDB driver for Python
-- **Requests** - HTTP library for API calls
+# macOS
 
-### Testing & Validation
-- **Integration Tests** - 37 automated tests covering all endpoints
-- **Database Validation** - Automated schema and data integrity checks
-- **Performance Testing** - Response time validation (<100ms target)
+brew services start mongodb-community### Data Pipeline
+
+```- **Python 3.12** - 21 automated ETL/preprocessing stages with caching
+
+- **Pandas** - Data manipulation and analysis
+
+**2. Run the preprocessing pipeline**- **NumPy** - Statistical modeling and computations
+
+- **PyMongo** - MongoDB driver for Python
+
+```bash- **Requests** - HTTP library for API calls
+
+cd preprocessing
+
+python -m venv .venv### Testing & Validation
+
+source .venv/bin/activate  # Windows: .venv\Scripts\activate- **Integration Tests** - 37 automated tests covering all endpoints
+
+pip install -r requirements.txt- **Database Validation** - Automated schema and data integrity checks
+
+./run_all_preprocessing.sh- **Performance Testing** - Response time validation (<100ms target)
+
+```
 
 ### APIs & Data Sources
-- **Census Bureau API** - CVAP demographic data
-- **EAC EAVS Datasets** - Election administration surveys (2016-2024)
-- **Census TIGER/Line** - Geographic boundaries
-- **MIT Election Lab** - Presidential election results (2000-2024)
-- **VerifiedVoting** - Voting equipment specifications
 
----
+First run takes ~10 minutes. Subsequent runs use cached data (~2 minutes).- **Census Bureau API** - CVAP demographic data
+
+- **EAC EAVS Datasets** - Election administration surveys (2016-2024)
+
+**3. Start the backend**- **Census TIGER/Line** - Geographic boundaries
+
+- **MIT Election Lab** - Presidential election results (2000-2024)
+
+```bash- **VerifiedVoting** - Voting equipment specifications
+
+cd backend
+
+./mvnw spring-boot:run---
+
+```
 
 ## 📦 Prerequisites
 
+Backend runs on http://localhost:8080
+
 Before you begin, ensure you have the following installed:
+
+**4. Start the frontend**
 
 ### Required Software
 
-### Optional (Recommended)
+```bash
 
-> ℹ️ **Node version management:** The repository includes a `.nvmrc` file pinned to `22.12.0`. With nvm, fnm, asdf, or Volta installed, run `nvm use` (or the equivalent command) after cloning to automatically match the required runtime.
+npm install### Optional (Recommended)
 
+npm run dev
+
+```> ℹ️ **Node version management:** The repository includes a `.nvmrc` file pinned to `22.12.0`. With nvm, fnm, asdf, or Volta installed, run `nvm use` (or the equivalent command) after cloning to automatically match the required runtime.
+
+
+
+Frontend runs on http://localhost:5173
 
 ## 🚀 Quick Start
 
+**5. Validate the stack (optional)**
+
 ### 1. Clone the Repository
-```bash
-git clone https://github.com/khandaker-abid/raptors-voting-analysis.git
-cd raptors-voting-analysis
+
+```bash```bash
+
+python test_integration.pygit clone https://github.com/khandaker-abid/raptors-voting-analysis.git
+
+```cd raptors-voting-analysis
+
 ```
+
+Runs 37 integration tests across all API endpoints.
 
 If you manage Node versions with nvm/fnm/asdf/Volta, run the appropriate `use` command here to activate **Node.js 22.12.0** from `.nvmrc` before proceeding.
-sudo systemctl start mongod
 
-# macOS
-brew services start mongodb-community
+## Architecturesudo systemctl start mongod
 
-# Windows
-net start MongoDB
-```
 
-### 3. Setup and Run (Choose One)
 
-**Option A: Full Stack with Real Data**
+```# macOS
 
-```bash
-# Terminal 1 - Setup and populate database
-cd preprocessing
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐brew services start mongodb-community
+
+│   React + Vite  │────▶│  Spring Boot    │────▶│    MongoDB      │
+
+│   TypeScript    │     │  REST API       │     │    7.0+         │# Windows
+
+│   Material-UI   │     │  Java 17        │     │                 │net start MongoDB
+
+└─────────────────┘     └─────────────────┘     └─────────────────┘```
+
+        │                       │
+
+        │                       │### 3. Setup and Run (Choose One)
+
+        ▼                       ▼
+
+┌─────────────────┐     ┌─────────────────┐**Option A: Full Stack with Real Data**
+
+│  Leaflet Maps   │     │ Python Pipeline │
+
+│  Recharts       │     │ 21 ETL stages   │```bash
+
+└─────────────────┘     └─────────────────┘# Terminal 1 - Setup and populate database
+
+```cd preprocessing
+
 python -m venv .venv
-source .venv/Scripts/activate  # Windows: .venv\Scripts\activate
+
+### Project Structuresource .venv/Scripts/activate  # Windows: .venv\Scripts\activate
+
 pip install -r requirements.txt
-./run_all_preprocessing.sh  # Populates MongoDB (first run ~10 minutes, cached reruns <2 minutes)
-cd ..
 
-# Terminal 2 - Start backend
-cd backend
-./mvnw clean install
-./mvnw spring-boot:run  # Runs on http://localhost:8080
+```./run_all_preprocessing.sh  # Populates MongoDB (first run ~10 minutes, cached reruns <2 minutes)
 
-# Terminal 3 - Start frontend
-npm install
-npm run dev  # Runs on http://localhost:5173
+raptors-voting-analysis/cd ..
 
-# Terminal 4 (Optional) - Run integration tests
-python test_integration.py  # Validates entire stack
-```
+├── src/                    # React frontend
 
-Then configure frontend to use real data:
-```typescript
+│   ├── components/         # Reusable UI (maps, charts, tables)# Terminal 2 - Start backend
+
+│   ├── pages/              # Route pagescd backend
+
+│   └── data/               # API client./mvnw clean install
+
+├── backend/                # Spring Boot API./mvnw spring-boot:run  # Runs on http://localhost:8080
+
+│   └── src/main/java/.../controller/
+
+│       ├── EAVSController.java# Terminal 3 - Start frontend
+
+│       ├── EquipmentController.javanpm install
+
+│       ├── PreclearanceController.javanpm run dev  # Runs on http://localhost:5173
+
+│       └── ...
+
+├── preprocessing/          # Python data pipeline# Terminal 4 (Optional) - Run integration tests
+
+│   ├── 01-18_*.py          # ETL scriptspython test_integration.py  # Validates entire stack
+
+│   ├── run_all_preprocessing.sh```
+
+│   └── utils/              # Database, Census API helpers
+
+└── public/                 # Static GeoJSON filesThen configure frontend to use real data:
+
+``````typescript
+
 // src/data/api.ts - Line 14
-const USE_MOCKS = false;  // Change from true to false
+
+### Data Sourcesconst USE_MOCKS = false;  // Change from true to false
+
 ```
 
-The preprocessing runner saves timestamped logs under `preprocessing/logs/` and triggers `validate_preprocessing.py` automatically. Run `./verify_preprocessing.sh` from the repository root at any time to confirm MongoDB collections and cached assets without rerunning the full pipeline.
+| Source | Data | Years |
 
-**Option B: Quick Start with Mock Data**
+|--------|------|-------|The preprocessing runner saves timestamped logs under `preprocessing/logs/` and triggers `validate_preprocessing.py` automatically. Run `./verify_preprocessing.sh` from the repository root at any time to confirm MongoDB collections and cached assets without rerunning the full pipeline.
 
-```bash
-# Install and start frontend only
+| [EAC EAVS](https://www.eac.gov/research-and-data/datasets-codebooks-and-surveys) | Election administration surveys | 2016-2024 |
+
+| [Census TIGER/Line](https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html) | State/county boundaries | Current |**Option B: Quick Start with Mock Data**
+
+| [Census API](https://api.census.gov/) | CVAP demographics | 2020 |
+
+| [MIT Election Lab](https://electionlab.mit.edu/data) | Presidential results | 2000-2024 |```bash
+
+| [VerifiedVoting](https://verifiedvoting.org/) | Equipment specifications | 2016-2024 |# Install and start frontend only
+
 npm install
-npm run dev  # Runs on http://localhost:5173
+
+## API Referencenpm run dev  # Runs on http://localhost:5173
+
 ```
+
+### EAVS Data
 
 Frontend will use mock data - perfect for UI development without database setup.
 
-**Access the app:** http://localhost:5173
+| Endpoint | Description |
+
+|----------|-------------|**Access the app:** http://localhost:5173
+
+| `GET /api/eavs/{state}/active-voters` | Active/inactive voter counts by county |
+
+| `GET /api/eavs/{state}/provisional-ballots` | Provisional ballot statistics |---
+
+| `GET /api/eavs/{state}/mail-rejections` | Mail ballot rejection rates |
+
+| `GET /api/eavs/{state}/pollbook-deletions` | Pollbook deletion records |## 📁 Project Structure
+
+
+
+### Equipment```
+
+raptors-voting-analysis/
+
+| Endpoint | Description |├── src/                          # React frontend source
+
+|----------|-------------|│   ├── components/              # Reusable UI components
+
+| `GET /api/equipment/history/{state}` | Equipment type trends over time |│   ├── pages/                   # Page components (30 GUI features)
+
+| `GET /api/equipment/all-states` | Equipment summary for all states |│   ├── charts/                  # Chart components (Recharts)
+
+| `GET /api/equipment/raw` | Paginated equipment records |│   ├── tables/                  # Table components
+
+│   ├── data/                    # API client & data utilities
+
+### VRA Preclearance│   └── assets/                  # Images, icons
+
+│
+
+| Endpoint | Description |├── preprocessing/               # Python data pipeline ⭐
+
+|----------|-------------|│   ├── 01-18_*.py, 27_*.py    # Automated preprocessing stages
+
+| `GET /api/preclearance/gingles/{state}` | Gingles factors analysis |│   │   ├── 01-04: Boundaries   # Geographic data
+
+| `GET /api/preclearance/ei-equipment/{state}` | Equipment quality by demographic |│   │   ├── 05-06c: EAVS/Equipment # Survey data & equipment quality
+
+| `GET /api/preclearance/ei-rejected/{state}` | Ballot rejection by demographic |│   │   ├── 07-10,17-18: Voters # Registration, rosters, aggregation
+
+│   │   ├── 11-13: Elections    # Results, CVAP, policies
+
+### Registration│   │   ├── 14-16: GUI Data     # Equipment history, bubbles, EI models
+
+│   │   └── 27: VRA Analysis    # Gingles factors
+
+| Endpoint | Description |│   ├── utils/                   # Shared utilities
+
+|----------|-------------|│   │   ├── database.py         # MongoDB connection
+
+| `GET /api/registration/trends/{state}` | Multi-year registration trends |│   │   ├── census_api.py       # Census API wrapper
+
+| `GET /api/registration/bubbles/{state}` | Census block voter overlays |│   │   └── geojson_tools.py    # GeoJSON utilities
+
+│   ├── config.json              # Database & API configuration
+
+## Testing│   ├── run_all_preprocessing.sh # Master automation script
+
+│   └── validate_preprocessing.py # Data validation
+
+```bash│
+
+# Frontend unit tests├── backend/                     # Spring Boot backend
+
+npm test│   ├── src/main/java/          # Java source code
+
+│   │   └── com/example/raptorsbackend/
+
+# Integration tests (requires running backend + MongoDB)│   │       ├── controller/     # REST controllers (6 files)
+
+python test_integration.py│   │       │   ├── EAVSController.java
+
+│   │       │   ├── EquipmentController.java
+
+# Validate preprocessing output│   │       │   ├── RegistrationController.java
+
+python preprocessing/validate_preprocessing.py│   │       │   ├── PreclearanceController.java
+
+```│   │       │   ├── PartyComparisonController.java
+
+│   │       │   └── DataController.java
+
+## Tech Stack│   │       ├── service/        # Business logic
+
+│   │       └── model/          # Data models
+
+**Frontend:** React 19, TypeScript, Vite, Material-UI, Leaflet, Recharts│   ├── pom.xml                 # Maven dependencies
+
+│   └── target/                 # Compiled JAR files
+
+**Backend:** Spring Boot 3.5.6, Java 17, Spring Data MongoDB│
+
+├── mongo-app/                   # MongoDB schemas
+
+**Database:** MongoDB 7.0+ with GeoJSON support│   ├── schema.cjs              # Collection schemas
+
+│   ├── models/                 # Mongoose models
+
+**Pipeline:** Python 3.12, Pandas, PyMongo│   └── app.cjs                 # Node.js connection
+
+│
+
+## Contributing├── public/                      # Static assets
+
+│   └── *.geojson               # US geographic boundaries
+
+1. Fork the repository│
+
+2. Create a feature branch (`git checkout -b feature/my-feature`)├── test_integration.py          # Integration test suite (37 tests)
+
+3. Commit your changes├── validate_database.py         # Database validation tool
+
+4. Push to the branch (`git push origin feature/my-feature`)├── package.json                 # Node.js dependencies
+
+5. Open a Pull Request├── vite.config.ts              # Vite configuration
+
+├── tsconfig.json               # TypeScript configuration
+
+## License└── README.md                   # This file
+
+```
+
+MIT License - see [LICENSE](LICENSE) for details.
 
 ---
-
-## 📁 Project Structure
-
-```
-raptors-voting-analysis/
-├── src/                          # React frontend source
-│   ├── components/              # Reusable UI components
-│   ├── pages/                   # Page components (30 GUI features)
-│   ├── charts/                  # Chart components (Recharts)
-│   ├── tables/                  # Table components
-│   ├── data/                    # API client & data utilities
-│   └── assets/                  # Images, icons
-│
-├── preprocessing/               # Python data pipeline ⭐
-│   ├── 01-18_*.py, 27_*.py    # Automated preprocessing stages
-│   │   ├── 01-04: Boundaries   # Geographic data
-│   │   ├── 05-06c: EAVS/Equipment # Survey data & equipment quality
-│   │   ├── 07-10,17-18: Voters # Registration, rosters, aggregation
-│   │   ├── 11-13: Elections    # Results, CVAP, policies
-│   │   ├── 14-16: GUI Data     # Equipment history, bubbles, EI models
-│   │   └── 27: VRA Analysis    # Gingles factors
-│   ├── utils/                   # Shared utilities
-│   │   ├── database.py         # MongoDB connection
-│   │   ├── census_api.py       # Census API wrapper
-│   │   └── geojson_tools.py    # GeoJSON utilities
-│   ├── config.json              # Database & API configuration
-│   ├── run_all_preprocessing.sh # Master automation script
-│   └── validate_preprocessing.py # Data validation
-│
-├── backend/                     # Spring Boot backend
-│   ├── src/main/java/          # Java source code
-│   │   └── com/example/raptorsbackend/
-│   │       ├── controller/     # REST controllers (6 files)
-│   │       │   ├── EAVSController.java
-│   │       │   ├── EquipmentController.java
-│   │       │   ├── RegistrationController.java
-│   │       │   ├── PreclearanceController.java
-│   │       │   ├── PartyComparisonController.java
-│   │       │   └── DataController.java
-│   │       ├── service/        # Business logic
-│   │       └── model/          # Data models
-│   ├── pom.xml                 # Maven dependencies
-│   └── target/                 # Compiled JAR files
-│
-├── mongo-app/                   # MongoDB schemas
-│   ├── schema.cjs              # Collection schemas
-│   ├── models/                 # Mongoose models
-│   └── app.cjs                 # Node.js connection
-│
-├── public/                      # Static assets
-│   └── *.geojson               # US geographic boundaries
-│
-├── test_integration.py          # Integration test suite (37 tests)
-├── validate_database.py         # Database validation tool
-├── package.json                 # Node.js dependencies
-├── vite.config.ts              # Vite configuration
-├── tsconfig.json               # TypeScript configuration
-└── README.md                   # This file
-```
 
 ---
 
 ## 🔄 Data Pipeline
 
+<div align="center">
+
 The data pipeline automatically populates MongoDB with election data from multiple sources.
 
+Built for **CSE 416 - Software Engineering** at Stony Brook University
+
 ### Quick Setup
+
+</div>
 
 ```bash
 cd preprocessing
